@@ -1,7 +1,8 @@
 from datetime import timedelta
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views import View
@@ -52,24 +53,45 @@ class TaskView(LoginRequiredMixin, View):
         context = _task_context(request.user, view_date)
         return render(request, "tasks/partials/queue_response.html", context)
 
-    def patch(self, request, task_id):
-        task = Task.objects.filter(id=task_id, user=request.user).first()
-        if not task:
-            return HttpResponse(status=404)
-
-        if task.is_running:
-            delta = int((timezone.now() - task.last_started).total_seconds())
-            task.elapsed_seconds += delta
-            task.last_started = None
-        else:
-            task.last_started = timezone.now()
-
-        task.save(update_fields=["last_started", "elapsed_seconds"])
-        return HttpResponse(status=204)
-
     def delete(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).delete()
 
         view_date = parse_date(request.GET.get("date"))
         context = _task_context(request.user, view_date)
         return render(request, "tasks/partials/queue_response.html", context)
+
+
+@login_required
+def toggle_task(request, task_id):
+    task = Task.objects.filter(id=task_id, user=request.user).first()
+    if not task:
+        return HttpResponse(status=404)
+
+    if task.is_running:
+        delta = int((timezone.now() - task.last_started).total_seconds())
+        task.elapsed_seconds += delta
+        task.last_started = None
+    else:
+        task.last_started = timezone.now()
+
+    task.save(update_fields=["last_started", "elapsed_seconds"])
+    return HttpResponse(status=204)
+
+
+@login_required
+def complete_task(request, task_id):
+    task = Task.objects.filter(id=task_id, user=request.user).first()
+    if not task:
+        return HttpResponse(status=404)
+
+    task.completed = True
+    if task.is_running:
+        delta = int((timezone.now() - task.last_started).total_seconds())
+        task.elapsed_seconds += delta
+        task.last_started = None
+        task.save(update_fields=["completed", "last_started", "elapsed_seconds"])
+    else:
+        task.save(update_fields=["completed"])
+
+    context = _task_context(request.user, timezone.now().date())
+    return render(request, "tasks/partials/queue_response.html", context)

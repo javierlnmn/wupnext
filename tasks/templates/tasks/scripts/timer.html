@@ -1,40 +1,55 @@
 <script>
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('timer', (elapsed = 0, running = false, url = '') => ({
-      elapsed,
-      running,
-      _interval: null,
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("timer", (elapsed = 0, running = false, toggleUrl = '') => {
+      let intervalId = null;
 
-      get mm() {
-        return String(Math.floor(this.elapsed / 60)).padStart(2, '0');
-      },
+      const pad2 = (n) => String(n).padStart(2, "0");
 
-      get ss() {
-        return String(this.elapsed % 60).padStart(2, '0');
-      },
+      const start = (ctx) => {
+        if (intervalId) return;
+        intervalId = setInterval(() => ctx.elapsed++, 1000);
+      };
 
-      init() {
-        if (this.running) this._tick();
-      },
+      const stop = () => {
+        if (!intervalId) return;
+        clearInterval(intervalId);
+        intervalId = null;
+      };
 
-      destroy() {
-        clearInterval(this._interval);
-      },
+      return {
+        elapsed,
+        running,
 
-      _tick() {
-        this._interval = setInterval(() => this.elapsed++, 1000);
-      },
+        get mm() {
+          return pad2(Math.floor(this.elapsed / 60));
+        },
 
-      toggle() {
-        this.running = !this.running;
-        if (this.running) {
-          this._tick();
-        } else {
-          clearInterval(this._interval);
+        get ss() {
+          return pad2(this.elapsed % 60);
+        },
+
+        init() {
+          if (this.running) start(this);
+        },
+
+        destroy() {
+          stop();
+        },
+
+        toggle() {
+          this.running = !this.running;
+          this.running ? start(this) : stop();
+
+          const csrf = document.querySelector(
+            'meta[name="csrf-token"]',
+          ).content;
+
+          fetch(toggleUrl, {
+            method: "PATCH",
+            headers: { "X-CSRFToken": csrf },
+          });
         }
-        const csrf = document.querySelector('meta[name="csrf-token"]').content;
-        fetch(url, { method: 'PATCH', headers: { 'X-CSRFToken': csrf } });
-      },
-    }));
+      };
+    });
   });
 </script>
