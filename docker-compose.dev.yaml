@@ -4,6 +4,7 @@ x-app: &default-app
     dockerfile: Dockerfile.dev
   volumes:
     - .:/data/app
+    - db_data:/data/app/db
   env_file:
     - .env
 
@@ -13,8 +14,6 @@ services:
     command: sh -c "poetry run python manage.py migrate && poetry run python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
-    volumes:
-      - db_data:/data/app/db
 
   tailwind:
     <<: *default-app
