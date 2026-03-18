@@ -1,5 +1,6 @@
 <div class="pt-2 flex items-center justify-between gap-3">
   <span class="text-[15px] text-neutral-300">{{ task.name }}</span>
+  {% if view_date == today %}
   <button
     type="button"
     hx-delete="{% url 'tasks:task-detail' task.id %}"
@@ -17,4 +18,5 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
     </svg>
   </button>
+  {% endif %}
 </div>

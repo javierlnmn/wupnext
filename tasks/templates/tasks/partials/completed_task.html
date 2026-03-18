@@ -6,6 +6,7 @@
     </svg>
     <span class="text-[15px] text-neutral-500 line-through truncate">{{ task.name }}</span>
   </div>
+  {% if view_date == today %}
   <button
     type="button"
     hx-delete="{% url 'tasks:task-detail' task.id %}"
@@ -23,4 +24,5 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
     </svg>
   </button>
+  {% endif %}
 </div>

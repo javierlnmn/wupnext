@@ -1,13 +1,18 @@
 <div
-  x-data="timer({{ task.total_elapsed_seconds }}, {{ task.is_running|yesno:'true,false' }}, '{% url 'tasks:task-toggle' task.id %}')"
+  x-data="timer(
+    {% if view_date == today %}{{ task.total_elapsed_seconds }}{% else %}{{ task.elapsed_seconds }}{% endif %},
+    {% if view_date == today %}{{ task.is_running|yesno:'true,false' }}{% else %}false{% endif %},
+    '{% url 'tasks:task-toggle' task.id %}'
+  )"
   class="flex flex-col md:flex-row md:items-center md:justify-between gap-6"
 >
 
   <div class="flex flex-col justify-between md:self-stretch gap-4">
     <p class="text-lg text-neutral-200 font-medium">{{ task.name }}</p>
 
-    <div class="flex items-center gap-3">
-      <button @click="toggle()"
+    <div class="flex items-center gap-3 {% if view_date != today %}opacity-50 pointer-events-none {% endif %}">
+      <button
+              {% if view_date == today %}@click="toggle()"{% else %}disabled{% endif %}
               class="w-11 h-11 rounded-xl border flex items-center justify-center transition-all"
               :class="running
                 ? 'bg-cyan-500/15 border-cyan-500/25 text-cyan-400 hover:bg-cyan-500/25'
@@ -23,6 +28,7 @@
 
       <button
         type="button"
+        {% if view_date != today %}disabled{% endif %}
         hx-delete="{% url 'tasks:task-detail' task.id %}"
         hx-target="#queue-content"
         hx-swap="innerHTML"
@@ -41,6 +47,7 @@
 
       <button
         type="button"
+        {% if view_date != today %}disabled{% endif %}
         hx-post="{% url 'tasks:task-complete' task.id %}"
         hx-target="#queue-content"
         hx-swap="innerHTML"

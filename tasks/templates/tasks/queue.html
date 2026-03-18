@@ -91,10 +91,12 @@
         >
       {% endif %}
       <form
-        hx-post="{% url 'tasks:task' %}"
-        hx-target="#queue-content"
-        hx-swap="innerHTML"
-        hx-on::after-request="this.reset()"
+        {% if view_date == today %}
+          hx-post="{% url 'tasks:task' %}"
+          hx-target="#queue-content"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()"
+        {% endif %}
         class="flex items-center w-full h-14"
       >
         <input type="hidden" name="date" value="{{ view_date|date:'Y-m-d' }}" />
@@ -102,7 +104,12 @@
         <input
           type="text"
           name="name"
-          placeholder="Add a task..."
+          {% if view_date == today %}
+            placeholder="Add a task..."
+          {% else %}
+            placeholder="Oof, that will be complicated..."
+            disabled
+          {% endif %}
           required
           class="flex-1 bg-transparent text-[15px] text-white placeholder-neutral-600 outline-none border-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:shadow-none"
         />
