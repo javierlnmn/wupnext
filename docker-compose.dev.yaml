@@ -13,6 +13,8 @@ services:
     command: sh -c "poetry run python manage.py migrate && poetry run python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
+    volumes:
+      - db_data:/data/app/db
 
   tailwind:
     <<: *default-app
@@ -20,3 +22,6 @@ services:
     tty: true
     depends_on:
       - web
+
+volumes:
+  db_data:
