@@ -20,8 +20,8 @@ def _tasks_queue_context(user, view_date):
     return {
         "pending_tasks": pending,
         "completed_tasks": completed,
-        "current_task": pending.first(),
         "total_tasks": tasks.count(),
+        "current_task": pending.first(),
         "view_date": view_date,
         "today": timezone.localdate(),
     }
@@ -94,5 +94,6 @@ def complete_task(request, task_id):
     else:
         task.save(update_fields=["completed"])
 
-    context = _tasks_queue_context(request.user, timezone.now().date())
+    view_date = parse_date(request.POST.get("date") or request.GET.get("date"))
+    context = _tasks_queue_context(request.user, view_date)
     return render(request, "tasks/partials/queue_response.html", context)
