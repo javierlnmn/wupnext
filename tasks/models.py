@@ -29,7 +29,7 @@ class Task(models.Model):
         return total
 
     @classmethod
-    def get_tasks_for_date(cls, user, date):
+    def get_user_tasks_for_date(cls, user, date):
         if date is None:
             date = timezone.now().date()
         return cls.objects.filter(user=user, date=date)

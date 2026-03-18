@@ -13,14 +13,15 @@ from common.utils import parse_date
 from .models import Task
 
 
-def _task_context(user, view_date):
-    tasks = Task.get_tasks_for_date(user, view_date)
+def _tasks_queue_context(user, view_date):
+    tasks = Task.get_user_tasks_for_date(user, view_date)
     pending = tasks.filter(completed=False)
     completed = tasks.filter(completed=True)
     return {
         "pending_tasks": pending,
         "completed_tasks": completed,
         "current_task": pending.first(),
+        "total_tasks": tasks.count(),
         "view_date": view_date,
         "today": timezone.localdate(),
     }
@@ -32,7 +33,7 @@ class QueueView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         view_date = parse_date(self.request.GET.get("date"))
-        context.update(_task_context(self.request.user, view_date))
+        context.update(_tasks_queue_context(self.request.user, view_date))
         context["prev_date"] = view_date - timedelta(days=1)
         context["next_date"] = view_date + timedelta(days=1)
         return context
@@ -50,14 +51,14 @@ class TaskView(LoginRequiredMixin, View):
                 date=view_date,
             )
 
-        context = _task_context(request.user, view_date)
+        context = _tasks_queue_context(request.user, view_date)
         return render(request, "tasks/partials/queue_response.html", context)
 
     def delete(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).delete()
 
         view_date = parse_date(request.GET.get("date"))
-        context = _task_context(request.user, view_date)
+        context = _tasks_queue_context(request.user, view_date)
         return render(request, "tasks/partials/queue_response.html", context)
 
 
@@ -93,5 +94,5 @@ def complete_task(request, task_id):
     else:
         task.save(update_fields=["completed"])
 
-    context = _task_context(request.user, timezone.now().date())
+    context = _tasks_queue_context(request.user, timezone.now().date())
     return render(request, "tasks/partials/queue_response.html", context)
