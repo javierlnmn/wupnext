@@ -1,13 +1,10 @@
 from django import template
 
+from common.utils import get_timer_format
+
 register = template.Library()
 
 
 @register.filter
-def timer_mm(seconds):
-    return f"{int(seconds) // 60:02d}"
-
-
-@register.filter
-def timer_ss(seconds):
-    return f"{int(seconds) % 60:02d}"
+def duration_format(seconds):
+    return get_timer_format(seconds)

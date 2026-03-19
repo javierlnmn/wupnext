@@ -20,8 +20,12 @@
         elapsed,
         running,
 
+        get hh() {
+          return pad2(Math.floor(this.elapsed / 3600));
+        },
+
         get mm() {
-          return pad2(Math.floor(this.elapsed / 60));
+          return pad2(Math.floor((this.elapsed % 3600) / 60));
         },
 
         get ss() {
