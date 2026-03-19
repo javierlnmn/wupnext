@@ -8,10 +8,7 @@
 {% else %}
 
   {% if current_task %}
-  <div class="flex flex-col gap-2 shrink-0">
-    <h2 class="text-[11px] font-semibold tracking-[0.15em] text-neutral-500 uppercase">Right now</h2>
     {% include 'tasks/partials/current_task.html' with task=current_task %}
-  </div>
   {% endif %}
 
   {% with up_next=pending_tasks|slice:"1:" %}
