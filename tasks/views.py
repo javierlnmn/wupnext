@@ -135,13 +135,15 @@ def undo_complete_task(request, task_id):
             completed=False
         )
 
-        first_pos = pending.first().position
+        if pending.count() > 0:
+            first_pos = pending.first().position
 
-        for pt in pending:
-            pt.position += 1
-            pt.save(update_fields=["position"])
+            for pt in pending:
+                pt.position += 1
+                pt.save(update_fields=["position"])
 
-        task.position = first_pos
+            task.position = first_pos
+
         task.completed = False
         task.save(update_fields=["completed", "position"])
 
