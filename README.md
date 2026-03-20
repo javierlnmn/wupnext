@@ -51,6 +51,15 @@ docker compose -f docker-compose.dev.yaml up
 
 ### Docker (prod)
 
+Build the image, then run with env file and named volumes for the SQLite DB and static files:
+
 ```bash
-docker compose -f docker-compose.prod.yaml up
+docker build -f Dockerfile.prod -t daychron .
+
+docker run --rm -p 8000:8000 --env-file .env \
+  -v daychron_db:/data/app/db \
+  -v daychron_static:/data/app/staticfiles \
+  daychron
 ```
+
+Create migrations locally (`poetry run python manage.py makemigrations`) before building; the container only runs `migrate`.
