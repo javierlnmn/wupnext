@@ -1,5 +1,5 @@
 <div class="pt-2 flex items-center justify-between gap-3">
-  <div class="flex items-center gap-2 shrink-0">
+  <div class="flex items-center gap-2">
     {% if view_date == today %}
     <div class="flex flex-col">
       <button
@@ -34,7 +34,7 @@
     </div>
     {% endif %}
     
-    <span class="text-[15px] text-neutral-300 min-w-0 truncate">{{ task.name }}</span>
+    <span class="text-[15px] text-neutral-300 min-w-0">{{ task.name }}</span>
   </div>
 
   {% if view_date == today %}
