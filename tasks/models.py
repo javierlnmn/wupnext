@@ -12,7 +12,7 @@ class Task(models.Model):
     name = models.CharField(max_length=255)
     date = models.DateField()
     completed = models.BooleanField(default=False)
-    position = models.PositiveIntegerField(default=0)
+    position = models.PositiveIntegerField(default=None, null=True, blank=True)
     last_started = models.DateTimeField(null=True, blank=True)
     elapsed_seconds = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -39,3 +39,14 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.position is None:
+            if Task.objects.count() == 0:
+                self.position = 1
+            else:
+                self.position = (
+                    Task.objects.filter(user=self.user, date=self.date).last().position
+                    + 1
+                )
+        super().save(*args, **kwargs)

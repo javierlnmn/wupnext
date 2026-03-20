@@ -10,6 +10,21 @@
     <span class="text-neutral-700" style="font-family: 'WDXL Lubrifont TC', sans-serif">{{ task.elapsed_seconds|duration_format }}</span>
   </div>
   {% if view_date == today %}
+  <div class="flex items-center gap-1 shrink-0">
+  <button
+    type="button"
+    hx-post="{% url 'tasks:task-undo-complete' task.id %}"
+    hx-target="#queue-content"
+    hx-swap="innerHTML"
+    hx-vals='{"date":"{{ view_date|date:"Y-m-d" }}"}'
+    class="p-1.5 rounded-md text-neutral-500 hover:text-cyan-400 hover:bg-neutral-800/60 transition-colors"
+    aria-label="Mark as not complete"
+    title="Undo complete"
+  >
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+    </svg>
+  </button>
   <button
     type="button"
     hx-delete="{% url 'tasks:task-detail' task.id %}"
@@ -27,5 +42,6 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
     </svg>
   </button>
+  </div>
   {% endif %}
 </div>
