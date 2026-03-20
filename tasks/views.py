@@ -63,7 +63,7 @@ class TaskView(LoginRequiredMixin, View):
 
 
 @login_required
-def toggle_task(request, task_id):
+def toggle_task_timer(request, task_id):
     task = Task.objects.filter(id=task_id, user=request.user).first()
     if not task:
         return HttpResponse(status=404)
