@@ -16,4 +16,5 @@ urlpatterns = [
         views.undo_complete_task,
         name="task-undo-complete",
     ),
+    path("procrastinate/", views.procrastinate_tasks, name="procrastinate"),
 ]

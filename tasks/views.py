@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Max
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
@@ -19,6 +20,7 @@ def _tasks_queue_context(user, view_date):
     tasks = Task.get_user_tasks_for_date(user, view_date)
     pending = tasks.filter(completed=False)
     completed = tasks.filter(completed=True)
+    yesterday = timezone.localdate() - timedelta(days=1)
     return {
         "pending_tasks": pending,
         "completed_tasks": completed,
@@ -26,6 +28,7 @@ def _tasks_queue_context(user, view_date):
         "current_task": pending.first(),
         "view_date": view_date,
         "today": timezone.localdate(),
+        "show_procrastinate": view_date == yesterday and pending.exists(),
     }
 
 
@@ -149,6 +152,51 @@ def undo_complete_task(request, task_id):
 
     context = _tasks_queue_context(request.user, view_date)
     return render(request, "tasks/partials/queue_response.html", context)
+
+
+@login_required
+def procrastinate_tasks(request):
+    today = timezone.localdate()
+    yesterday = today - timedelta(days=1)
+    source_date = parse_date(request.POST.get("date"))
+    if source_date != yesterday:
+        return HttpResponse(status=400)
+
+    pending_to_move = list(
+        Task.objects.filter(
+            user=request.user,
+            date=yesterday,
+            completed=False,
+        ).order_by("position", "created_at")
+    )
+
+    if not pending_to_move:
+        response = HttpResponse()
+        response["HX-Redirect"] = reverse("tasks:queue")
+        return response
+
+    max_today = (
+        Task.objects.filter(
+            user=request.user,
+            date=today,
+            completed=False,
+        )
+        .aggregate(m=Max("position"))
+        .get("m")
+    )
+
+    next_pos = (max_today if max_today is not None else -1) + 1
+
+    with transaction.atomic():
+        for i, task in enumerate(pending_to_move):
+            task.date = today
+            task.position = next_pos + i
+            task.last_started = None
+            task.save(update_fields=["date", "position", "last_started"])
+
+    response = HttpResponse()
+    response["HX-Redirect"] = reverse("tasks:queue")
+    return response
 
 
 @login_required
