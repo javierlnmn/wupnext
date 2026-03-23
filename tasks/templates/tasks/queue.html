@@ -83,7 +83,7 @@
 
   <div class="shrink-0 w-full mt-4 border-t border-neutral-800/60">
     <div class="max-w-[560px] lg:max-w-[900px] mx-auto px-6 relative">
-      {% if total_tasks <= 0 %}
+      {% if total_tasks <= 0 and view_date == today %}
         <img
           src="{% static 'img/chalk-arrow.png' %}"
           alt="Arrow"
