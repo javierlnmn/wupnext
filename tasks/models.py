@@ -45,8 +45,13 @@ class Task(models.Model):
             if Task.objects.count() == 0:
                 self.position = 1
             else:
-                self.position = (
-                    Task.objects.filter(user=self.user, date=self.date).last().position
-                    + 1
-                )
+                if Task.objects.filter(user=self.user, date=self.date).count() <= 0:
+                    self.position = 1
+                else:
+                    self.position = (
+                        Task.objects.filter(user=self.user, date=self.date)
+                        .last()
+                        .position
+                        + 1
+                    )
         super().save(*args, **kwargs)
