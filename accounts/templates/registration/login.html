@@ -6,7 +6,7 @@
     <div class="w-full max-w-[380px]">
       <div class="text-center mb-10">
         <p class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">
-          wup<span class="text-clay-500">next</span>
+          wup<span class="text-clay-500">next.</span>
         </p>
         <p class="text-sm text-slate-500">Sign in to continue</p>
       </div>
@@ -61,12 +61,37 @@
     </div>
   </div>
 
-  <div class="hidden lg:block w-2/5 relative">
-    <img
-      src="{% static 'img/login-hero.png' %}"
-      alt=""
-      class="absolute inset-0 w-full h-full object-cover"
-    />
+  <div
+    class="hidden lg:block w-2/5 relative overflow-hidden bg-gradient-to-br from-clay-400 via-clay-600 to-slate-900 dark:from-slate-900 dark:via-slate-950 dark:to-clay-900"
+  >
+    <!-- dot grid -->
+    <div
+      class="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.14)_1.5px,_transparent_1.5px)] [background-size:22px_22px]"
+    ></div>
+
+    <!-- soft color glows -->
+    <div class="absolute -top-24 -right-16 w-96 h-96 rounded-full bg-white/15 dark:bg-clay-500/20 blur-3xl"></div>
+    <div class="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-olive-400/25 dark:bg-olive-500/10 blur-3xl"></div>
+
+    <!-- floating rounded squares -->
+    <div class="absolute top-16 right-20 w-20 h-20 rounded-2xl bg-white/10 border border-white/15 rotate-12 backdrop-blur-sm"></div>
+    <div class="absolute top-44 right-48 w-10 h-10 rounded-xl bg-white/10 border border-white/15 -rotate-6"></div>
+    <div class="absolute bottom-40 right-32 w-14 h-14 rounded-2xl bg-clay-300/20 border border-white/10 rotate-6"></div>
+
+    <!-- brand watermark -->
+    <div class="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+      <span class="text-[15rem] leading-none font-extrabold tracking-tighter text-white/10">
+        w<span class="text-white/20">.</span>
+      </span>
+    </div>
+
+    <!-- tagline -->
+    <div class="absolute bottom-12 left-12 right-12 text-white">
+      <p class="text-3xl font-extrabold tracking-tight leading-tight text-balance">
+        Stay on top of<br />what's <span class="text-clay-100 dark:text-clay-300">next.</span>
+      </p>
+      <p class="mt-3 text-sm text-white/70">Your day, distilled into a single queue.</p>
+    </div>
   </div>
 </main>
 {% endblock %}
