@@ -2,30 +2,27 @@
 
 A focused task queue app built with Django. Add tasks to your daily queue, work through them one at a time with timer, and track your progress throughout the day.
 
-## Setup
+## Development
+
+Development runs directly on the host (no Docker) — Poetry for the Python side, npm for Tailwind.
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11–3.13 (avoid 3.14 for now: a `Context.__copy__` incompatibility in Django 5.0.6 breaks template rendering)
 - [Poetry](https://python-poetry.org/)
 - Node.js and npm (for Tailwind CSS)
 
 ### Environment
 
-Copy the example env file and adjust as needed:
+Copy the example env file:
 
-```
+```bash
 cp .env.example .env
 ```
 
-Then set these in your `.env` file:
+The defaults in `.env.example` (`DEBUG=True`, `localhost`/`127.0.0.1`) are already suitable for local development.
 
-- `DEBUG=False`
-- `SECRET_KEY` — a random secret key
-- `ALLOWED_HOSTS` — comma-separated list of hosts
-- `CSRF_TRUSTED_ORIGINS` — comma-separated list of origins
-
-### Local
+### Setup
 
 ```bash
 poetry install
@@ -33,28 +30,32 @@ poetry run python manage.py tailwind install
 poetry run python manage.py migrate
 ```
 
-Run these two commands in separate terminals:
+### Tailwind
+
+Styles are built with [django-tailwind](https://django-tailwind.readthedocs.io/), which manages a Tailwind CLI project under `theme/static_src/`. `tailwind install` (above) installs its npm dependencies the first time you set up the project — rerun it if `theme/static_src/package.json` changes.
+
+While developing, run the Tailwind watcher in its own terminal so template class changes are picked up and rebuilt into `theme/static/css/dist/styles.css` on save:
 
 ```bash
 poetry run python manage.py tailwind start
 ```
 
+### Run the app
+
+In another terminal:
+
 ```bash
 poetry run python manage.py runserver
 ```
 
-### Docker (dev)
+The app is then available at http://127.0.0.1:8000.
+
+## Deploy
+
+Production is Docker-only, built from `Dockerfile`. Build the image, then run with an env file and named volumes for the SQLite DB and static files:
 
 ```bash
-docker compose -f docker-compose.dev.yaml up
-```
-
-### Docker (prod)
-
-Build the image, then run with env file and named volumes for the SQLite DB and static files:
-
-```bash
-docker build -f Dockerfile.prod -t daychron .
+docker build -t daychron .
 
 docker run --rm -p 8000:8000 --env-file .env \
   -v daychron_db:/data/app/db \
@@ -62,4 +63,4 @@ docker run --rm -p 8000:8000 --env-file .env \
   daychron
 ```
 
-Create migrations locally (`poetry run python manage.py makemigrations`) before building; the container only runs `migrate`.
+Create migrations locally (`poetry run python manage.py makemigrations`) before building; the container only runs `migrate`. Before deploying, make sure `.env` has production values set: `DEBUG=False`, a real `SECRET_KEY`, `ALLOWED_HOSTS`, and `CSRF_TRUSTED_ORIGINS`.
