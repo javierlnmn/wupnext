@@ -1,21 +1,19 @@
 {% extends 'common/_main.html' %} {% load static %} {% block content %}
-<main class="flex-1 flex text-white">
+<main class="flex-1 flex">
   <div
     class="w-full lg:w-3/5 flex flex-col items-center justify-center px-6 py-12"
   >
     <div class="w-full max-w-[380px]">
       <div class="text-center mb-10">
-        <img
-          src="{% static 'img/logo-rect_no-bg.png' %}"
-          alt="DayChron"
-          class="h-8 mx-auto mb-3"
-        />
-        <p class="text-sm text-neutral-500">Sign in to continue</p>
+        <p class="text-2xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-3">
+          wup<span class="text-ember-500">next</span>
+        </p>
+        <p class="text-sm text-stone-500">Sign in to continue</p>
       </div>
 
       {% if form.errors %}
       <div
-        class="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center"
+        class="mb-6 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-sm text-center"
       >
         Invalid username or password.
       </div>
@@ -26,7 +24,7 @@
         <div>
           <label
             for="username"
-            class="block text-[13px] text-neutral-400 mb-1.5"
+            class="block text-[13px] text-stone-500 dark:text-stone-400 mb-1.5"
             >Username</label
           >
           <input
@@ -35,13 +33,13 @@
             name="username"
             id="username"
             placeholder="Enter your username"
-            class="w-full h-11 bg-[#151517] border border-neutral-800 rounded-xl px-4 text-[15px] text-white placeholder-neutral-600 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+            class="w-full h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl px-4 text-[15px] text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-stone-600 outline-none focus:border-ember-500/50 focus:ring-1 focus:ring-ember-500/30 transition-all"
           />
         </div>
         <div>
           <label
             for="password"
-            class="block text-[13px] text-neutral-400 mb-1.5"
+            class="block text-[13px] text-stone-500 dark:text-stone-400 mb-1.5"
             >Password</label
           >
           <input
@@ -50,12 +48,12 @@
             name="password"
             id="password"
             placeholder="Enter your password"
-            class="w-full h-11 bg-[#151517] border border-neutral-800 rounded-xl px-4 text-[15px] text-white placeholder-neutral-600 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+            class="w-full h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl px-4 text-[15px] text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-stone-600 outline-none focus:border-ember-500/50 focus:ring-1 focus:ring-ember-500/30 transition-all"
           />
         </div>
         <button
           type="submit"
-          class="w-full h-11 bg-cyan-500 hover:bg-cyan-400 text-white font-medium rounded-xl transition-colors"
+          class="w-full h-11 bg-gradient-to-b from-ember-500 to-ember-600 hover:from-ember-400 hover:to-ember-500 text-white font-semibold rounded-xl shadow-lg shadow-ember-600/20 transition-all"
         >
           Sign in
         </button>

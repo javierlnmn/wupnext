@@ -1,7 +1,7 @@
 {% if pending_tasks %}
-  {{ pending_tasks|length }} task{{ pending_tasks|length|pluralize }} remaining.
+  <span class="text-ember-600 dark:text-ember-400 font-semibold">{{ pending_tasks|length }}</span> task{{ pending_tasks|length|pluralize }} remaining.
 {% elif completed_tasks %}
-  All tasks completed!
+  <span class="text-teal-600 dark:text-teal-400 font-semibold">All tasks completed!</span>
 {% else %}
   No tasks queued.
 {% endif %}

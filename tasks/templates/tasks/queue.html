@@ -1,118 +1,142 @@
 {% extends 'common/_main.html' %}
-{% load static %}
 
 {% block content %}
-{% include 'tasks/scripts/timer.html' %}
-<main
-  class="h-svh flex flex-col items-center text-white relative"
->
-  <div class="w-full max-w-[560px] lg:max-w-[900px] px-6 pt-8 flex-1 flex flex-col min-h-0">
-    <div class="flex max-sm:flex-col gap-4 items-start justify-between mb-8">
+<main class="h-svh flex flex-col items-center relative">
+  <div class="w-full max-w-3xl px-6 pt-8 flex-1 flex flex-col min-h-0">
+    <div class="flex items-start justify-between mb-8">
       <div>
-        <img
-          src="{% static 'img/logo-rect_no-bg.png' %}"
-          alt="DayChron"
-          class="h-6"
-        />
-        <p id="queue-stats" class="text-[13px] text-neutral-500 mt-1">
+        <h1 class="text-xl font-extrabold tracking-tight text-stone-900 dark:text-white">
+          wup<span class="text-ember-500">next</span>
+        </h1>
+        <p id="queue-stats" class="text-[13px] text-stone-500 mt-1">
           {% include 'tasks/partials/tasks_summary.html' %}
         </p>
       </div>
-      <div class="max-sm:w-full flex items-center gap-3 relative max-sm:flex-row-reverse max-sm:justify-between">
-        <form
-          method="POST"
-          action="{% url 'accounts:logout' %}"
-          class="text-neutral-600 hover:text-red-400 transition-colors cursor-pointer grid place-items-center"
-          aria-label="Logout"
-        >
-          {% csrf_token %}
-          <button type="submit">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-            </svg>
-          </button>
-        </form>
-        <span class="w-px h-4 bg-neutral-800 max-sm:hidden"></span>
-        <div class="flex items-center gap-2 max-sm:-ml-1">
-          <a
-            href="?date={{ prev_date|date:'Y-m-d' }}"
-            class="text-neutral-500 hover:text-neutral-300 text-xl transition-colors"
-            aria-label="Previous day"
-          >
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M15 6l-6 6l6 6"/>
-            </svg>
-          </a>
-          <a
-            href="{% if view_date == today %}{% url 'tasks:queue' %}{% else %}?date={{ view_date|date:'Y-m-d' }}{% endif %}"
-            class="flex items-center gap-1.5 text-cyan-400 text-sm font-medium hover:text-cyan-300 transition-colors"
-          >
-            <svg
-              class="size-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
-            <span class="text-white">
-              {% if view_date == today %}Today{% else %}{{ view_date|date:"M j"}}
-              {% endif %}
-            </span>
-          </a>
-          <a
-            href="?date={{ next_date|date:'Y-m-d' }}"
-            class="text-neutral-500 hover:text-neutral-300 text-xl transition-colors"
-            aria-label="Next day"
-          >
-            <svg class="size-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M15 6l-6 6l6 6"/>
-            </svg>
-          </a>
-        </div>
-      </div>
+      <form
+        method="POST"
+        action="{% url 'accounts:logout' %}"
+        aria-label="Logout"
+      >
+        {% csrf_token %}
+        <button type="submit" class="mt-1 text-stone-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors grid place-items-center">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+        </button>
+      </form>
     </div>
 
     <div id="queue-content" class="flex-1 flex flex-col gap-6 min-h-0">
       {% include 'tasks/partials/task_list.html' %}
     </div>
-
   </div>
 
-  <div class="shrink-0 w-full mt-4 border-t border-neutral-800/60">
-    <div class="max-w-[560px] lg:max-w-[900px] mx-auto px-6 relative">
-      {% if total_tasks <= 0 and view_date == today %}
-        <img
-          src="{% static 'img/chalk-arrow.png' %}"
-          alt="Arrow"
-          class="max-sm:hidden absolute bottom-6 -left-16 z-50 h-auto w-20 object-fill pointer-events-none"
-        >
-      {% endif %}
-      <form
-        {% if view_date == today %}
-          hx-post="{% url 'tasks:task' %}"
-          hx-target="#queue-content"
-          hx-swap="innerHTML"
-          hx-on::after-request="this.reset()"
-        {% endif %}
-        class="flex items-center w-full h-14"
+  <div
+    x-data="{ open: false }"
+    @keydown.escape.window="open = false"
+    @task-added="open = false"
+    class="shrink-0 w-full mt-4 border-t border-stone-200 dark:border-stone-800/60"
+  >
+    <div class="max-w-3xl mx-auto px-6 h-16 flex items-center">
+      <button
+        type="button"
+        @click="open = true"
+        class="inline-flex items-center gap-2 px-5 h-10 rounded-full bg-gradient-to-b from-ember-500 to-ember-600 text-white text-sm font-semibold shadow-lg shadow-ember-600/20 hover:from-ember-400 hover:to-ember-500 transition-all"
       >
-        <input type="hidden" name="date" value="{{ view_date|date:'Y-m-d' }}" />
-        <span class="text-xl font-light text-neutral-500 leading-none">+</span>
-        <input
-          type="text"
-          name="name"
-          {% if view_date == today %}
-            placeholder="Add a task..."
-          {% else %}
-            placeholder="Oof, that will be complicated..."
-            disabled
-          {% endif %}
-          required
-          class="flex-1 bg-transparent text-[15px] text-white placeholder-neutral-600 outline-none border-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:shadow-none"
-        />
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Add task
+      </button>
+    </div>
+
+    <div
+      x-show="open"
+      x-cloak
+      @click="open = false"
+      x-transition.opacity
+      class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-40"
+    ></div>
+
+    <div
+      x-show="open"
+      x-cloak
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="translate-x-full"
+      x-transition:enter-end="translate-x-0"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="translate-x-0"
+      x-transition:leave-end="translate-x-full"
+      class="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-stone-900 border-l border-stone-200 dark:border-stone-800 shadow-2xl z-50 flex flex-col"
+    >
+      <div class="flex items-center justify-between px-6 py-5 border-b border-stone-200 dark:border-stone-800">
+        <h2 class="text-lg font-bold text-stone-900 dark:text-white">New task</h2>
+        <button
+          type="button"
+          @click="open = false"
+          class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors"
+          aria-label="Close"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form
+        x-data="{ weight: 0, hover: 0 }"
+        @task-added="weight = 0; hover = 0"
+        hx-post="{% url 'tasks:task' %}"
+        hx-target="#queue-content"
+        hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('task-added', { bubbles: true })) }"
+        class="flex-1 flex flex-col px-6 py-6 gap-6"
+      >
+        <div>
+          <label for="task-name" class="block text-[13px] text-stone-500 dark:text-stone-400 mb-1.5">Name</label>
+          <input
+            required
+            type="text"
+            name="name"
+            id="task-name"
+            placeholder="What do you need to do?"
+            class="w-full h-11 bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700 rounded-xl px-4 text-[15px] text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-stone-600 outline-none focus:border-ember-500/50 focus:ring-1 focus:ring-ember-500/30 transition-all"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[13px] text-stone-500 dark:text-stone-400 mb-2">Weight</label>
+          <div class="flex items-center gap-1.5" @mouseleave="hover = 0">
+            <template x-for="i in 5" :key="i">
+              <button
+                type="button"
+                @click="weight = (weight === i ? 0 : i)"
+                @mouseenter="hover = i"
+                class="p-1 transition-transform hover:scale-110"
+                :aria-label="'Set weight to ' + i"
+              >
+                <svg
+                  class="w-6 h-6 transition-colors"
+                  :class="(hover || weight) >= i ? 'text-ember-500' : 'text-stone-300 dark:text-stone-700'"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.176 7.547 7.547 0 01-1.705-1.715.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z"/>
+                </svg>
+              </button>
+            </template>
+          </div>
+          <input type="hidden" name="weight" :value="weight">
+        </div>
+
+        <div class="flex-1"></div>
+
+        <button
+          type="submit"
+          class="w-full h-11 bg-gradient-to-b from-ember-500 to-ember-600 hover:from-ember-400 hover:to-ember-500 text-white font-semibold rounded-xl shadow-lg shadow-ember-600/20 transition-all"
+        >
+          Add task
+        </button>
       </form>
     </div>
   </div>

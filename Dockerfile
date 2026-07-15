@@ -29,6 +29,6 @@ CMD sh -c "\
     poetry run python manage.py migrate --noinput && \
     poetry run python manage.py tailwind build && \
     poetry run python manage.py collectstatic --noinput && \
-    exec poetry run gunicorn daychron.wsgi:application \
+    exec poetry run gunicorn wupnext.wsgi:application \
     --bind 0.0.0.0:8000 --workers 1 --threads 2 \
     "

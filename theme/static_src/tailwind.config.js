@@ -6,6 +6,7 @@
  */
 
 module.exports = {
+    darkMode: 'selector',
     content: [
         /**
          * HTML. Paths to Django template files that will contain Tailwind CSS classes.
@@ -42,7 +43,25 @@ module.exports = {
         // '../../**/*.py'
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                sans: ['Manrope', 'sans-serif'],
+            },
+            colors: {
+                ember: {
+                    50: '#fef6f0',
+                    100: '#fde8da',
+                    200: '#fbceae',
+                    300: '#f7ab77',
+                    400: '#f2813e',
+                    500: '#e8622c',
+                    600: '#cc4a1e',
+                    700: '#a83a19',
+                    800: '#85301b',
+                    900: '#6d2a1a',
+                },
+            },
+        },
     },
     plugins: [
         /**
