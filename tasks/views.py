@@ -8,6 +8,14 @@ from django.views.generic import TemplateView
 from .models import Task
 
 
+def _parse_weight(value):
+    try:
+        weight = int(value)
+    except (TypeError, ValueError):
+        return 0
+    return min(max(weight, 0), 5)
+
+
 def _tasks_context(user):
     tasks = Task.objects.filter(user=user)
     pending = tasks.filter(completed_at__isnull=True)
@@ -33,7 +41,8 @@ class TaskView(LoginRequiredMixin, View):
         name = request.POST.get("name", "").strip()
 
         if name:
-            Task.objects.create(user=request.user, name=name)
+            weight = _parse_weight(request.POST.get("weight"))
+            Task.objects.create(user=request.user, name=name, weight=weight)
 
         context = _tasks_context(request.user)
         return render(request, "tasks/partials/queue_response.html", context)
