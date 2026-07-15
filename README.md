@@ -52,10 +52,10 @@ The app is then available at http://127.0.0.1:8000.
 
 ## Deploy
 
-Production is Docker-only, built from `Dockerfile.prod` (no compose file — the container's `CMD` runs migrations, a one-off `tailwind build`, and `collectstatic` before starting gunicorn). Build the image, then run with an env file and named volumes for the SQLite DB and static files:
+Production is Docker-only, built from `Dockerfile`. Build the image, then run with an env file and named volumes for the SQLite DB and static files:
 
 ```bash
-docker build -f Dockerfile.prod -t daychron .
+docker build -t daychron .
 
 docker run --rm -p 8000:8000 --env-file .env \
   -v daychron_db:/data/app/db \
