@@ -1,56 +1,36 @@
 {% if not pending_tasks and not completed_tasks %}
 
-<div class="flex flex-col items-center justify-center flex-1">
-  <p class="text-[1.65rem] font-semibold text-neutral-600">Do the next thing.</p>
-  <p class="text-sm text-neutral-600 mt-2">Add a task below to begin.</p>
+<div class="flex flex-col items-center justify-center flex-1 text-center">
+  <p class="text-2xl font-semibold text-stone-400 dark:text-stone-600">Nothing on your plate.</p>
+  <p class="text-sm text-stone-400 dark:text-stone-600 mt-2">Add a task below to get going.</p>
 </div>
 
 {% else %}
 
-  {% if current_task %}
-    {% include 'tasks/partials/current_task.html' with task=current_task %}
-  {% endif %}
+<div class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-8 pb-4">
 
-  {% with up_next=pending_tasks|slice:"1:" %}
-  {% if up_next or completed_tasks %}
-  <div class="flex flex-col flex-1 min-h-0 gap-3">
-    <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="min-h-0 overflow-y-auto rounded-2xl bg-[#131315] border border-neutral-700/30 shadow-lg shadow-black/20 px-5 pt-4 pb-3">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-[11px] font-semibold tracking-[0.15em] text-neutral-500 uppercase">Up Next</h2>
-          {% if show_procrastinate %}
-          <button
-            type="button"
-            hx-post="{% url 'tasks:procrastinate' %}"
-            hx-vals='{"date":"{{ view_date|date:"Y-m-d" }}"}'
-            class="text-xs font-semibold px-2.5 py-1 rounded-md bg-cyan-500 text-neutral-900 hover:bg-cyan-400 shadow-md shadow-black/40 transition-colors"
-          >
-            Procrastinate
-          </button>
-          {% endif %}
-        </div>
-        {% if up_next %}
-        <div class="flex flex-col gap-2 divide-y divide-neutral-800/60">
-          {% for task in up_next %}
-            {% include 'tasks/partials/up_next_task.html' %}
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-
-      <div class="min-h-0 overflow-y-auto rounded-2xl bg-[#131315] border border-neutral-700/30 shadow-lg shadow-black/20 px-5 pt-4 pb-3">
-        <h2 class="text-[11px] font-semibold tracking-[0.15em] text-neutral-500 uppercase mb-3">Completed &middot; {{ completed_tasks|length }}</h2>
-        {% if completed_tasks %}
-        <div class="flex flex-col gap-2 divide-y divide-neutral-800/60">
-          {% for task in completed_tasks %}
-            {% include 'tasks/partials/completed_task.html' with task=task %}
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
+  {% if pending_tasks %}
+  <div>
+    <h2 class="text-[11px] font-semibold tracking-[0.15em] text-stone-400 dark:text-stone-600 uppercase mb-1">Pending</h2>
+    <div class="divide-y divide-stone-200 dark:divide-stone-800/60">
+      {% for task in pending_tasks %}
+        {% include 'tasks/partials/pending_task.html' %}
+      {% endfor %}
     </div>
   </div>
   {% endif %}
-  {% endwith %}
+
+  {% if completed_tasks %}
+  <div>
+    <h2 class="text-[11px] font-semibold tracking-[0.15em] text-stone-400 dark:text-stone-600 uppercase mb-1">Completed &middot; {{ completed_tasks|length }}</h2>
+    <div class="divide-y divide-stone-200 dark:divide-stone-800/60">
+      {% for task in completed_tasks %}
+        {% include 'tasks/partials/completed_task.html' %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
 
 {% endif %}
