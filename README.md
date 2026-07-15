@@ -8,7 +8,7 @@ Development runs directly on the host (no Docker) — Poetry for the Python side
 
 ### Prerequisites
 
-- Python 3.11–3.13 (avoid 3.14 for now: a `Context.__copy__` incompatibility in Django 5.0.6 breaks template rendering)
+- Python 3.11–3.13
 - [Poetry](https://python-poetry.org/)
 - Node.js and npm (for Tailwind CSS)
 
@@ -55,12 +55,12 @@ The app is then available at http://127.0.0.1:8000.
 Production is Docker-only, built from `Dockerfile`. Build the image, then run with an env file and named volumes for the SQLite DB and static files:
 
 ```bash
-docker build -t daychron .
+docker build -t wupnext .
 
 docker run --rm -p 8000:8000 --env-file .env \
-  -v daychron_db:/data/app/db \
-  -v daychron_static:/data/app/staticfiles \
-  daychron
+  -v wupnext_db:/data/app/db \
+  -v wupnext_static:/data/app/staticfiles \
+  wupnext
 ```
 
 Create migrations locally (`poetry run python manage.py makemigrations`) before building; the container only runs `migrate`. Before deploying, make sure `.env` has production values set: `DEBUG=False`, a real `SECRET_KEY`, `ALLOWED_HOSTS`, and `CSRF_TRUSTED_ORIGINS`.
