@@ -32,13 +32,14 @@
   </div>
 
   <div
-    x-data="{ open: false }"
+    x-data="{ open: false, taskId: null, name: '', weight: 0, hover: 0 }"
     @keydown.escape.window="open = false"
-    @task-added="open = false"
+    @task-added="open = false; taskId = null; name = ''; weight = 0; hover = 0"
+    @edit-task.window="open = true; taskId = $event.detail.id; name = $event.detail.name; weight = $event.detail.weight"
   >
     <button
       type="button"
-      @click="open = true"
+      @click="open = true; taskId = null; name = ''; weight = 0; hover = 0"
       class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white shadow-lg shadow-clay-600/30 transition-all flex items-center justify-center"
       aria-label="Add task"
     >
@@ -67,7 +68,7 @@
       class="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col"
     >
       <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">New task</h2>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white" x-text="taskId ? 'Edit task' : 'New task'"></h2>
         <button
           type="button"
           @click="open = false"
@@ -81,14 +82,14 @@
       </div>
 
       <form
-        x-data="{ weight: 0, hover: 0 }"
-        @task-added="weight = 0; hover = 0"
         hx-post="{% url 'tasks:task' %}"
         hx-target="#queue-content"
         hx-swap="innerHTML"
-        hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('task-added', { bubbles: true })) }"
+        hx-on::after-request="if(event.detail.successful){ this.dispatchEvent(new CustomEvent('task-added', { bubbles: true })) }"
         class="flex-1 flex flex-col px-6 py-6 gap-6"
       >
+        <input type="hidden" name="task_id" :value="taskId">
+
         <div>
           <label for="task-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
           <input
@@ -96,6 +97,7 @@
             type="text"
             name="name"
             id="task-name"
+            x-model="name"
             placeholder="What do you need to do?"
             class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
           />
@@ -133,9 +135,8 @@
         <button
           type="submit"
           class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
-        >
-          Add task
-        </button>
+          x-text="taskId ? 'Save changes' : 'Add task'"
+        ></button>
       </form>
     </div>
   </div>

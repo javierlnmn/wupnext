@@ -14,6 +14,16 @@
   {% include 'tasks/partials/weight_badge.html' with weight=task.weight %}
   <button
     type="button"
+    @click="$dispatch('edit-task', { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }} })"
+    class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
+    aria-label="Edit task"
+  >
+    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+    </svg>
+  </button>
+  <button
+    type="button"
     hx-delete="{% url 'tasks:task-detail' task.id %}"
     hx-target="#queue-content"
     hx-swap="innerHTML"

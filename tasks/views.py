@@ -39,10 +39,16 @@ class QueueView(LoginRequiredMixin, TemplateView):
 class TaskView(LoginRequiredMixin, View):
     def post(self, request):
         name = request.POST.get("name", "").strip()
+        task_id = request.POST.get("task_id")
 
         if name:
             weight = _parse_weight(request.POST.get("weight"))
-            Task.objects.create(user=request.user, name=name, weight=weight)
+            if task_id:
+                Task.objects.filter(id=task_id, user=request.user).update(
+                    name=name, weight=weight
+                )
+            else:
+                Task.objects.create(user=request.user, name=name, weight=weight)
 
         context = _tasks_context(request.user)
         return render(request, "tasks/partials/queue_response.html", context)
