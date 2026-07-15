@@ -9,13 +9,13 @@
 
 <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-  <div class="min-h-0 overflow-y-auto rounded-2xl bg-denim-50/70 dark:bg-denim-900/20 border border-denim-200/70 dark:border-denim-800/40 shadow-lg shadow-denim-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
-    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-denim-700 dark:text-denim-400 uppercase mb-3">
+  <div class="min-h-0 overflow-y-auto rounded-2xl bg-clay-50/70 dark:bg-clay-900/20 border border-clay-200/70 dark:border-clay-800/40 shadow-lg shadow-clay-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
+    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-clay-700 dark:text-clay-400 uppercase mb-3">
       <span class="w-1.5 h-1.5 rounded-full bg-olive-500"></span>
       Pending &middot; {{ pending_tasks|length }}
     </h2>
     {% if pending_tasks %}
-    <div class="flex flex-col divide-y divide-denim-200/60 dark:divide-denim-800/40">
+    <div class="flex flex-col divide-y divide-clay-200/60 dark:divide-clay-800/40">
       {% for task in pending_tasks %}
         {% include 'tasks/partials/pending_task.html' %}
       {% endfor %}
