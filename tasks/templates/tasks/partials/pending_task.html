@@ -14,7 +14,7 @@
   {% include 'tasks/partials/weight_badge.html' with weight=task.weight %}
   <button
     type="button"
-    @click="$dispatch('edit-task', { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }} })"
+    onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }} } }))"
     class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
     aria-label="Edit task"
   >
