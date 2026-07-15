@@ -1,6 +1,6 @@
-# Daychron
+# Wupnext
 
-A focused task queue app built with Django. Add tasks to your daily queue, work through them one at a time with timer, and track your progress throughout the day.
+A focused task list built with Django. Add tasks whenever you want, work through them, and check them off — pending and completed tasks always live on the same page, no daily reset.
 
 ## Development
 
