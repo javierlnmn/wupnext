@@ -4,7 +4,7 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   </div>
-  <span class="flex-1 min-w-0 text-[15px] text-slate-400 dark:text-slate-500 line-through truncate">{{ task.name }}</span>
+  <span class="flex-1 min-w-0 text-[15px] text-emerald-800/40 dark:text-emerald-200/40 line-through truncate">{{ task.name }}</span>
   {% include 'tasks/partials/weight_badge.html' with weight=task.weight muted=True %}
   <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.completed_at|date:"M j" }}</span>
   <button
