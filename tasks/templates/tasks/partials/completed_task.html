@@ -1,26 +1,41 @@
-<div class="flex items-center gap-3 py-3">
-  <div class="w-5 h-5 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shrink-0">
-    <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
+<div class="py-3">
+  <div class="flex items-center gap-3">
+    <div class="w-5 h-5 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shrink-0">
+      <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <span class="flex-1 min-w-0 text-[15px] text-emerald-800/40 dark:text-emerald-200/40 line-through truncate">{{ task.name }}</span>
+    {% if task.subtask_count %}
+    <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-emerald-400/70 bg-emerald-100/70 dark:bg-emerald-500/10 rounded-full px-2 py-0.5">
+      {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+    </span>
+    {% endif %}
+    {% include 'tasks/partials/weight_badge.html' with weight=task.weight muted=True %}
+    <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.completed_at|date:"M j" }}</span>
+    <button
+      type="button"
+      hx-delete="{% url 'tasks:task-detail' task.id %}"
+      hx-target="#queue-content"
+      hx-swap="innerHTML"
+      class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+      aria-label="Delete task"
+    >
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 11v6" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l1 14h10l1-14" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
+      </svg>
+    </button>
   </div>
-  <span class="flex-1 min-w-0 text-[15px] text-emerald-800/40 dark:text-emerald-200/40 line-through truncate">{{ task.name }}</span>
-  {% include 'tasks/partials/weight_badge.html' with weight=task.weight muted=True %}
-  <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.completed_at|date:"M j" }}</span>
-  <button
-    type="button"
-    hx-delete="{% url 'tasks:task-detail' task.id %}"
-    hx-target="#queue-content"
-    hx-swap="innerHTML"
-    class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
-    aria-label="Delete task"
-  >
-    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M14 11v6" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l1 14h10l1-14" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
-    </svg>
-  </button>
+
+  {% if task.subtask_count %}
+  <div class="mt-1.5 ml-7 pl-3.5 flex flex-col border-l border-emerald-200/70 dark:border-emerald-800/50">
+    {% for subtask in task.subtasks.all %}
+      {% include 'tasks/partials/subtask.html' with task=subtask %}
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>

@@ -18,11 +18,10 @@ def _parse_weight(value):
 
 def _tasks_context(user):
     tasks = Task.objects.filter(user=user)
-    pending = tasks.filter(completed_at__isnull=True)
-    completed = tasks.filter(completed_at__isnull=False)
+    top_level = tasks.filter(parent__isnull=True).prefetch_related("subtasks")
     return {
-        "pending_tasks": pending,
-        "completed_tasks": completed,
+        "pending_tasks": top_level.filter(completed_at__isnull=True),
+        "completed_tasks": top_level.filter(completed_at__isnull=False),
         "total_tasks": tasks.count(),
     }
 
@@ -48,7 +47,15 @@ class TaskView(LoginRequiredMixin, View):
                     name=name, weight=weight
                 )
             else:
-                Task.objects.create(user=request.user, name=name, weight=weight)
+                parent = None
+                parent_id = request.POST.get("parent_id")
+                if parent_id:
+                    parent = Task.objects.filter(
+                        id=parent_id, user=request.user, parent__isnull=True
+                    ).first()
+                Task.objects.create(
+                    user=request.user, name=name, weight=weight, parent=parent
+                )
 
         context = _tasks_context(request.user)
         return render(request, "tasks/partials/queue_response.html", context)

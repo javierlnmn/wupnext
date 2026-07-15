@@ -32,14 +32,15 @@
   </div>
 
   <div
-    x-data="{ open: false, taskId: null, name: '', weight: 0, hover: 0 }"
+    x-data="{ open: false, taskId: null, parentId: null, name: '', weight: 0, hover: 0 }"
     @keydown.escape.window="open = false"
-    @task-added="open = false; taskId = null; name = ''; weight = 0; hover = 0"
-    @edit-task.window="open = true; taskId = $event.detail.id; name = $event.detail.name; weight = $event.detail.weight"
+    @task-added="open = false; taskId = null; parentId = null; name = ''; weight = 0; hover = 0"
+    @edit-task.window="open = true; taskId = $event.detail.id; parentId = null; name = $event.detail.name; weight = $event.detail.weight"
+    @add-subtask.window="open = true; taskId = null; parentId = $event.detail.parentId; name = ''; weight = 0; hover = 0"
   >
     <button
       type="button"
-      @click="open = true; taskId = null; name = ''; weight = 0; hover = 0"
+      @click="open = true; taskId = null; parentId = null; name = ''; weight = 0; hover = 0"
       class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white shadow-lg shadow-clay-600/30 transition-all flex items-center justify-center"
       aria-label="Add task"
     >
@@ -68,7 +69,7 @@
       class="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col"
     >
       <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white" x-text="taskId ? 'Edit task' : 'New task'"></h2>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white" x-text="taskId ? 'Edit task' : (parentId ? 'New subtask' : 'New task')"></h2>
         <button
           type="button"
           @click="open = false"
@@ -89,6 +90,7 @@
         class="flex-1 flex flex-col px-6 py-6 gap-6"
       >
         <input type="hidden" name="task_id" :value="taskId">
+        <input type="hidden" name="parent_id" :value="parentId">
 
         <div>
           <label for="task-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
@@ -103,7 +105,7 @@
           />
         </div>
 
-        <div>
+        <div x-show="!parentId">
           <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Weight</label>
           <div class="flex items-center gap-1.5" @mouseleave="hover = 0">
             <template x-for="i in 5" :key="i">
@@ -135,7 +137,7 @@
         <button
           type="submit"
           class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
-          x-text="taskId ? 'Save changes' : 'Add task'"
+          x-text="taskId ? 'Save changes' : (parentId ? 'Add subtask' : 'Add task')"
         ></button>
       </form>
     </div>
