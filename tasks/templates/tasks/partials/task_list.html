@@ -1,21 +1,21 @@
 {% if not pending_tasks and not completed_tasks %}
 
 <div class="flex flex-col items-center justify-center flex-1 text-center">
-  <p class="text-2xl font-semibold text-stone-400 dark:text-stone-600">Nothing on your plate.</p>
-  <p class="text-sm text-stone-400 dark:text-stone-600 mt-2">Add a task below to get going.</p>
+  <p class="text-2xl font-semibold text-slate-400 dark:text-slate-600">Nothing on your plate.</p>
+  <p class="text-sm text-slate-400 dark:text-slate-600 mt-2">Add a task below to get going.</p>
 </div>
 
 {% else %}
 
 <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-  <div class="min-h-0 overflow-y-auto rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800/60 shadow-lg shadow-stone-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
-    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-stone-400 dark:text-stone-600 uppercase mb-3">
-      <span class="w-1.5 h-1.5 rounded-full bg-clay-500"></span>
+  <div class="min-h-0 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/60 shadow-lg shadow-slate-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
+    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-slate-400 dark:text-slate-600 uppercase mb-3">
+      <span class="w-1.5 h-1.5 rounded-full bg-olive-500"></span>
       Pending &middot; {{ pending_tasks|length }}
     </h2>
     {% if pending_tasks %}
-    <div class="flex flex-col divide-y divide-stone-200 dark:divide-stone-800/60">
+    <div class="flex flex-col divide-y divide-slate-200 dark:divide-slate-800/60">
       {% for task in pending_tasks %}
         {% include 'tasks/partials/pending_task.html' %}
       {% endfor %}
@@ -23,13 +23,13 @@
     {% endif %}
   </div>
 
-  <div class="min-h-0 overflow-y-auto rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800/60 shadow-lg shadow-stone-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
-    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-stone-400 dark:text-stone-600 uppercase mb-3">
+  <div class="min-h-0 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/60 shadow-lg shadow-slate-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
+    <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-slate-400 dark:text-slate-600 uppercase mb-3">
       <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
       Completed &middot; {{ completed_tasks|length }}
     </h2>
     {% if completed_tasks %}
-    <div class="flex flex-col divide-y divide-stone-200 dark:divide-stone-800/60">
+    <div class="flex flex-col divide-y divide-slate-200 dark:divide-slate-800/60">
       {% for task in completed_tasks %}
         {% include 'tasks/partials/completed_task.html' %}
       {% endfor %}
