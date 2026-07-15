@@ -5,6 +5,7 @@
     </svg>
   </div>
   <span class="flex-1 min-w-0 text-[15px] text-stone-400 dark:text-stone-500 line-through truncate">{{ task.name }}</span>
+  {% include 'tasks/partials/weight_badge.html' with weight=task.weight muted=True %}
   <span class="shrink-0 text-xs text-stone-400 dark:text-stone-600">{{ task.completed_at|date:"M j" }}</span>
   <button
     type="button"
