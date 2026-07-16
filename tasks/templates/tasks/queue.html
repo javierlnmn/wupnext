@@ -1,46 +1,51 @@
 {% extends 'common/_main.html' %}
 
 {% block content %}
-<main class="h-svh flex flex-col items-center relative">
-  <div class="w-full max-w-6xl px-6 py-8 flex-1 flex flex-col min-h-0">
-    <div class="flex items-start justify-between mb-8">
-      <div>
-        <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          wup<span class="text-clay-500">next.</span>
-        </h1>
-        <p id="queue-stats" class="text-[13px] text-slate-500 mt-1">
-          {% include 'tasks/partials/tasks_summary.html' %}
-        </p>
-      </div>
-      <form
-        method="POST"
-        action="{% url 'accounts:logout' %}"
-        aria-label="Logout"
-      >
+<main class="h-svh flex flex-col lg:flex-row overflow-hidden">
+  <aside class="flex flex-col shrink-0 lg:w-64 lg:h-svh border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/30">
+    <div class="flex items-center justify-between gap-2 px-4 lg:px-5 pt-5 pb-3">
+      <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        wup<span class="text-clay-500">next.</span>
+      </h1>
+      <form method="POST" action="{% url 'accounts:logout' %}" aria-label="Logout">
         {% csrf_token %}
-        <button type="submit" class="mt-1 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors grid place-items-center">
+        <button type="submit" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors grid place-items-center">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
           </svg>
         </button>
       </form>
     </div>
+    <nav id="group-nav" class="flex lg:flex-col gap-1.5 px-3 pb-4 lg:flex-1 overflow-x-auto lg:overflow-y-auto">
+      {% include 'tasks/partials/group_nav.html' %}
+    </nav>
+  </aside>
+
+  <section class="flex-1 flex flex-col min-h-0 w-full max-w-4xl mx-auto px-6 py-6 lg:py-8">
+    <div class="mb-6">
+      <h2 id="active-group-title" class="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        {% include 'tasks/partials/active_title.html' %}
+      </h2>
+      <p id="queue-stats" class="text-[13px] text-slate-500 dark:text-slate-500 mt-1">
+        {% include 'tasks/partials/tasks_summary.html' %}
+      </p>
+    </div>
 
     <div id="queue-content" class="flex-1 flex flex-col gap-6 min-h-0">
       {% include 'tasks/partials/task_list.html' %}
     </div>
-  </div>
+  </section>
 
   <div
-    x-data="{ open: false, taskId: null, parentId: null, name: '', weight: 0, hover: 0 }"
+    x-data="{ open: false, taskId: null, parentId: null, groupId: null, name: '', weight: 0, hover: 0 }"
     @keydown.escape.window="open = false"
-    @task-added="open = false; taskId = null; parentId = null; name = ''; weight = 0; hover = 0"
-    @edit-task.window="open = true; taskId = $event.detail.id; parentId = null; name = $event.detail.name; weight = $event.detail.weight"
-    @add-subtask.window="open = true; taskId = null; parentId = $event.detail.parentId; name = ''; weight = 0; hover = 0"
+    @task-added="open = false; taskId = null; parentId = null; groupId = null; name = ''; weight = 0; hover = 0"
+    @edit-task.window="open = true; taskId = $event.detail.id; parentId = null; groupId = $event.detail.group; name = $event.detail.name; weight = $event.detail.weight"
+    @add-subtask.window="open = true; taskId = null; parentId = $event.detail.parentId; groupId = null; name = ''; weight = 0; hover = 0"
   >
     <button
       type="button"
-      @click="open = true; taskId = null; parentId = null; name = ''; weight = 0; hover = 0"
+      @click="open = true; taskId = null; parentId = null; groupId = {% if active_group %}{{ active_group.id }}{% else %}null{% endif %}; name = ''; weight = 0; hover = 0"
       class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white shadow-lg shadow-clay-600/30 transition-all flex items-center justify-center"
       aria-label="Add task"
     >
@@ -87,10 +92,11 @@
         hx-target="#queue-content"
         hx-swap="innerHTML"
         hx-on::after-request="if(event.detail.successful){ this.dispatchEvent(new CustomEvent('task-added', { bubbles: true })) }"
-        class="flex-1 flex flex-col px-6 py-6 gap-6"
+        class="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto"
       >
         <input type="hidden" name="task_id" :value="taskId">
         <input type="hidden" name="parent_id" :value="parentId">
+        <input type="hidden" name="group_id" :value="groupId">
 
         <div>
           <label for="task-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
@@ -103,6 +109,13 @@
             placeholder="What do you need to do?"
             class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
           />
+        </div>
+
+        <div x-show="!parentId">
+          <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Group</label>
+          <div id="drawer-groups" class="flex flex-wrap gap-2">
+            {% include 'tasks/partials/drawer_groups.html' %}
+          </div>
         </div>
 
         <div x-show="!parentId">
@@ -142,5 +155,93 @@
       </form>
     </div>
   </div>
+
+  <div
+    x-data="{ groupOpen: false, gName: '', gColor: '{{ default_group_color }}' }"
+    @new-group.window="groupOpen = true; gName = ''; gColor = '{{ default_group_color }}'"
+    @group-created="groupOpen = false"
+    @keydown.escape.window="groupOpen = false"
+  >
+    <div
+      x-show="groupOpen"
+      x-cloak
+      @click="groupOpen = false"
+      x-transition.opacity
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
+    ></div>
+
+    <div
+      x-show="groupOpen"
+      x-cloak
+      x-transition
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+    >
+      <div
+        @click.stop
+        class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl pointer-events-auto"
+      >
+        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">New group</h2>
+          <button
+            type="button"
+            @click="groupOpen = false"
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            aria-label="Close"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form
+          hx-post="{% url 'tasks:group-create' %}"
+          hx-target="#queue-content"
+          hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('group-created', { bubbles: true })) }"
+          class="px-6 py-6 flex flex-col gap-6"
+        >
+          <div>
+            <label for="group-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
+            <input
+              required
+              type="text"
+              name="name"
+              id="group-name"
+              x-model="gName"
+              placeholder="Work, Personal, Errands…"
+              class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Color</label>
+            <div class="flex flex-wrap gap-2.5">
+              {% for color in group_palette %}
+              <button
+                type="button"
+                @click="gColor = '{{ color.hex }}'"
+                class="w-7 h-7 rounded-full transition-transform hover:scale-110"
+                :class="gColor === '{{ color.hex }}' ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-slate-400 dark:ring-slate-500' : ''"
+                style="background-color: {{ color.hex }}"
+                aria-label="{{ color.name }}"
+              ></button>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="color" :value="gColor">
+          </div>
+
+          <button
+            type="submit"
+            class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
+          >
+            Create group
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% include 'tasks/partials/delete_modal.html' %}
 </main>
 {% endblock %}

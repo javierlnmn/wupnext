@@ -1,0 +1,20 @@
+<button
+  type="button"
+  @click="groupId = null"
+  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors"
+  :class="groupId === null ? 'border-slate-400 dark:border-slate-500 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'"
+>
+  None
+</button>
+{% for group in groups %}
+<button
+  type="button"
+  @click="groupId = {{ group.id }}"
+  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors"
+  :class="groupId === {{ group.id }} ? 'border-transparent' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'"
+  :style="groupId === {{ group.id }} ? 'background-color: {{ group.color }}1a; color: {{ group.color }}; border-color: {{ group.color }}66' : ''"
+>
+  <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ group.color }}"></span>
+  {{ group.name }}
+</button>
+{% endfor %}

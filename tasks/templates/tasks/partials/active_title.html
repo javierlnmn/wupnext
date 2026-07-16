@@ -1,0 +1,6 @@
+{% if active_group %}
+<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ active_group.color }}"></span>
+<span>{{ active_group.name }}</span>
+{% else %}
+<span>All tasks</span>
+{% endif %}

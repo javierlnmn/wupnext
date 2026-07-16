@@ -12,6 +12,9 @@
         aria-label="Mark task complete"
       ></button>
     </form>
+    {% if not active_group and task.group %}
+    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
+    {% endif %}
     <span class="flex-1 min-w-0 text-[15px] text-slate-800 dark:text-slate-200 truncate">{{ task.name }}</span>
     {% if task.subtask_count %}
     <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-clay-700 dark:text-clay-400 bg-clay-100/70 dark:bg-clay-500/10 rounded-full px-2 py-0.5">
@@ -31,7 +34,7 @@
     </button>
     <button
       type="button"
-      onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }} } }))"
+      onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }}, group: {{ task.group_id|default:'null' }} } }))"
       class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
       aria-label="Edit task"
     >
@@ -41,9 +44,7 @@
     </button>
     <button
       type="button"
-      hx-delete="{% url 'tasks:task-detail' task.id %}"
-      hx-target="#queue-content"
-      hx-swap="innerHTML"
+      onclick="window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title: 'Delete task', name: '{{ task.name|escapejs }}', desc: '{% if task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', url: '{% url 'tasks:task-detail' task.id %}' } }))"
       class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
       aria-label="Delete task"
     >

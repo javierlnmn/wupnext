@@ -23,9 +23,7 @@
   {% endif %}
   <button
     type="button"
-    hx-delete="{% url 'tasks:task-detail' task.id %}"
-    hx-target="#queue-content"
-    hx-swap="innerHTML"
+    onclick="window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title: 'Delete subtask', name: '{{ task.name|escapejs }}', desc: 'This subtask will be permanently deleted.', url: '{% url 'tasks:task-detail' task.id %}' } }))"
     class="shrink-0 text-slate-300 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
     aria-label="Delete subtask"
   >
