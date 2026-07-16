@@ -32,13 +32,7 @@
     class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity"
     aria-label="Delete group"
   >
-    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M14 11v6" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l1 14h10l1-14" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V4h6v3" />
-    </svg>
+    {% include 'common/icons/trash.html' with class='w-4 h-4' %}
   </button>
 </div>
 {% endfor %}
@@ -48,8 +42,6 @@
   onclick="window.dispatchEvent(new CustomEvent('new-group'))"
   class="shrink-0 lg:w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-clay-600 dark:hover:text-clay-400 hover:border-clay-400 dark:hover:border-clay-600 transition-colors"
 >
-  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
+  {% include 'common/icons/plus.html' with class='w-4 h-4 shrink-0' stroke='1.8' %}
   <span>New group</span>
 </button>
