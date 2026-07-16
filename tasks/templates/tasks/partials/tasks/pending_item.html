@@ -1,46 +1,50 @@
-<div class="py-3">
-  <div class="flex items-center gap-3">
-    <form
-      class="flex shrink-0"
-      hx-post="{% url 'tasks:task-complete' task.id %}"
-      hx-target="#queue-content"
-      hx-swap="innerHTML"
-    >
+<div class="rounded-xl border border-clay-200/60 dark:border-clay-800/40 bg-white/50 dark:bg-slate-900/20 px-3 py-2.5">
+  <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+    <div class="flex items-center gap-3 min-w-0 lg:flex-1">
+      <form
+        class="flex shrink-0"
+        hx-post="{% url 'tasks:task-complete' task.id %}"
+        hx-target="#queue-content"
+        hx-swap="innerHTML"
+      >
+        <button
+          type="submit"
+          class="w-5 h-5 rounded-full border-2 border-clay-300 dark:border-clay-700 hover:border-clay-500 dark:hover:border-clay-500 hover:bg-clay-50 dark:hover:bg-clay-500/10 transition-colors shrink-0"
+          aria-label="Mark task complete"
+        ></button>
+      </form>
+      {% if not active_group and task.group %}
+      <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
+      {% endif %}
+      <span class="flex-1 min-w-0 text-[15px] text-slate-800 dark:text-slate-200 lg:truncate">{{ task.name }}</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0 pl-8 lg:pl-0">
+      {% if task.subtask_count %}
+      <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-clay-700 dark:text-clay-400 bg-clay-100/70 dark:bg-clay-500/10 rounded-full px-2 py-0.5">
+        {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+      </span>
+      {% endif %}
+      {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight %}
       <button
-        type="submit"
-        class="w-5 h-5 rounded-full border-2 border-clay-300 dark:border-clay-700 hover:border-clay-500 dark:hover:border-clay-500 hover:bg-clay-50 dark:hover:bg-clay-500/10 transition-colors shrink-0"
-        aria-label="Mark task complete"
-      ></button>
-    </form>
-    {% if not active_group and task.group %}
-    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
-    {% endif %}
-    <span class="flex-1 min-w-0 text-[15px] text-slate-800 dark:text-slate-200 truncate">{{ task.name }}</span>
-    {% if task.subtask_count %}
-    <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-clay-700 dark:text-clay-400 bg-clay-100/70 dark:bg-clay-500/10 rounded-full px-2 py-0.5">
-      {{ task.completed_subtask_count }}/{{ task.subtask_count }}
-    </span>
-    {% endif %}
-    {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight %}
-    <button
-      type="button"
-      onclick="window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId: {{ task.id }} } }))"
-      class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
-      aria-label="Add subtask"
-    >
-      {% include 'common/icons/plus.html' with class='w-5 h-5' stroke='1.5' %}
-    </button>
-    <button
-      type="button"
-      onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }}, group: {{ task.group_id|default:'null' }} } }))"
-      class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
-      aria-label="Edit task"
-    >
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
-      </svg>
-    </button>
-    {% include 'tasks/partials/tasks/delete_task_button.html' %}
+        type="button"
+        onclick="window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId: {{ task.id }} } }))"
+        class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
+        aria-label="Add subtask"
+      >
+        {% include 'common/icons/plus.html' with class='w-5 h-5' stroke='1.5' %}
+      </button>
+      <button
+        type="button"
+        onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }}, group: {{ task.group_id|default:'null' }} } }))"
+        class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
+        aria-label="Edit task"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+        </svg>
+      </button>
+      {% include 'tasks/partials/tasks/delete_task_button.html' %}
+    </div>
   </div>
 
   {% if task.subtask_count %}

@@ -5,7 +5,7 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   </div>
-  <span class="flex-1 min-w-0 text-[13px] text-slate-400 dark:text-slate-600 line-through truncate">{{ task.name }}</span>
+  <span class="flex-1 min-w-0 text-[13px] text-slate-400 dark:text-slate-600 line-through lg:truncate">{{ task.name }}</span>
   {% else %}
   <form
     class="flex shrink-0"
@@ -19,7 +19,7 @@
       aria-label="Mark subtask complete"
     ></button>
   </form>
-  <span class="flex-1 min-w-0 text-[13px] text-slate-600 dark:text-slate-300 truncate">{{ task.name }}</span>
+  <span class="flex-1 min-w-0 text-[13px] text-slate-600 dark:text-slate-300 lg:truncate">{{ task.name }}</span>
   {% endif %}
   {% include 'tasks/partials/tasks/delete_task_button.html' with size='w-4 h-4' %}
 </div>

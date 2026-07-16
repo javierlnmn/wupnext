@@ -8,6 +8,7 @@
         wup<span class="text-clay-500">next.</span>
       </h1>
       <div class="flex items-center gap-1">
+        {% include 'common/theme_toggle.html' with class='text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors grid place-items-center w-6 h-6' %}
         <button
           type="button"
           onclick="window.dispatchEvent(new CustomEvent('open-preferences'))"
