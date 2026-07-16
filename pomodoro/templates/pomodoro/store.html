@@ -1,0 +1,161 @@
+{{ pomodoro_settings|json_script:"pomodoro-settings" }}
+<script>
+  document.addEventListener('alpine:init', () => {
+    const KEY = 'wupnext.pomodoro'
+    const LABELS = { focus: 'Focus', short: 'Short break', long: 'Long break' }
+
+    Alpine.store('pomodoro', {
+      settings: {},
+      phase: 'focus',
+      running: false,
+      endsAt: null,
+      remaining: 0,
+      completed: 0,
+      _tick: null,
+      _audio: null,
+      _baseTitle: document.title,
+
+      init() {
+        let server = null
+        const el = document.getElementById('pomodoro-settings')
+        if (el) { try { server = JSON.parse(el.textContent) } catch (e) {} }
+        this.settings = server || {}
+        const saved = JSON.parse(localStorage.getItem(KEY) || 'null')
+        if (!saved) {
+          this.remaining = this.phaseSeconds()
+          return
+        }
+        this.phase = saved.phase || 'focus'
+        this.completed = saved.completed || 0
+        if (saved.running && saved.endsAt) {
+          this.running = true
+          this.endsAt = saved.endsAt
+          this.remaining = Math.max(0, Math.round((saved.endsAt - Date.now()) / 1000))
+          if (this.remaining <= 0) this._complete()
+          else this._loop()
+        } else {
+          this.running = false
+          this.remaining = saved.remaining ?? this.phaseSeconds()
+        }
+      },
+
+      get label() { return LABELS[this.phase] },
+      get onBreak() { return this.running && this.phase !== 'focus' },
+      get display() {
+        const s = Math.max(0, this.remaining)
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
+      },
+
+      phaseSeconds() {
+        const m = this.phase === 'focus' ? this.settings.focus
+                : this.phase === 'short' ? this.settings.short : this.settings.long
+        return Math.round(m * 60)
+      },
+
+      toggle() { this.running ? this.pause() : this.start() },
+
+      start() {
+        this.running = true
+        this.endsAt = Date.now() + this.remaining * 1000
+        this._loop()
+        this._save()
+      },
+
+      pause() {
+        if (this.endsAt) this.remaining = Math.max(0, Math.round((this.endsAt - Date.now()) / 1000))
+        this.running = false
+        this.endsAt = null
+        this._stopLoop()
+        this._restoreTitle()
+        this._save()
+      },
+
+      reset() {
+        this._stopLoop()
+        this.running = false
+        this.endsAt = null
+        this.remaining = this.phaseSeconds()
+        this._restoreTitle()
+        this._save()
+      },
+
+      skip() {
+        const wasRunning = this.running
+        this._advance(false)
+        if (wasRunning) this.start()
+        else { this._restoreTitle(); this._save() }
+      },
+
+      setSettings(next) {
+        const s = { ...this.settings }
+        for (const k of ['focus', 'short', 'long']) {
+          let v = parseInt(next[k], 10)
+          if (!isNaN(v)) s[k] = Math.min(Math.max(v, 1), 180)
+        }
+        let e = parseInt(next.every, 10)
+        if (!isNaN(e)) s.every = Math.min(Math.max(e, 1), 12)
+        this.settings = s
+        if (!this.running) this.remaining = this.phaseSeconds()
+        this._save()
+      },
+
+      _advance(autostart) {
+        if (this.phase === 'focus') {
+          this.completed += 1
+          this.phase = (this.completed % this.settings.every === 0) ? 'long' : 'short'
+        } else {
+          if (this.phase === 'long') this.completed = 0
+          this.phase = 'focus'
+        }
+        this.remaining = this.phaseSeconds()
+        this.running = autostart
+        this.endsAt = autostart ? Date.now() + this.remaining * 1000 : null
+      },
+
+      _complete() {
+        this._chime()
+        this._advance(true)
+        this._loop()
+        this._save()
+      },
+
+      _loop() {
+        this._stopLoop()
+        this._tick = setInterval(() => {
+          this.remaining = Math.max(0, Math.round((this.endsAt - Date.now()) / 1000))
+          this._updateTitle()
+          if (this.remaining <= 0) this._complete()
+        }, 1000)
+      },
+
+      _stopLoop() { if (this._tick) { clearInterval(this._tick); this._tick = null } },
+
+      _updateTitle() { document.title = this.display + ' · ' + this.label },
+      _restoreTitle() { document.title = this._baseTitle },
+
+      _save() {
+        localStorage.setItem(KEY, JSON.stringify({
+          phase: this.phase, running: this.running,
+          endsAt: this.endsAt, remaining: this.remaining, completed: this.completed,
+        }))
+      },
+
+      _chime() {
+        try {
+          if (!this._audio) this._audio = new (window.AudioContext || window.webkitAudioContext)()
+          const ctx = this._audio
+          if (ctx.state === 'suspended') ctx.resume()
+          const o = ctx.createOscillator(), g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'sine'
+          o.frequency.value = 880
+          g.gain.setValueAtTime(0.0001, ctx.currentTime)
+          g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02)
+          g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5)
+          o.start()
+          o.stop(ctx.currentTime + 0.5)
+        } catch (e) {}
+      },
+    })
+  })
+</script>

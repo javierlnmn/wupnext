@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "common",
     "accounts",
     "tasks",
+    "pomodoro",
 ]
 
 MIDDLEWARE = [
@@ -83,6 +84,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "common.context_processors.settings",
+                "pomodoro.context_processors.pomodoro",
             ],
         },
     },

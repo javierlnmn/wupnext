@@ -1,0 +1,63 @@
+<section>
+  <div class="flex items-center gap-2 mb-4">
+    <div class="w-8 h-8 rounded-lg bg-clay-500/10 flex items-center justify-center shrink-0">
+      <svg class="w-4 h-4 text-clay-600 dark:text-clay-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="13" r="8" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4l2.5 2.5M9 2h6" />
+      </svg>
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white">Pomodoro</h3>
+      <p class="text-[12px] text-slate-500 dark:text-slate-400">Focus and break lengths, in minutes.</p>
+    </div>
+  </div>
+
+  <form
+    hx-post="{% url 'accounts:pomodoro-settings' %}"
+    hx-swap="none"
+    hx-on::after-request="
+      if (event.detail.successful) {
+        const d = new FormData(this);
+        Alpine.store('pomodoro').setSettings({ focus: d.get('focus'), short: d.get('short'), long: d.get('long'), every: d.get('every') });
+        this.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }));
+      }
+    "
+    class="space-y-3"
+  >
+    <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <span>Focus</span>
+      <span class="flex items-center gap-1.5">
+        <input type="number" name="focus" min="1" max="180" value="{{ pomodoro_settings.focus }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <span class="text-xs text-slate-400">min</span>
+      </span>
+    </label>
+    <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <span>Short break</span>
+      <span class="flex items-center gap-1.5">
+        <input type="number" name="short" min="1" max="180" value="{{ pomodoro_settings.short }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <span class="text-xs text-slate-400">min</span>
+      </span>
+    </label>
+    <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <span>Long break</span>
+      <span class="flex items-center gap-1.5">
+        <input type="number" name="long" min="1" max="180" value="{{ pomodoro_settings.long }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <span class="text-xs text-slate-400">min</span>
+      </span>
+    </label>
+    <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <span>Long break every</span>
+      <span class="flex items-center gap-1.5">
+        <input type="number" name="every" min="1" max="12" value="{{ pomodoro_settings.every }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <span class="text-xs text-slate-400">🍅</span>
+      </span>
+    </label>
+
+    <button
+      type="submit"
+      class="w-full h-9 mt-4 bg-clay-500 hover:bg-clay-600 text-white text-sm font-semibold rounded-lg transition-colors"
+    >
+      Save
+    </button>
+  </form>
+</section>

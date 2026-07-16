@@ -1,0 +1,41 @@
+<div
+  x-data="{}"
+  class="relative flex items-center gap-3 shrink-0 rounded-xl px-2 py-1 border border-transparent transition-colors"
+  :class="$store.pomodoro.onBreak ? 'bg-white/60 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800' : ''"
+>
+  <div class="text-right leading-tight">
+    <div
+      class="text-[10px] font-semibold uppercase tracking-wider"
+      :class="$store.pomodoro.phase === 'focus' ? 'text-clay-600 dark:text-clay-400' : 'text-emerald-600 dark:text-emerald-400'"
+      x-text="$store.pomodoro.label"
+    ></div>
+    <div class="text-2xl font-extrabold tabular-nums text-slate-900 dark:text-white -mt-0.5" x-text="$store.pomodoro.display"></div>
+  </div>
+
+  <div class="flex items-center gap-1">
+    <button
+      @click="$store.pomodoro.toggle()"
+      class="w-8 h-8 grid place-items-center rounded-lg bg-clay-500 hover:bg-clay-600 text-white transition-colors"
+      :aria-label="$store.pomodoro.running ? 'Pause timer' : 'Start timer'"
+    >
+      <svg x-show="!$store.pomodoro.running" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+      <svg x-show="$store.pomodoro.running" x-cloak class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+    </button>
+    <button
+      @click="$store.pomodoro.reset()"
+      class="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      aria-label="Reset timer"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M5 9a7 7 0 0111-3.5M19 15a7 7 0 01-11 3.5" />
+      </svg>
+    </button>
+    <button
+      @click="$store.pomodoro.skip()"
+      class="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      aria-label="Skip to next phase"
+    >
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5l8 7-8 7zM16 5h2v14h-2z" /></svg>
+    </button>
+  </div>
+</div>
