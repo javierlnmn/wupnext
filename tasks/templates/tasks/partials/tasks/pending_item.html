@@ -21,7 +21,7 @@
       {{ task.completed_subtask_count }}/{{ task.subtask_count }}
     </span>
     {% endif %}
-    {% include 'tasks/partials/weight_badge.html' with weight=task.weight %}
+    {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight %}
     <button
       type="button"
       onclick="window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId: {{ task.id }} } }))"
@@ -61,7 +61,7 @@
   {% if task.subtask_count %}
   <div class="mt-1.5 ml-7 pl-3.5 flex flex-col border-l border-clay-200/70 dark:border-clay-800/50">
     {% for subtask in task.subtasks.all %}
-      {% include 'tasks/partials/subtask.html' with task=subtask %}
+      {% include 'tasks/partials/tasks/subtask_item.html' with task=subtask %}
     {% endfor %}
   </div>
   {% endif %}

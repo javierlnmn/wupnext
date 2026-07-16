@@ -1,0 +1,15 @@
+{% if not pending_tasks and not completed_tasks %}
+
+<div class="flex flex-col items-center justify-center flex-1 text-center">
+  <p class="text-2xl font-semibold text-slate-400 dark:text-slate-600">Nothing on your plate.</p>
+  <p class="text-sm text-slate-400 dark:text-slate-600 mt-2">Add a task below to get going.</p>
+</div>
+
+{% else %}
+
+<div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4">
+  {% include 'tasks/partials/tasks/pending_column.html' %}
+  {% include 'tasks/partials/tasks/completed_column.html' %}
+</div>
+
+{% endif %}

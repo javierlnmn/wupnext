@@ -1,9 +1,0 @@
-{% include 'tasks/partials/task_list.html' %}
-
-<p id="queue-stats" hx-swap-oob="true" class="text-[13px] text-slate-500 dark:text-slate-500 mt-1">
-  {% include 'tasks/partials/tasks_summary.html' %}
-</p>
-
-<div hx-swap-oob="innerHTML:#group-nav">{% include 'tasks/partials/group_nav.html' %}</div>
-<div hx-swap-oob="innerHTML:#active-group-title">{% include 'tasks/partials/active_title.html' %}</div>
-<div hx-swap-oob="innerHTML:#drawer-groups">{% include 'tasks/partials/drawer_groups.html' %}</div>

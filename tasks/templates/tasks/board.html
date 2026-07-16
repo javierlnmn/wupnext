@@ -1,0 +1,43 @@
+{% extends 'common/_main.html' %}
+
+{% block content %}
+<main class="h-svh flex flex-col lg:flex-row overflow-hidden">
+  <aside class="flex flex-col shrink-0 lg:w-64 lg:h-svh border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/30">
+    <div class="flex items-center justify-between gap-2 px-4 lg:px-5 pt-5 pb-3">
+      <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        wup<span class="text-clay-500">next.</span>
+      </h1>
+      <form method="POST" action="{% url 'accounts:logout' %}" aria-label="Logout">
+        {% csrf_token %}
+        <button type="submit" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors grid place-items-center">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+    <nav id="group-nav" class="flex lg:flex-col gap-1.5 px-3 pb-4 lg:flex-1 overflow-x-auto lg:overflow-y-auto">
+      {% include 'tasks/partials/groups/nav.html' %}
+    </nav>
+  </aside>
+
+  <section class="flex-1 flex flex-col min-h-0 w-full max-w-4xl mx-auto px-6 py-6 lg:py-8">
+    <div class="mb-6">
+      <h2 id="active-group-title" class="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        {% include 'tasks/partials/groups/title.html' %}
+      </h2>
+      <p id="queue-stats" class="text-[13px] text-slate-500 dark:text-slate-500 mt-1">
+        {% include 'tasks/partials/tasks/summary.html' %}
+      </p>
+    </div>
+
+    <div id="queue-content" class="flex-1 flex flex-col gap-6 min-h-0">
+      {% include 'tasks/partials/tasks/list.html' %}
+    </div>
+  </section>
+
+  {% include 'tasks/partials/tasks/form.html' %}
+  {% include 'tasks/partials/groups/form.html' %}
+  {% include 'tasks/partials/shared/delete_modal.html' %}
+</main>
+{% endblock %}

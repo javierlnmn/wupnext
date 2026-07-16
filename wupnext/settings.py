@@ -183,7 +183,7 @@ JET_THEMES = [
 ]
 
 # Accounts redirect urls
-LOGIN_REDIRECT_URL = "tasks:queue"
+LOGIN_REDIRECT_URL = "tasks:board"
 LOGIN_URL = "accounts:login"
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGOUT_URL = "accounts:logout"

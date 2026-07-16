@@ -1,0 +1,13 @@
+<div class="min-h-0 overflow-y-auto rounded-2xl bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-200/70 dark:border-emerald-800/40 shadow-lg shadow-emerald-900/5 dark:shadow-black/20 px-5 pt-4 pb-3">
+  <h2 class="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.15em] text-emerald-700 dark:text-emerald-400 uppercase mb-3">
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+    Completed &middot; {{ completed_tasks|length }}
+  </h2>
+  {% if completed_tasks %}
+  <div class="flex flex-col divide-y divide-emerald-200/60 dark:divide-emerald-800/40">
+    {% for task in completed_tasks %}
+      {% include 'tasks/partials/tasks/completed_item.html' %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

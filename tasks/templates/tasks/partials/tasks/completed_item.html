@@ -14,7 +14,7 @@
       {{ task.completed_subtask_count }}/{{ task.subtask_count }}
     </span>
     {% endif %}
-    {% include 'tasks/partials/weight_badge.html' with weight=task.weight muted=True %}
+    {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight muted=True %}
     <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.completed_at|date:"M j" }}</span>
     <button
       type="button"
@@ -35,7 +35,7 @@
   {% if task.subtask_count %}
   <div class="mt-1.5 ml-7 pl-3.5 flex flex-col border-l border-emerald-200/70 dark:border-emerald-800/50">
     {% for subtask in task.subtasks.all %}
-      {% include 'tasks/partials/subtask.html' with task=subtask %}
+      {% include 'tasks/partials/tasks/subtask_item.html' with task=subtask %}
     {% endfor %}
   </div>
   {% endif %}
