@@ -1,85 +1,68 @@
+{% load ui %}
 <div
   x-data="{ groupOpen: false, gName: '', gColor: '{{ default_group_color }}' }"
   @new-group.window="groupOpen = true; gName = ''; gColor = '{{ default_group_color }}'"
   @group-created="groupOpen = false"
   @keydown.escape.window="groupOpen = false"
 >
-  <div
-    x-show="groupOpen"
-    x-cloak
-    @click="groupOpen = false"
-    x-transition.opacity
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
-  ></div>
+  {% modal openStateKey="groupOpen" %}
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white">New group</h2>
+      <button
+        type="button"
+        @click="groupOpen = false"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+        aria-label="Close"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
 
-  <div
-    x-show="groupOpen"
-    x-cloak
-    x-transition
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
-  >
-    <div
-      @click.stop
-      class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl pointer-events-auto"
+    <form
+      hx-post="{% url 'tasks:group-create' %}"
+      hx-target="#queue-content"
+      hx-swap="innerHTML"
+      hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('group-created', { bubbles: true })) }"
+      class="px-6 py-6 flex flex-col gap-6"
     >
-      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">New group</h2>
-        <button
-          type="button"
-          @click="groupOpen = false"
-          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-          aria-label="Close"
-        >
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      <div>
+        <label for="group-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
+        <input
+          required
+          type="text"
+          name="name"
+          id="group-name"
+          x-model="gName"
+          placeholder="Work, Personal, Errands…"
+          class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
+        />
       </div>
 
-      <form
-        hx-post="{% url 'tasks:group-create' %}"
-        hx-target="#queue-content"
-        hx-swap="innerHTML"
-        hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('group-created', { bubbles: true })) }"
-        class="px-6 py-6 flex flex-col gap-6"
+      <div>
+        <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Color</label>
+        <div class="flex flex-wrap gap-2.5">
+          {% for color in group_palette %}
+          <button
+            type="button"
+            @click="gColor = '{{ color.hex }}'"
+            class="w-7 h-7 rounded-full transition-transform hover:scale-110"
+            :class="gColor === '{{ color.hex }}' ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-slate-400 dark:ring-slate-500' : ''"
+            style="background-color: {{ color.hex }}"
+            aria-label="{{ color.name }}"
+          ></button>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="color" :value="gColor">
+      </div>
+
+      <button
+        type="submit"
+        class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
       >
-        <div>
-          <label for="group-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
-          <input
-            required
-            type="text"
-            name="name"
-            id="group-name"
-            x-model="gName"
-            placeholder="Work, Personal, Errands…"
-            class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Color</label>
-          <div class="flex flex-wrap gap-2.5">
-            {% for color in group_palette %}
-            <button
-              type="button"
-              @click="gColor = '{{ color.hex }}'"
-              class="w-7 h-7 rounded-full transition-transform hover:scale-110"
-              :class="gColor === '{{ color.hex }}' ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-slate-400 dark:ring-slate-500' : ''"
-              style="background-color: {{ color.hex }}"
-              aria-label="{{ color.name }}"
-            ></button>
-            {% endfor %}
-          </div>
-          <input type="hidden" name="color" :value="gColor">
-        </div>
-
-        <button
-          type="submit"
-          class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
-        >
-          Create group
-        </button>
-      </form>
-    </div>
-  </div>
+        Create group
+      </button>
+    </form>
+  {% endmodal %}
 </div>
