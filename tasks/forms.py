@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import DEFAULT_GROUP_COLOR, GROUP_COLOR_VALUES, Group, Task
+from .models import (
+    DEFAULT_GROUP_COLOR,
+    GROUP_COLOR_VALUES,
+    MAX_TASK_WEIGHT,
+    Group,
+    Task,
+)
 
 
 class TaskForm(forms.Form):
@@ -22,7 +28,7 @@ class TaskForm(forms.Form):
 
     def clean_weight(self):
         weight = self.cleaned_data.get("weight") or 0
-        return min(max(weight, 0), 5)
+        return min(max(weight, 0), MAX_TASK_WEIGHT)
 
     def clean(self):
         cleaned = super().clean()

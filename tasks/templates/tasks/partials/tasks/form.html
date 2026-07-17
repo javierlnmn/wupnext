@@ -87,7 +87,7 @@
       <div x-show="!parentId">
         <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Weight</label>
         <div class="flex items-center gap-1.5" @mouseleave="hover = 0">
-          <template x-for="i in 5" :key="i">
+          <template x-for="i in {{ max_task_weight }}" :key="i">
             <button
               type="button"
               @click="weight = (weight === i ? 0 : i)"

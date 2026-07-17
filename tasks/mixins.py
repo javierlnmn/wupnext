@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import render
 
-from .models import DEFAULT_GROUP_COLOR, GROUP_COLORS, Group, Task
+from .models import DEFAULT_GROUP_COLOR, GROUP_COLORS, MAX_TASK_WEIGHT, Group, Task
 
 
 class BoardMixin(LoginRequiredMixin):
@@ -51,6 +51,7 @@ class BoardMixin(LoginRequiredMixin):
         return {
             **self._task_context(active_group),
             **self._group_context(active_group),
+            "max_task_weight": MAX_TASK_WEIGHT,
         }
 
     def board_response(self):

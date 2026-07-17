@@ -15,6 +15,8 @@ GROUP_COLORS = [
 DEFAULT_GROUP_COLOR = GROUP_COLORS[0]["hex"]
 GROUP_COLOR_VALUES = {color["hex"] for color in GROUP_COLORS}
 
+MAX_TASK_WEIGHT = 5
+
 
 class Group(models.Model):
     user = models.ForeignKey(
@@ -43,7 +45,7 @@ class Task(models.Model):
     name = models.CharField(max_length=255)
     weight = models.PositiveSmallIntegerField(
         default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        validators=[MinValueValidator(0), MaxValueValidator(MAX_TASK_WEIGHT)],
     )
     group = models.ForeignKey(
         Group,
