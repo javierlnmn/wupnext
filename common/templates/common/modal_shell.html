@@ -14,7 +14,8 @@
 >
   <div
     @click.stop
-    class="w-full {{ width }} bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl pointer-events-auto"
+    class="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl pointer-events-auto"
+    style="max-width: {{ width }}"
   >
     {{ content }}
   </div>

@@ -5,7 +5,7 @@
   @group-created="groupOpen = false"
   @keydown.escape.window="groupOpen = false"
 >
-  {% modal openStateKey="groupOpen" %}
+  {% drawer openStateKey="groupOpen" %}
     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
       <h2 class="text-lg font-bold text-slate-900 dark:text-white">New group</h2>
       <button
@@ -25,7 +25,7 @@
       hx-target="#queue-content"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('group-created', { bubbles: true })) }"
-      class="px-6 py-6 flex flex-col gap-6"
+      class="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto"
     >
       <div>
         <label for="group-name" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Name</label>
@@ -57,6 +57,8 @@
         <input type="hidden" name="color" :value="gColor">
       </div>
 
+      <div class="flex-1"></div>
+
       <button
         type="submit"
         class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
@@ -64,5 +66,5 @@
         Create group
       </button>
     </form>
-  {% endmodal %}
+  {% enddrawer %}
 </div>

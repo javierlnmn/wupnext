@@ -1,35 +1,20 @@
 from django import template
 from django.template.loader import render_to_string
-from django.utils.safestring import mark_safe
 
 register = template.Library()
 
 
-@register.tag("modal")
-def do_modal(parser, token):
-    kwargs = {}
-    for bit in token.split_contents()[1:]:
-        if "=" not in bit:
-            raise template.TemplateSyntaxError("modal arguments must be key=value")
-        name, value = bit.split("=", 1)
-        kwargs[name] = parser.compile_filter(value)
-    nodelist = parser.parse(("endmodal",))
-    parser.delete_first_token()
-    return ModalNode(nodelist, kwargs)
+@register.simple_block_tag
+def modal(content, openStateKey, width="24rem"):
+    return render_to_string(
+        "common/modal_shell.html",
+        {"content": content, "openStateKey": openStateKey, "width": width},
+    )
 
 
-class ModalNode(template.Node):
-    def __init__(self, nodelist, kwargs):
-        self.nodelist = nodelist
-        self.kwargs = kwargs
-
-    def render(self, context):
-        values = {name: expr.resolve(context) for name, expr in self.kwargs.items()}
-        return render_to_string(
-            "common/modal_shell.html",
-            {
-                "content": mark_safe(self.nodelist.render(context)),
-                "openStateKey": values["openStateKey"],
-                "width": values.get("width", "max-w-sm"),
-            },
-        )
+@register.simple_block_tag
+def drawer(content, openStateKey, width="24rem"):
+    return render_to_string(
+        "common/drawer_shell.html",
+        {"content": content, "openStateKey": openStateKey, "width": width},
+    )
