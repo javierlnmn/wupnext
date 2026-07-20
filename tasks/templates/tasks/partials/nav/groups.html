@@ -3,14 +3,13 @@
   <a
     href="{% url 'tasks:board' %}?group={{ group.id }}"
     hx-boost="true"
-    class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors {% if nav_active == 'board' and active_task_group.id == group.id %}{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60{% endif %}"
-    {% if nav_active == 'board' and active_task_group.id == group.id %}style="background-color: {{ group.color }}1a; color: {{ group.color }};"{% endif %}
+    class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors {% if active_task_group.id == group.id %}{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60{% endif %}"
+    {% if active_task_group.id == group.id %}style="background-color: {{ group.color }}1a; color: {{ group.color }};"{% endif %}
   >
     <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ group.color }}"></span>
     <span class="flex-1 text-left truncate">{{ group.name }}</span>
-    <span class="text-xs tabular-nums transition-opacity {% if nav_active == 'board' %}lg:group-hover/nav:opacity-0{% endif %} {% if nav_active == 'board' and active_task_group.id == group.id %}{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ group.pending_count }}</span>
+    <span class="text-xs tabular-nums transition-opacity lg:group-hover/nav:opacity-0 {% if active_task_group.id == group.id %}{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ group.pending_count }}</span>
   </a>
-  {% if nav_active == 'board' %}
   <button
     type="button"
     onclick="window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title: 'Delete group', name: '{{ group.name|escapejs }}', desc: 'Its tasks are kept and moved to No group.', url: '{% url 'tasks:group-detail' group.id %}' } }))"
@@ -19,7 +18,6 @@
   >
     {% include 'common/icons/trash.html' with class='w-4 h-4' %}
   </button>
-  {% endif %}
 </div>
 {% endfor %}
 

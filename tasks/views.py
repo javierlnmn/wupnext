@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.urls import reverse
+from django.shortcuts import render
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
@@ -88,9 +88,8 @@ class GroupCreateView(BoardMixin, View):
             color=form.cleaned_data["color"],
             position=Group.objects.filter(user=request.user).count(),
         )
-        response = HttpResponse(status=204)
-        response["HX-Redirect"] = f"{reverse('tasks:board')}?group={group.id}"
-        return response
+        request.session["active_group"] = group.id
+        return self.board_response()
 
 
 class GroupDeleteView(BoardMixin, View):
@@ -101,19 +100,19 @@ class GroupDeleteView(BoardMixin, View):
         return self.board_response()
 
 
-class ArchiveView(ArchiveMixin, TemplateView):
-    template_name = "tasks/archive.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(self.archive_context())
-        return context
+class ArchiveView(ArchiveMixin, View):
+    def get(self, request):
+        return self.archive_response()
 
 
-class TaskUnarchiveView(ArchiveMixin, View):
+class TaskUnarchiveView(BoardMixin, ArchiveMixin, View):
     def post(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
-        return self.archive_response()
+        return render(
+            request,
+            "tasks/partials/archive/unarchive_response.html",
+            {**self.board_context(), **self.archive_context()},
+        )
 
 
 class ArchiveTaskDeleteView(ArchiveMixin, View):
