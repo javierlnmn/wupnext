@@ -13,7 +13,22 @@ urlpatterns = [
         views.TaskCompleteView.as_view(),
         name="task-complete",
     ),
-    path("group/filter/", views.GroupFilterView.as_view(), name="group-filter"),
+    path(
+        "task/<int:task_id>/archive/",
+        views.TaskArchiveView.as_view(),
+        name="task-archive",
+    ),
+    path(
+        "task/<int:task_id>/unarchive/",
+        views.TaskUnarchiveView.as_view(),
+        name="task-unarchive",
+    ),
+    path("archive/", views.ArchiveView.as_view(), name="archive"),
+    path(
+        "archive/task/<int:task_id>/",
+        views.ArchiveTaskDeleteView.as_view(),
+        name="archive-task-detail",
+    ),
     path("group/", views.GroupCreateView.as_view(), name="group-create"),
     path("group/<int:group_id>/", views.GroupDeleteView.as_view(), name="group-detail"),
 ]

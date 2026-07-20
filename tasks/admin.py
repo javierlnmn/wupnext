@@ -12,8 +12,15 @@ class GroupAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ["name", "group", "parent", "completed_at", "created_at"]
-    list_filter = ["completed_at", "group"]
+    list_display = [
+        "name",
+        "group",
+        "parent",
+        "completed_at",
+        "archived_at",
+        "created_at",
+    ]
+    list_filter = ["completed_at", "archived_at", "group"]
     search_fields = ["name"]
     ordering = ["created_at"]
     raw_id_fields = ["parent"]

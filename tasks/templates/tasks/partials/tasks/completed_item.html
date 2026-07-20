@@ -6,7 +6,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      {% if not active_group and task.group %}
+      {% if not active_task_group and task.group %}
       <span class="w-2 h-2 rounded-full shrink-0 opacity-60" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
       {% endif %}
       <span class="flex-1 min-w-0 text-[15px] text-emerald-800/40 dark:text-emerald-200/40 line-through lg:truncate">{{ task.name }}</span>
@@ -19,7 +19,22 @@
       {% endif %}
       {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight muted=True %}
       <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.completed_at|date:"M j" }}</span>
-      {% include 'tasks/partials/tasks/delete_task_button.html' %}
+      <form
+        class="flex shrink-0"
+        hx-post="{% url 'tasks:task-archive' task.id %}"
+        hx-target="#queue-content"
+        hx-swap="innerHTML"
+      >
+        <button
+          type="submit"
+          class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
+          aria-label="Archive task"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+        </button>
+      </form>
     </div>
   </div>
 

@@ -36,6 +36,14 @@ class Group(models.Model):
         return self.name
 
 
+class TaskQuerySet(models.QuerySet):
+    def filter_unarchived(self):
+        return self.filter(archived_at__isnull=True)
+
+    def filter_archived(self):
+        return self.filter(archived_at__isnull=False)
+
+
 class Task(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -62,7 +70,10 @@ class Task(models.Model):
         related_name="subtasks",
     )
     completed_at = models.DateTimeField(null=True, blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TaskQuerySet.as_manager()
 
     class Meta:
         ordering = ["created_at"]

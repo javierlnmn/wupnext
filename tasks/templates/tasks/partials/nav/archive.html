@@ -1,0 +1,8 @@
+<a
+  href="{% url 'tasks:archive' %}"
+  hx-boost="true"
+  class="shrink-0 lg:w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors {% if nav_active == 'archive' %}bg-clay-100/70 dark:bg-clay-500/15 text-clay-700 dark:text-clay-300{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60{% endif %}"
+>
+  {% include 'common/icons/archive.html' with class='w-4 h-4 shrink-0' %}
+  <span class="flex-1 text-left">Archive</span>
+</a>

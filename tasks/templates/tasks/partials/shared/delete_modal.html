@@ -1,7 +1,7 @@
 {% load ui %}
 <div
-  x-data="{ delOpen: false, delTitle: '', delName: '', delDesc: '', delUrl: '' }"
-  @confirm-delete.window="delOpen = true; delTitle = $event.detail.title; delName = $event.detail.name; delDesc = $event.detail.desc; delUrl = $event.detail.url"
+  x-data="{ delOpen: false, delTitle: '', delName: '', delDesc: '', delUrl: '', delTarget: '#queue-content' }"
+  @confirm-delete.window="delOpen = true; delTitle = $event.detail.title; delName = $event.detail.name; delDesc = $event.detail.desc; delUrl = $event.detail.url; delTarget = $event.detail.target || '#queue-content'"
   @keydown.escape.window="delOpen = false"
 >
   {% modal openStateKey="delOpen" %}
@@ -28,7 +28,7 @@
         </button>
         <button
           type="button"
-          @click="htmx.ajax('DELETE', delUrl, { target: '#queue-content', swap: 'innerHTML', source: $el }); delOpen = false"
+          @click="htmx.ajax('DELETE', delUrl, { target: delTarget, swap: 'innerHTML', source: $el }); delOpen = false"
           class="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg shadow-rose-600/20 transition-colors"
         >
           Delete

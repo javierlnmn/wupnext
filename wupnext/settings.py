@@ -85,6 +85,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "common.context_processors.settings",
                 "pomodoro.context_processors.pomodoro",
+                "tasks.context_processors.sidebar",
             ],
         },
     },

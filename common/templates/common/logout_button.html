@@ -1,0 +1,8 @@
+<form method="POST" action="{% url 'accounts:logout' %}" aria-label="Logout">
+  {% csrf_token %}
+  <button type="submit" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors grid place-items-center w-6 h-6">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+    </svg>
+  </button>
+</form>

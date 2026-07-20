@@ -1,0 +1,54 @@
+<div class="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/20 px-3 py-2.5">
+  <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+    <div class="flex items-center gap-3 min-w-0 lg:flex-1">
+      {% if task.group %}
+      <span class="w-2 h-2 rounded-full shrink-0 opacity-60" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
+      {% endif %}
+      <span class="flex-1 min-w-0 text-[15px] text-slate-500 dark:text-slate-400 line-through lg:truncate">{{ task.name }}</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      {% if task.subtask_count %}
+      <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5">
+        {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+      </span>
+      {% endif %}
+      {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight muted=True %}
+      <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.archived_at|date:"M j" }}</span>
+      <form
+        class="flex shrink-0"
+        hx-post="{% url 'tasks:task-unarchive' task.id %}"
+        hx-target="#archive-content"
+        hx-swap="innerHTML"
+      >
+        <button
+          type="submit"
+          class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
+          aria-label="Unarchive task"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 7.5L12 3m0 0L7.5 7.5M12 3v13.5" />
+          </svg>
+        </button>
+      </form>
+      <button
+        type="button"
+        onclick="window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title: 'Delete task', name: '{{ task.name|escapejs }}', desc: '{% if task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', url: '{% url 'tasks:archive-task-detail' task.id %}', target: '#archive-content' } }))"
+        class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+        aria-label="Delete task"
+      >
+        {% include 'common/icons/trash.html' with class='w-5 h-5' %}
+      </button>
+    </div>
+  </div>
+
+  {% if task.subtask_count %}
+  <div class="mt-1.5 ml-1 pl-3.5 flex flex-col border-l border-slate-200/70 dark:border-slate-800/60">
+    {% for subtask in task.subtasks.all %}
+    <div class="flex items-center gap-2.5 py-1">
+      <span class="w-1.5 h-1.5 rounded-full shrink-0 {% if subtask.completed_at %}bg-emerald-500{% else %}bg-slate-300 dark:bg-slate-600{% endif %}"></span>
+      <span class="flex-1 min-w-0 text-[13px] truncate {% if subtask.completed_at %}text-slate-400 dark:text-slate-600 line-through{% else %}text-slate-500 dark:text-slate-400{% endif %}">{{ subtask.name }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

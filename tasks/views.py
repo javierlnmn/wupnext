@@ -1,15 +1,27 @@
 from django.http import HttpResponse
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
 from .forms import GroupForm, TaskForm
-from .mixins import BoardMixin
+from .mixins import ArchiveMixin, BoardMixin
 from .models import Group, Task
 
 
 class BoardView(BoardMixin, TemplateView):
     template_name = "tasks/board.html"
+
+    def get(self, request, *args, **kwargs):
+        group = request.GET.get("group")
+        if group is not None:
+            if group.isdigit() and Group.objects.filter(
+                id=group, user=request.user
+            ).exists():
+                request.session["active_group"] = int(group)
+            else:
+                request.session["active_group"] = None
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,28 +69,28 @@ class TaskCompleteView(BoardMixin, View):
         return self.board_response()
 
 
-class GroupFilterView(BoardMixin, View):
-    def post(self, request):
-        value = request.POST.get("group")
-        if value and value != "all":
-            group = Group.objects.filter(id=value, user=request.user).first()
-            request.session["active_group"] = group.id if group else None
-        else:
-            request.session["active_group"] = None
+class TaskArchiveView(BoardMixin, View):
+    def post(self, request, task_id):
+        Task.objects.filter(
+            id=task_id, user=request.user, completed_at__isnull=False
+        ).update(archived_at=timezone.now())
         return self.board_response()
 
 
 class GroupCreateView(BoardMixin, View):
     def post(self, request):
         form = GroupForm(request.POST)
-        if form.is_valid():
-            Group.objects.create(
-                user=request.user,
-                name=form.cleaned_data["name"],
-                color=form.cleaned_data["color"],
-                position=Group.objects.filter(user=request.user).count(),
-            )
-        return self.board_response()
+        if not form.is_valid():
+            return self.board_response()
+        group = Group.objects.create(
+            user=request.user,
+            name=form.cleaned_data["name"],
+            color=form.cleaned_data["color"],
+            position=Group.objects.filter(user=request.user).count(),
+        )
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = f"{reverse('tasks:board')}?group={group.id}"
+        return response
 
 
 class GroupDeleteView(BoardMixin, View):
@@ -87,3 +99,24 @@ class GroupDeleteView(BoardMixin, View):
         if request.session.get("active_group") == group_id:
             request.session["active_group"] = None
         return self.board_response()
+
+
+class ArchiveView(ArchiveMixin, TemplateView):
+    template_name = "tasks/archive.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.archive_context())
+        return context
+
+
+class TaskUnarchiveView(ArchiveMixin, View):
+    def post(self, request, task_id):
+        Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
+        return self.archive_response()
+
+
+class ArchiveTaskDeleteView(ArchiveMixin, View):
+    def delete(self, request, task_id):
+        Task.objects.filter(id=task_id, user=request.user).delete()
+        return self.archive_response()

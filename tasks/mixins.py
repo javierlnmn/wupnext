@@ -1,8 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count
 from django.shortcuts import render
 
-from .models import DEFAULT_GROUP_COLOR, GROUP_COLORS, MAX_TASK_WEIGHT, Group, Task
+from .models import MAX_TASK_WEIGHT, Group, Task
 
 
 class BoardMixin(LoginRequiredMixin):
@@ -12,9 +11,11 @@ class BoardMixin(LoginRequiredMixin):
             return None
         return Group.objects.filter(id=group_id, user=self.request.user).first()
 
-    def _task_context(self, active_group):
+    def board_context(self):
+        active_group = self.active_group()
         top_level = (
-            Task.objects.filter(user=self.request.user, parent__isnull=True)
+            Task.objects.filter_unarchived()
+            .filter(user=self.request.user, parent__isnull=True)
             .select_related("group")
             .prefetch_related("subtasks")
         )
@@ -23,38 +24,28 @@ class BoardMixin(LoginRequiredMixin):
         return {
             "pending_tasks": top_level.filter(completed_at__isnull=True),
             "completed_tasks": top_level.filter(completed_at__isnull=False),
-        }
-
-    def _group_context(self, active_group):
-        user = self.request.user
-        groups = list(Group.objects.filter(user=user))
-        counts = {
-            row["group"]: row["c"]
-            for row in Task.objects.filter(
-                user=user, parent__isnull=True, completed_at__isnull=True
-            )
-            .values("group")
-            .annotate(c=Count("id"))
-        }
-        for group in groups:
-            group.pending_count = counts.get(group.id, 0)
-        return {
-            "groups": groups,
-            "active_group": active_group,
-            "group_all_count": sum(counts.values()),
-            "group_palette": GROUP_COLORS,
-            "default_group_color": DEFAULT_GROUP_COLOR,
-        }
-
-    def board_context(self):
-        active_group = self.active_group()
-        return {
-            **self._task_context(active_group),
-            **self._group_context(active_group),
             "max_task_weight": MAX_TASK_WEIGHT,
         }
 
     def board_response(self):
         return render(
             self.request, "tasks/partials/response.html", self.board_context()
+        )
+
+
+class ArchiveMixin(LoginRequiredMixin):
+    def archive_context(self):
+        return {
+            "archived_tasks": (
+                Task.objects.filter_archived()
+                .filter(user=self.request.user, parent__isnull=True)
+                .select_related("group")
+                .prefetch_related("subtasks")
+                .order_by("-archived_at")
+            )
+        }
+
+    def archive_response(self):
+        return render(
+            self.request, "tasks/partials/archive/list.html", self.archive_context()
         )

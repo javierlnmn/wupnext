@@ -13,7 +13,7 @@
           aria-label="Mark task complete"
         ></button>
       </form>
-      {% if not active_group and task.group %}
+      {% if not active_task_group and task.group %}
       <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ task.group.color }}" title="{{ task.group.name }}"></span>
       {% endif %}
       <span class="flex-1 min-w-0 text-[15px] text-slate-800 dark:text-slate-200 lg:truncate">{{ task.name }}</span>

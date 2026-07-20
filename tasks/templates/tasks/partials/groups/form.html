@@ -1,7 +1,7 @@
 {% load ui %}
 <div
-  x-data="{ groupOpen: false, gName: '', gColor: '{{ default_group_color }}' }"
-  @new-group.window="groupOpen = true; gName = ''; gColor = '{{ default_group_color }}'"
+  x-data="{ groupOpen: false, gName: '', gColor: '{{ default_task_group_color }}' }"
+  @new-group.window="groupOpen = true; gName = ''; gColor = '{{ default_task_group_color }}'"
   @group-created="groupOpen = false"
   @keydown.escape.window="groupOpen = false"
 >
@@ -43,7 +43,7 @@
       <div>
         <label class="block text-[13px] text-slate-500 dark:text-slate-400 mb-2">Color</label>
         <div class="flex flex-wrap gap-2.5">
-          {% for color in group_palette %}
+          {% for color in task_group_palette %}
           <button
             type="button"
             @click="gColor = '{{ color.hex }}'"
