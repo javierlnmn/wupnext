@@ -6,10 +6,10 @@ from .models import MAX_TASK_WEIGHT, Group, Task
 
 class BoardMixin(LoginRequiredMixin):
     def active_group(self):
-        group_id = self.request.session.get("active_group")
-        if not group_id:
+        group_id = self.request.GET.get("group")
+        if not group_id or not group_id.isdigit():
             return None
-        return Group.objects.filter(id=group_id, user=self.request.user).first()
+        return Group.objects.filter(id=int(group_id), user=self.request.user).first()
 
     def board_context(self):
         active_group = self.active_group()
@@ -25,16 +25,22 @@ class BoardMixin(LoginRequiredMixin):
             "pending_tasks": top_level.filter(completed_at__isnull=True),
             "completed_tasks": top_level.filter(completed_at__isnull=False),
             "max_task_weight": MAX_TASK_WEIGHT,
+            "active_task_group": active_group,
+            "group_query": f"?group={active_group.id}" if active_group else "",
         }
 
     def board_response(self):
         return render(
-            self.request, "tasks/partials/response.html", self.board_context()
+            self.request,
+            "tasks/partials/shared/board_response.html",
+            self.board_context(),
         )
 
 
 class ArchiveMixin(LoginRequiredMixin):
     def archive_context(self):
+        group_id = self.request.GET.get("group")
+        group_query = f"?group={group_id}" if group_id and group_id.isdigit() else ""
         return {
             "archived_tasks": (
                 Task.objects.filter_archived()
@@ -42,7 +48,8 @@ class ArchiveMixin(LoginRequiredMixin):
                 .select_related("group")
                 .prefetch_related("subtasks")
                 .order_by("-archived_at")
-            )
+            ),
+            "group_query": group_query,
         }
 
     def archive_response(self):

@@ -9,7 +9,7 @@
   {% else %}
   <form
     class="flex shrink-0"
-    hx-post="{% url 'tasks:task-complete' task.id %}"
+    hx-post="{% url 'tasks:task-complete' task.id %}{{ group_query }}"
     hx-target="#queue-content"
     hx-swap="innerHTML"
   >

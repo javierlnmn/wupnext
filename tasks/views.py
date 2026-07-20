@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
@@ -11,17 +12,6 @@ from .models import Group, Task
 
 class BoardView(BoardMixin, TemplateView):
     template_name = "tasks/board.html"
-
-    def get(self, request, *args, **kwargs):
-        group = request.GET.get("group")
-        if group is not None:
-            if group.isdigit() and Group.objects.filter(
-                id=group, user=request.user
-            ).exists():
-                request.session["active_group"] = int(group)
-            else:
-                request.session["active_group"] = None
-        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -88,16 +78,19 @@ class GroupCreateView(BoardMixin, View):
             color=form.cleaned_data["color"],
             position=Group.objects.filter(user=request.user).count(),
         )
-        request.session["active_group"] = group.id
-        return self.board_response()
+        response = HttpResponse(status=204)
+        response["HX-Location"] = f"{reverse('tasks:board')}?group={group.id}"
+        return response
 
 
 class GroupDeleteView(BoardMixin, View):
     def delete(self, request, group_id):
+        was_active = request.GET.get("group") == str(group_id)
         Group.objects.filter(id=group_id, user=request.user).delete()
-        if request.session.get("active_group") == group_id:
-            request.session["active_group"] = None
-        return self.board_response()
+        response = self.board_response()
+        if was_active:
+            response["HX-Push-Url"] = reverse("tasks:board")
+        return response
 
 
 class ArchiveView(ArchiveMixin, View):
@@ -111,7 +104,7 @@ class TaskUnarchiveView(BoardMixin, ArchiveMixin, View):
         return render(
             request,
             "tasks/partials/archive/unarchive_response.html",
-            {**self.board_context(), **self.archive_context()},
+            {**self.archive_context(), **self.board_context()},
         )
 
 

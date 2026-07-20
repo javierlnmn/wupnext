@@ -19,14 +19,8 @@ def sidebar(request):
     for group in groups:
         group.pending_count = counts.get(group.id, 0)
 
-    active_group = None
-    group_id = request.session.get("active_group")
-    if group_id:
-        active_group = next((g for g in groups if g.id == group_id), None)
-
     return {
         "task_groups": groups,
-        "active_task_group": active_group,
         "all_tasks_count": sum(counts.values()),
         "task_group_palette": GROUP_COLORS,
         "default_task_group_color": DEFAULT_GROUP_COLOR,

@@ -16,7 +16,7 @@
       <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.archived_at|date:"M j" }}</span>
       <form
         class="flex shrink-0"
-        hx-post="{% url 'tasks:task-unarchive' task.id %}"
+        hx-post="{% url 'tasks:task-unarchive' task.id %}{{ group_query }}"
         hx-target="#archive-content"
         hx-swap="innerHTML"
       >
