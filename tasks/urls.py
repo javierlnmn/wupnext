@@ -15,20 +15,20 @@ urlpatterns = [
     ),
     path(
         "task/<int:task_id>/archive/",
-        views.TaskArchiveView.as_view(),
+        views.ArchiveView.as_view(),
         name="task-archive",
     ),
     path(
         "task/<int:task_id>/unarchive/",
-        views.TaskUnarchiveView.as_view(),
+        views.UnarchiveTaskView.as_view(),
         name="task-unarchive",
     ),
     path("archive/", views.ArchiveView.as_view(), name="archive"),
     path(
         "archive/task/<int:task_id>/",
-        views.ArchiveTaskDeleteView.as_view(),
+        views.ArchiveView.as_view(),
         name="archive-task-detail",
     ),
-    path("group/", views.GroupCreateView.as_view(), name="group-create"),
-    path("group/<int:group_id>/", views.GroupDeleteView.as_view(), name="group-detail"),
+    path("group/", views.GroupView.as_view(), name="group-create"),
+    path("group/<int:group_id>/", views.GroupView.as_view(), name="group-detail"),
 ]

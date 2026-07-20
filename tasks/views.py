@@ -50,24 +50,14 @@ class TaskCompleteView(BoardMixin, View):
             return HttpResponse(status=404)
 
         now = timezone.now()
-
         task.completed_at = now
         task.save(update_fields=["completed_at"])
-
         task.subtasks.update(completed_at=now)
 
         return self.board_response()
 
 
-class TaskArchiveView(BoardMixin, View):
-    def post(self, request, task_id):
-        Task.objects.filter(
-            id=task_id, user=request.user, completed_at__isnull=False
-        ).update(archived_at=timezone.now())
-        return self.board_response()
-
-
-class GroupCreateView(BoardMixin, View):
+class GroupView(BoardMixin, View):
     def post(self, request):
         form = GroupForm(request.POST)
         if not form.is_valid():
@@ -82,8 +72,6 @@ class GroupCreateView(BoardMixin, View):
         response["HX-Location"] = f"{reverse('tasks:board')}?group={group.id}"
         return response
 
-
-class GroupDeleteView(BoardMixin, View):
     def delete(self, request, group_id):
         was_active = request.GET.get("group") == str(group_id)
         Group.objects.filter(id=group_id, user=request.user).delete()
@@ -93,12 +81,22 @@ class GroupDeleteView(BoardMixin, View):
         return response
 
 
-class ArchiveView(ArchiveMixin, View):
+class ArchiveView(BoardMixin, ArchiveMixin, View):
     def get(self, request):
         return self.archive_response()
 
+    def post(self, request, task_id):
+        Task.objects.filter(
+            id=task_id, user=request.user, completed_at__isnull=False
+        ).update(archived_at=timezone.now())
+        return self.board_response()
 
-class TaskUnarchiveView(BoardMixin, ArchiveMixin, View):
+    def delete(self, request, task_id):
+        Task.objects.filter(id=task_id, user=request.user).delete()
+        return self.archive_response()
+
+
+class UnarchiveTaskView(BoardMixin, ArchiveMixin, View):
     def post(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
         return render(
@@ -106,9 +104,3 @@ class TaskUnarchiveView(BoardMixin, ArchiveMixin, View):
             "tasks/partials/archive/unarchive_response.html",
             {**self.archive_context(), **self.board_context()},
         )
-
-
-class ArchiveTaskDeleteView(ArchiveMixin, View):
-    def delete(self, request, task_id):
-        Task.objects.filter(id=task_id, user=request.user).delete()
-        return self.archive_response()
