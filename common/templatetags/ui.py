@@ -5,10 +5,16 @@ register = template.Library()
 
 
 @register.simple_block_tag
-def modal(content, openStateKey, width="24rem"):
+def modal(content, openStateKey, width="24rem", z=50):
     return render_to_string(
         "common/modal_shell.html",
-        {"content": content, "openStateKey": openStateKey, "width": width},
+        {
+            "content": content,
+            "openStateKey": openStateKey,
+            "width": width,
+            "z": z,
+            "backdrop_z": z - 10,
+        },
     )
 
 

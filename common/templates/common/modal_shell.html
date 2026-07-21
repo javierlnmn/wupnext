@@ -3,14 +3,16 @@
   x-cloak
   @click="{{ openStateKey }} = false"
   x-transition.opacity
-  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+  style="z-index: {{ backdrop_z }}"
 ></div>
 
 <div
   x-show="{{ openStateKey }}"
   x-cloak
   x-transition
-  class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+  class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none"
+  style="z-index: {{ z }}"
 >
   <div
     @click.stop
