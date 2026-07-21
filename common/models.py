@@ -27,4 +27,4 @@ class AbstractSingleton(models.Model):
 
 
 class SiteSettings(AbstractSingleton):
-    site_parameter = models.CharField(max_length=255, null=True, blank=True)
+    email_notifications_enabled = models.BooleanField(default=True)
