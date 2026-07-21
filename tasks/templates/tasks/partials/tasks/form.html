@@ -9,7 +9,7 @@
   <button
     type="button"
     @click="openNew({% if active_task_group %}{{ active_task_group.id }}{% else %}null{% endif %})"
-    class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white shadow-lg shadow-clay-600/30 transition-all flex items-center justify-center"
+    class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white transition-all flex items-center justify-center"
     aria-label="Add task"
   >
     {% include 'common/icons/plus.html' with class='w-6 h-6' stroke='2.5' %}
@@ -93,7 +93,7 @@
 
       <button
         type="submit"
-        class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl shadow-lg shadow-clay-600/20 transition-all"
+        class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl transition-all"
         x-text="taskId ? 'Save changes' : (parentId ? 'Add subtask' : 'Add task')"
       ></button>
     </form>
