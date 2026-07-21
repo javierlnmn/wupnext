@@ -47,13 +47,13 @@ class TaskView(BoardMixin, View):
         return self.board_response()
 
 
-class TaskCompleteView(BoardMixin, View):
+class ToggleCompleteTaskView(BoardMixin, View):
     def post(self, request, task_id):
         task = Task.objects.filter(id=task_id, user=request.user).first()
         if not task:
             return HttpResponse(status=404)
 
-        now = timezone.now()
+        now = None if task.completed_at else timezone.now()
         task.completed_at = now
         task.save(update_fields=["completed_at"])
         task.subtasks.update(completed_at=now)

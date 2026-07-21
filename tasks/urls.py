@@ -9,9 +9,9 @@ urlpatterns = [
     path("task/", views.TaskView.as_view(), name="task"),
     path("task/<int:task_id>/", views.TaskView.as_view(), name="task-detail"),
     path(
-        "task/<int:task_id>/complete/",
-        views.TaskCompleteView.as_view(),
-        name="task-complete",
+        "task/<int:task_id>/toggle-complete/",
+        views.ToggleCompleteTaskView.as_view(),
+        name="task-toggle-complete",
     ),
     path(
         "task/<int:task_id>/archive/",

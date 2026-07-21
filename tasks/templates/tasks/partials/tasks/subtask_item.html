@@ -1,13 +1,24 @@
 <div class="flex items-center gap-2.5 py-1.5">
   {% if task.completed_at %}
-  <div class="w-4 h-4 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shrink-0">
-    {% include 'common/icons/check.html' with class='w-2 h-2 text-emerald-600 dark:text-emerald-400' %}
-  </div>
+  <form
+    class="flex shrink-0"
+    hx-post="{% url 'tasks:task-toggle-complete' task.id %}{{ board_query }}"
+    hx-target="#queue-content"
+    hx-swap="innerHTML"
+  >
+    <button
+      type="submit"
+      class="w-4 h-4 rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shrink-0 hover:border-emerald-500/70 transition-colors"
+      aria-label="Mark subtask incomplete"
+    >
+      {% include 'common/icons/check.html' with class='w-2 h-2 text-emerald-600 dark:text-emerald-400' %}
+    </button>
+  </form>
   <span class="flex-1 min-w-0 text-[13px] text-slate-400 dark:text-slate-600 line-through lg:truncate">{{ task.name }}</span>
   {% else %}
   <form
     class="flex shrink-0"
-    hx-post="{% url 'tasks:task-complete' task.id %}{{ board_query }}"
+    hx-post="{% url 'tasks:task-toggle-complete' task.id %}{{ board_query }}"
     hx-target="#queue-content"
     hx-swap="innerHTML"
   >
