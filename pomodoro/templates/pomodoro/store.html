@@ -1,8 +1,10 @@
 {{ pomodoro_settings|json_script:"pomodoro-settings" }}
+{{ pomodoro_state|json_script:"pomodoro-state" }}
 <script>
   document.addEventListener('alpine:init', () => {
-    const KEY = 'wupnext.pomodoro'
     const LABELS = { focus: 'Focus', short: 'Short break', long: 'Long break' }
+    const STATE_URL = "{% url 'pomodoro:state' %}"
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content
 
     Alpine.store('pomodoro', {
       settings: {},
@@ -14,29 +16,19 @@
       _tick: null,
       _audio: null,
       _baseTitle: document.title,
+      _updatedAt: 0,
 
       init() {
-        let server = null
-        const el = document.getElementById('pomodoro-settings')
-        if (el) { try { server = JSON.parse(el.textContent) } catch (e) {} }
-        this.settings = server || {}
-        const saved = JSON.parse(localStorage.getItem(KEY) || 'null')
-        if (!saved) {
-          this.remaining = this.phaseSeconds()
-          return
-        }
-        this.phase = saved.phase || 'focus'
-        this.completed = saved.completed || 0
-        if (saved.running && saved.endsAt) {
-          this.running = true
-          this.endsAt = saved.endsAt
-          this.remaining = Math.max(0, Math.round((saved.endsAt - Date.now()) / 1000))
-          if (this.remaining <= 0) this._complete()
-          else this._loop()
-        } else {
-          this.running = false
-          this.remaining = saved.remaining ?? this.phaseSeconds()
-        }
+        this.settings = this._read('pomodoro-settings') || {}
+        const state = this._read('pomodoro-state')
+        if (state) this._apply(state)
+        else this.remaining = this.phaseSeconds()
+
+        window.addEventListener('focus', () => this._pull())
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) this._pull()
+        })
+        setInterval(() => this._pull(), 30000)
       },
 
       get label() { return LABELS[this.phase] },
@@ -58,7 +50,7 @@
         this.running = true
         this.endsAt = Date.now() + this.remaining * 1000
         this._loop()
-        this._save()
+        this._persist()
       },
 
       pause() {
@@ -67,7 +59,7 @@
         this.endsAt = null
         this._stopLoop()
         this._restoreTitle()
-        this._save()
+        this._persist()
       },
 
       reset() {
@@ -76,14 +68,14 @@
         this.endsAt = null
         this.remaining = this.phaseSeconds()
         this._restoreTitle()
-        this._save()
+        this._persist()
       },
 
       skip() {
         const wasRunning = this.running
         this._advance(false)
         if (wasRunning) this.start()
-        else { this._restoreTitle(); this._save() }
+        else { this._restoreTitle(); this._persist() }
       },
 
       setSettings(next) {
@@ -96,7 +88,7 @@
         if (!isNaN(e)) s.every = Math.min(Math.max(e, 1), 12)
         this.settings = s
         if (!this.running) this.remaining = this.phaseSeconds()
-        this._save()
+        this._persist()
       },
 
       _advance(autostart) {
@@ -116,7 +108,7 @@
         this._chime()
         this._advance(true)
         this._loop()
-        this._save()
+        this._persist()
       },
 
       _loop() {
@@ -133,11 +125,53 @@
       _updateTitle() { document.title = this.display + ' · ' + this.label },
       _restoreTitle() { document.title = this._baseTitle },
 
-      _save() {
-        localStorage.setItem(KEY, JSON.stringify({
-          phase: this.phase, running: this.running,
-          endsAt: this.endsAt, remaining: this.remaining, completed: this.completed,
-        }))
+      _read(id) {
+        const el = document.getElementById(id)
+        if (!el) return null
+        try { return JSON.parse(el.textContent) } catch (e) { return null }
+      },
+
+      _apply(s) {
+        this._updatedAt = s.updatedAt || 0
+        this.phase = s.phase || 'focus'
+        this.completed = s.completed || 0
+        this._stopLoop()
+        if (s.running && s.endsAt) {
+          this.running = true
+          this.endsAt = s.endsAt
+          this.remaining = Math.max(0, Math.round((s.endsAt - Date.now()) / 1000))
+          if (this.remaining <= 0) this._complete()
+          else { this._loop(); this._updateTitle() }
+        } else {
+          this.running = false
+          this.endsAt = null
+          this.remaining = s.remaining ?? this.phaseSeconds()
+          this._restoreTitle()
+        }
+      },
+
+      _pull() {
+        fetch(STATE_URL)
+          .then(r => r.ok ? r.json() : null)
+          .then(s => { if (s && (s.updatedAt || 0) > this._updatedAt) this._apply(s) })
+          .catch(() => {})
+      },
+
+      _persist() {
+        fetch(STATE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+          body: JSON.stringify({
+            phase: this.phase,
+            running: this.running,
+            ends_at_ms: this.endsAt,
+            remaining: this.remaining,
+            completed: this.completed,
+          }),
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(s => { if (s) this._updatedAt = s.updatedAt || this._updatedAt })
+          .catch(() => {})
       },
 
       _chime() {
