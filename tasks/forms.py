@@ -15,6 +15,7 @@ class TaskForm(forms.Form):
     weight = forms.IntegerField(required=False)
     group_id = forms.IntegerField(required=False)
     parent_id = forms.IntegerField(required=False)
+    due_date = forms.DateField(required=False)
 
     def __init__(self, *args, user=None, **kwargs):
         self.user = user
@@ -46,6 +47,9 @@ class TaskForm(forms.Form):
                 id=cleaned["group_id"], user=self.user
             ).first()
         cleaned["group"] = group
+
+        if parent:
+            cleaned["due_date"] = None
 
         return cleaned
 

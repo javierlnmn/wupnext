@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 GROUP_COLORS = [
     {"name": "Clay", "hex": "#d1793f"},
@@ -16,6 +17,11 @@ DEFAULT_GROUP_COLOR = GROUP_COLORS[0]["hex"]
 GROUP_COLOR_VALUES = {color["hex"] for color in GROUP_COLORS}
 
 MAX_TASK_WEIGHT = 5
+
+
+class DueLens(models.TextChoices):
+    TODAY = "today", "Today"
+    OVERDUE = "overdue", "Overdue"
 
 
 class Group(models.Model):
@@ -69,6 +75,7 @@ class Task(models.Model):
         on_delete=models.CASCADE,
         related_name="subtasks",
     )
+    due_date = models.DateField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,3 +95,15 @@ class Task(models.Model):
     @property
     def completed_subtask_count(self):
         return sum(1 for subtask in self.subtasks.all() if subtask.completed_at)
+
+    @property
+    def is_due_today(self):
+        return bool(self.due_date and self.due_date == timezone.localdate())
+
+    @property
+    def is_overdue(self):
+        return bool(
+            self.due_date
+            and not self.completed_at
+            and self.due_date < timezone.localdate()
+        )

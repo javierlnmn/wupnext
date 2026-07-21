@@ -1,6 +1,6 @@
 <button
   type="button"
-  onclick="promptDelete('{% if task.parent_id %}Delete subtask{% else %}Delete task{% endif %}', '{{ task.name|escapejs }}', '{% if task.parent_id %}This subtask will be permanently deleted.{% elif task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', '{% url 'tasks:task-detail' task.id %}{{ group_query }}')"
+  onclick="promptDelete('{% if task.parent_id %}Delete subtask{% else %}Delete task{% endif %}', '{{ task.name|escapejs }}', '{% if task.parent_id %}This subtask will be permanently deleted.{% elif task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', '{% url 'tasks:task-detail' task.id %}{{ board_query }}')"
   class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
   aria-label="{% if task.parent_id %}Delete subtask{% else %}Delete task{% endif %}"
 >

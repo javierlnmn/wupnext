@@ -2,19 +2,19 @@ from django.conf import settings
 from django.db import models
 
 
-class PomodoroState(models.Model):
-    PHASES = [
-        ("focus", "Focus"),
-        ("short", "Short break"),
-        ("long", "Long break"),
-    ]
+class Phase(models.TextChoices):
+    FOCUS = "focus", "Focus"
+    SHORT = "short", "Short break"
+    LONG = "long", "Long break"
 
+
+class PomodoroState(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="pomodoro_state",
     )
-    phase = models.CharField(max_length=5, choices=PHASES, default="focus")
+    phase = models.CharField(max_length=5, choices=Phase.choices, default=Phase.FOCUS)
     running = models.BooleanField(default=False)
     ends_at_ms = models.BigIntegerField(null=True, blank=True, default=None)
     remaining = models.PositiveIntegerField(null=True, blank=True, default=None)

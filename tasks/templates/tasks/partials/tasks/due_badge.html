@@ -1,0 +1,9 @@
+{% if task.due_date %}
+  {% if task.is_overdue %}
+  <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-0.5 text-rose-700 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-500/15">Overdue</span>
+  {% elif task.is_due_today %}
+  <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-0.5 text-clay-700 dark:text-clay-300 bg-clay-100/70 dark:bg-clay-500/15">Today</span>
+  {% else %}
+  <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium rounded-full px-2 py-0.5 text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">{{ task.due_date|date:"M j" }}</span>
+  {% endif %}
+{% endif %}

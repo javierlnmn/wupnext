@@ -26,7 +26,10 @@ class TaskView(BoardMixin, View):
             data = form.cleaned_data
             if data["task_id"]:
                 Task.objects.filter(id=data["task_id"], user=request.user).update(
-                    name=data["name"], weight=data["weight"], group=data["group"]
+                    name=data["name"],
+                    weight=data["weight"],
+                    group=data["group"],
+                    due_date=data["due_date"],
                 )
             else:
                 Task.objects.create(
@@ -35,6 +38,7 @@ class TaskView(BoardMixin, View):
                     weight=data["weight"],
                     group=data["group"],
                     parent=data["parent"],
+                    due_date=data["due_date"],
                 )
         return self.board_response()
 

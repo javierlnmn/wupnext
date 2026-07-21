@@ -3,7 +3,7 @@
     <div class="flex items-center gap-3 min-w-0 lg:flex-1">
       <form
         class="flex shrink-0"
-        hx-post="{% url 'tasks:task-complete' task.id %}{{ group_query }}"
+        hx-post="{% url 'tasks:task-complete' task.id %}{{ board_query }}"
         hx-target="#queue-content"
         hx-swap="innerHTML"
       >
@@ -19,6 +19,7 @@
       <span class="flex-1 min-w-0 text-[15px] text-slate-800 dark:text-slate-200 lg:truncate">{{ task.name }}</span>
     </div>
     <div class="flex items-center gap-2 shrink-0 pl-8 lg:pl-0">
+      {% include 'tasks/partials/tasks/due_badge.html' %}
       {% if task.subtask_count %}
       <span class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-clay-700 dark:text-clay-400 bg-clay-100/70 dark:bg-clay-500/10 rounded-full px-2 py-0.5">
         {{ task.completed_subtask_count }}/{{ task.subtask_count }}
@@ -35,7 +36,7 @@
       </button>
       <button
         type="button"
-        onclick="editTask({{ task.id }}, '{{ task.name|escapejs }}', {{ task.weight }}, {{ task.group_id|default:'null' }})"
+        onclick="editTask({{ task.id }}, '{{ task.name|escapejs }}', {{ task.weight }}, {{ task.group_id|default:'null' }}, '{{ task.due_date|date:"Y-m-d" }}')"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
         aria-label="Edit task"
       >

@@ -2,13 +2,18 @@
 {{ pomodoro_state|json_script:"pomodoro-state" }}
 <script>
   document.addEventListener('alpine:init', () => {
-    const LABELS = { focus: 'Focus', short: 'Short break', long: 'Long break' }
+    const PHASE = { FOCUS: 'focus', SHORT: 'short', LONG: 'long' }
+    const LABELS = {
+      [PHASE.FOCUS]: 'Focus',
+      [PHASE.SHORT]: 'Short break',
+      [PHASE.LONG]: 'Long break',
+    }
     const STATE_URL = "{% url 'pomodoro:state' %}"
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content
 
     Alpine.store('pomodoro', {
       settings: {},
-      phase: 'focus',
+      phase: PHASE.FOCUS,
       running: false,
       endsAt: null,
       remaining: 0,
@@ -32,16 +37,14 @@
       },
 
       get label() { return LABELS[this.phase] },
-      get onBreak() { return this.running && this.phase !== 'focus' },
+      get onBreak() { return this.running && this.phase !== PHASE.FOCUS },
       get display() {
         const s = Math.max(0, this.remaining)
         return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
       },
 
       phaseSeconds() {
-        const m = this.phase === 'focus' ? this.settings.focus
-                : this.phase === 'short' ? this.settings.short : this.settings.long
-        return Math.round(m * 60)
+        return Math.round(this.settings[this.phase] * 60)
       },
 
       toggle() { this.running ? this.pause() : this.start() },
@@ -80,7 +83,7 @@
 
       setSettings(next) {
         const s = { ...this.settings }
-        for (const k of ['focus', 'short', 'long']) {
+        for (const k of [PHASE.FOCUS, PHASE.SHORT, PHASE.LONG]) {
           let v = parseInt(next[k], 10)
           if (!isNaN(v)) s[k] = Math.min(Math.max(v, 1), 180)
         }
@@ -92,12 +95,12 @@
       },
 
       _advance(autostart) {
-        if (this.phase === 'focus') {
+        if (this.phase === PHASE.FOCUS) {
           this.completed += 1
-          this.phase = (this.completed % this.settings.every === 0) ? 'long' : 'short'
+          this.phase = (this.completed % this.settings.every === 0) ? PHASE.LONG : PHASE.SHORT
         } else {
-          if (this.phase === 'long') this.completed = 0
-          this.phase = 'focus'
+          if (this.phase === PHASE.LONG) this.completed = 0
+          this.phase = PHASE.FOCUS
         }
         this.remaining = this.phaseSeconds()
         this.running = autostart
@@ -133,7 +136,7 @@
 
       _apply(s) {
         this._updatedAt = s.updatedAt || 0
-        this.phase = s.phase || 'focus'
+        this.phase = s.phase || PHASE.FOCUS
         this.completed = s.completed || 0
         this._stopLoop()
         if (s.running && s.endsAt) {

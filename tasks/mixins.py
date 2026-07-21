@@ -1,9 +1,12 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncMonth
 from django.shortcuts import render
+from django.utils import timezone
 
-from .models import MAX_TASK_WEIGHT, Group, Task
+from .models import MAX_TASK_WEIGHT, DueLens, Group, Task
 
 
 class BoardMixin(LoginRequiredMixin):
@@ -15,6 +18,10 @@ class BoardMixin(LoginRequiredMixin):
 
     def board_context(self):
         active_group = self.active_group()
+        due = self.request.GET.get("due")
+        active_due = due if due in DueLens.values else None
+        today = timezone.localdate()
+
         top_level = (
             Task.objects.filter_unarchived()
             .filter(user=self.request.user, parent__isnull=True)
@@ -23,12 +30,25 @@ class BoardMixin(LoginRequiredMixin):
         )
         if active_group:
             top_level = top_level.filter(group=active_group)
+        if active_due == DueLens.TODAY:
+            top_level = top_level.filter(due_date=today)
+        elif active_due == DueLens.OVERDUE:
+            top_level = top_level.filter(due_date__lt=today, completed_at__isnull=True)
+
+        params = {}
+        if active_group:
+            params["group"] = active_group.id
+        if active_due:
+            params["due"] = active_due
+
         return {
             "pending_tasks": top_level.filter(completed_at__isnull=True),
             "completed_tasks": top_level.filter(completed_at__isnull=False),
             "max_task_weight": MAX_TASK_WEIGHT,
             "active_task_group": active_group,
-            "group_query": f"?group={active_group.id}" if active_group else "",
+            "active_due": active_due,
+            "today": today,
+            "board_query": f"?{urlencode(params)}" if params else "",
         }
 
     def board_response(self):
@@ -41,9 +61,6 @@ class BoardMixin(LoginRequiredMixin):
 
 class ArchiveMixin(LoginRequiredMixin):
     def archive_context(self):
-        group_id = self.request.GET.get("group")
-        group_query = f"?group={group_id}" if group_id and group_id.isdigit() else ""
-
         base = Task.objects.filter_archived().filter(
             user=self.request.user, parent__isnull=True
         )
@@ -83,7 +100,6 @@ class ArchiveMixin(LoginRequiredMixin):
             "archived_tasks": tasks,
             "archive_periods": periods,
             "active_period": active_period,
-            "group_query": group_query,
         }
 
     def archive_response(self):

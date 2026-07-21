@@ -29,7 +29,7 @@
     </div>
 
     <form
-      hx-post="{% url 'tasks:task' %}{{ group_query }}"
+      hx-post="{% url 'tasks:task' %}{{ board_query }}"
       hx-target="#queue-content"
       hx-swap="innerHTML"
       hx-on::after-request="taskFormComplete(event)"
@@ -57,6 +57,17 @@
         <div id="drawer-groups" class="flex flex-wrap gap-2">
           {% include 'tasks/partials/groups/picker.html' %}
         </div>
+      </div>
+
+      <div x-show="!parentId">
+        <label for="task-due" class="block text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">Due date</label>
+        <input
+          type="date"
+          name="due_date"
+          id="task-due"
+          x-model="due"
+          class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
+        />
       </div>
 
       <div x-show="!parentId">
@@ -98,6 +109,7 @@
       groupId: null,
       name: '',
       weight: 0,
+      due: '',
       hover: 0,
       reset() {
         this.taskId = null
@@ -105,6 +117,7 @@
         this.groupId = null
         this.name = ''
         this.weight = 0
+        this.due = ''
         this.hover = 0
       },
       openNew(groupId) {
@@ -123,13 +136,14 @@
         this.name = detail.name
         this.weight = detail.weight
         this.groupId = detail.group
+        this.due = detail.due
         this.open = true
       },
     }))
   })
 
-  function editTask(id, name, weight, group) {
-    window.dispatchEvent(new CustomEvent('edit-task', { detail: { id, name, weight, group } }))
+  function editTask(id, name, weight, group, due) {
+    window.dispatchEvent(new CustomEvent('edit-task', { detail: { id, name, weight, group, due } }))
   }
 
   function addSubtask(parentId) {
