@@ -13,10 +13,9 @@
       </span>
       {% endif %}
       {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight muted=True %}
-      <span class="shrink-0 text-xs text-slate-400 dark:text-slate-600">{{ task.archived_at|date:"M j" }}</span>
       <form
         class="flex shrink-0"
-        hx-post="{% url 'tasks:task-unarchive' task.id %}{{ group_query }}"
+        hx-post="{% url 'tasks:task-unarchive' task.id %}{% querystring %}"
         hx-target="#archive-content"
         hx-swap="innerHTML"
       >
@@ -30,7 +29,7 @@
       </form>
       <button
         type="button"
-        onclick="promptDelete('Delete task', '{{ task.name|escapejs }}', '{% if task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', '{% url 'tasks:archive-task-detail' task.id %}', '#archive-content')"
+        onclick="promptDelete('Delete task', '{{ task.name|escapejs }}', '{% if task.subtask_count %}This task and its {{ task.subtask_count }} subtask{{ task.subtask_count|pluralize }} will be permanently deleted.{% else %}This task will be permanently deleted.{% endif %}', '{% url 'tasks:archive-task-detail' task.id %}{% querystring %}', '#archive-content')"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
         aria-label="Delete task"
       >
@@ -43,7 +42,11 @@
   <div class="mt-1.5 ml-1 pl-3.5 flex flex-col border-l border-slate-200/70 dark:border-slate-800/60">
     {% for subtask in task.subtasks.all %}
     <div class="flex items-center gap-2.5 py-1">
-      <span class="w-1.5 h-1.5 rounded-full shrink-0 {% if subtask.completed_at %}bg-emerald-500{% else %}bg-slate-300 dark:bg-slate-600{% endif %}"></span>
+      {% if task.group %}
+      <span class="w-1.5 h-1.5 rounded-full shrink-0 opacity-60" style="background-color: {{ task.group.color }}"></span>
+      {% else %}
+      <span class="w-1.5 h-1.5 rounded-full shrink-0 bg-slate-300 dark:bg-slate-600"></span>
+      {% endif %}
       <span class="flex-1 min-w-0 text-[13px] truncate {% if subtask.completed_at %}text-slate-400 dark:text-slate-600 line-through{% else %}text-slate-500 dark:text-slate-400{% endif %}">{{ subtask.name }}</span>
     </div>
     {% endfor %}

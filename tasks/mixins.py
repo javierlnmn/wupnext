@@ -1,4 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
+from django.db.models.functions import TruncDate, TruncMonth
 from django.shortcuts import render
 
 from .models import MAX_TASK_WEIGHT, Group, Task
@@ -41,14 +43,46 @@ class ArchiveMixin(LoginRequiredMixin):
     def archive_context(self):
         group_id = self.request.GET.get("group")
         group_query = f"?group={group_id}" if group_id and group_id.isdigit() else ""
+
+        base = Task.objects.filter_archived().filter(
+            user=self.request.user, parent__isnull=True
+        )
+        periods = [
+            {
+                "value": row["month"].strftime("%Y-%m"),
+                "year": row["month"].year,
+                "label": row["month"].strftime("%B"),
+                "short": row["month"].strftime("%b %y"),
+                "count": row["count"],
+            }
+            for row in base.annotate(month=TruncMonth("archived_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by("-month")
+        ]
+
+        requested = self.request.GET.get("period")
+        values = {p["value"] for p in periods}
+        active_period = requested if requested in values else (
+            periods[0]["value"] if periods else None
+        )
+
+        tasks = (
+            base.select_related("group")
+            .prefetch_related("subtasks")
+            .annotate(day=TruncDate("archived_at"))
+            .order_by("-archived_at")
+        )
+        if active_period:
+            year, month = active_period.split("-")
+            tasks = tasks.filter(
+                archived_at__year=int(year), archived_at__month=int(month)
+            )
+
         return {
-            "archived_tasks": (
-                Task.objects.filter_archived()
-                .filter(user=self.request.user, parent__isnull=True)
-                .select_related("group")
-                .prefetch_related("subtasks")
-                .order_by("-archived_at")
-            ),
+            "archived_tasks": tasks,
+            "archive_periods": periods,
+            "active_period": active_period,
             "group_query": group_query,
         }
 

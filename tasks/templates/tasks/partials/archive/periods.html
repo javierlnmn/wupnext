@@ -1,0 +1,36 @@
+<div class="flex md:hidden gap-2 overflow-x-auto pb-3 -mx-1 px-1 border-b border-slate-200 dark:border-slate-800">
+  {% for p in archive_periods %}
+  <button
+    type="button"
+    hx-get="{% url 'tasks:archive' %}{% querystring period=p.value %}"
+    hx-target="#archive-content"
+    hx-swap="innerHTML"
+    class="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium border whitespace-nowrap transition-colors {% if p.value == active_period %}bg-clay-500 text-white border-clay-500{% else %}border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-clay-400{% endif %}"
+  >
+    {{ p.short }}<span class="tabular-nums opacity-70">{{ p.count }}</span>
+  </button>
+  {% endfor %}
+</div>
+
+<div class="hidden md:flex md:flex-col gap-4 w-40 shrink-0 overflow-y-auto pr-4 border-r border-slate-200 dark:border-slate-800">
+  {% regroup archive_periods by year as year_groups %}
+  {% for year in year_groups %}
+  <div>
+    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 mb-1.5">{{ year.grouper }}</p>
+    <div class="flex flex-col gap-0.5">
+      {% for p in year.list %}
+      <button
+        type="button"
+        hx-get="{% url 'tasks:archive' %}{% querystring period=p.value %}"
+        hx-target="#archive-content"
+        hx-swap="innerHTML"
+        class="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-sm text-left transition-colors {% if p.value == active_period %}bg-clay-500/10 text-clay-700 dark:text-clay-300 font-semibold{% else %}text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60{% endif %}"
+      >
+        <span>{{ p.label }}</span>
+        <span class="text-[11px] tabular-nums {% if p.value == active_period %}text-clay-600 dark:text-clay-400{% else %}text-slate-400 dark:text-slate-600{% endif %}">{{ p.count }}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
