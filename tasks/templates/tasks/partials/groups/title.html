@@ -1,9 +1,9 @@
 {% if active_task_group %}
 <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ active_task_group.color }}"></span>
 <span>{{ active_task_group.name }}</span>
-{% elif active_due == DueLens.TODAY %}
+{% elif active_due == DueFilter.TODAY %}
 <span>Today</span>
-{% elif active_due == DueLens.OVERDUE %}
+{% elif active_due == DueFilter.OVERDUE %}
 <span>Overdue</span>
 {% else %}
 <span>All tasks</span>

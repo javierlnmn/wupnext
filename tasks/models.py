@@ -19,7 +19,7 @@ GROUP_COLOR_VALUES = {color["hex"] for color in GROUP_COLORS}
 MAX_TASK_WEIGHT = 5
 
 
-class DueLens(models.TextChoices):
+class DueFilter(models.TextChoices):
     TODAY = "today", "Today"
     OVERDUE = "overdue", "Overdue"
 

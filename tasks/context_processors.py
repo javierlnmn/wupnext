@@ -1,7 +1,7 @@
 from django.db.models import Count
 from django.utils import timezone
 
-from .models import DEFAULT_GROUP_COLOR, GROUP_COLORS, DueLens, Group, Task
+from .models import DEFAULT_GROUP_COLOR, GROUP_COLORS, DueFilter, Group, Task
 
 
 def sidebar(request):
@@ -29,5 +29,5 @@ def sidebar(request):
         "overdue_count": pending.filter(due_date__lt=today).count(),
         "task_group_palette": GROUP_COLORS,
         "default_task_group_color": DEFAULT_GROUP_COLOR,
-        "DueLens": DueLens,
+        "DueFilter": DueFilter,
     }

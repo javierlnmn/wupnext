@@ -6,7 +6,7 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.shortcuts import render
 from django.utils import timezone
 
-from .models import MAX_TASK_WEIGHT, DueLens, Group, Task
+from .models import MAX_TASK_WEIGHT, DueFilter, Group, Task
 
 
 class BoardMixin(LoginRequiredMixin):
@@ -19,7 +19,7 @@ class BoardMixin(LoginRequiredMixin):
     def board_context(self):
         active_group = self.active_group()
         due = self.request.GET.get("due")
-        active_due = due if due in DueLens.values else None
+        active_due = due if due in DueFilter.values else None
         today = timezone.localdate()
 
         top_level = (
@@ -30,9 +30,9 @@ class BoardMixin(LoginRequiredMixin):
         )
         if active_group:
             top_level = top_level.filter(group=active_group)
-        if active_due == DueLens.TODAY:
+        if active_due == DueFilter.TODAY:
             top_level = top_level.filter(due_date=today)
-        elif active_due == DueLens.OVERDUE:
+        elif active_due == DueFilter.OVERDUE:
             top_level = top_level.filter(due_date__lt=today, completed_at__isnull=True)
 
         params = {}
