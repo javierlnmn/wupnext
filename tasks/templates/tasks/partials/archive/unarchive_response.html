@@ -1,7 +1,5 @@
 {% include 'tasks/partials/archive/list.html' %}
 
 <div hx-swap-oob="innerHTML:#queue-content">{% include 'tasks/partials/tasks/list.html' %}</div>
-<p id="queue-stats" hx-swap-oob="true" class="text-[13px] text-slate-500 dark:text-slate-500 mt-1">
-  {% include 'tasks/partials/tasks/summary.html' %}
-</p>
+<div hx-swap-oob="innerHTML:#queue-stats">{% include 'tasks/partials/tasks/summary.html' %}</div>
 <div hx-swap-oob="innerHTML:#group-nav">{% include 'tasks/partials/nav/sidebar.html' %}</div>

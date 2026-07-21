@@ -1,9 +1,16 @@
 <button
   type="button"
-  onclick="const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isDark ? 'dark' : 'light')"
+  onclick="toggleTheme()"
   class="{{ class }}"
   aria-label="Toggle color theme"
 >
-  {% include 'common/icons/sun.html' with class='w-4 h-4 block dark:hidden' %}
-  {% include 'common/icons/moon.html' with class='w-4 h-4 hidden dark:block' %}
+  {% include 'common/icons/sun.html' with class='w-4 h-4 hidden dark:block' %}
+  {% include 'common/icons/moon.html' with class='w-4 h-4 block dark:hidden' %}
 </button>
+
+<script>
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark')
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  }
+</script>

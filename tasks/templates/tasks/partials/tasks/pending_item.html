@@ -27,7 +27,7 @@
       {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight %}
       <button
         type="button"
-        onclick="window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId: {{ task.id }} } }))"
+        onclick="addSubtask({{ task.id }})"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
         aria-label="Add subtask"
       >
@@ -35,7 +35,7 @@
       </button>
       <button
         type="button"
-        onclick="window.dispatchEvent(new CustomEvent('edit-task', { detail: { id: {{ task.id }}, name: '{{ task.name|escapejs }}', weight: {{ task.weight }}, group: {{ task.group_id|default:'null' }} } }))"
+        onclick="editTask({{ task.id }}, '{{ task.name|escapejs }}', {{ task.weight }}, {{ task.group_id|default:'null' }})"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
         aria-label="Edit task"
       >

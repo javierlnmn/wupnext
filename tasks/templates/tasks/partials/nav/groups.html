@@ -12,7 +12,7 @@
   </a>
   <button
     type="button"
-    onclick="window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title: 'Delete group', name: '{{ group.name|escapejs }}', desc: 'Its tasks are kept and moved to No group.', url: '{% url 'tasks:group-detail' group.id %}{{ group_query }}' } }))"
+    onclick="promptDelete('Delete group', '{{ group.name|escapejs }}', 'Its tasks are kept and moved to No group.', '{% url 'tasks:group-detail' group.id %}{{ group_query }}')"
     class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity"
     aria-label="Delete group"
   >

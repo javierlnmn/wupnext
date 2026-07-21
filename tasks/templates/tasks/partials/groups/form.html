@@ -1,7 +1,7 @@
 {% load ui %}
 <div
-  x-data="{ groupOpen: false, gName: '', gColor: '{{ default_task_group_color }}' }"
-  @new-group.window="groupOpen = true; gName = ''; gColor = '{{ default_task_group_color }}'"
+  x-data="groupForm()"
+  @new-group.window="openNew()"
   @group-created="groupOpen = false"
   @keydown.escape.window="groupOpen = false"
 >
@@ -22,7 +22,7 @@
       hx-post="{% url 'tasks:group-create' %}"
       hx-target="#queue-content"
       hx-swap="innerHTML"
-      hx-on::after-request="if(event.detail.successful){ this.reset(); this.dispatchEvent(new CustomEvent('group-created', { bubbles: true })) }"
+      hx-on::after-request="groupFormComplete(event)"
       class="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto"
     >
       <div>
@@ -66,3 +66,25 @@
     </form>
   {% enddrawer %}
 </div>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('groupForm', () => ({
+      groupOpen: false,
+      gName: '',
+      gColor: '{{ default_task_group_color }}',
+      openNew() {
+        this.groupOpen = true
+        this.gName = ''
+        this.gColor = '{{ default_task_group_color }}'
+      },
+    }))
+  })
+
+  function groupFormComplete(event) {
+    if (event.detail.successful) {
+      event.target.reset()
+      event.target.dispatchEvent(new CustomEvent('group-created', { bubbles: true }))
+    }
+  }
+</script>

@@ -1,7 +1,7 @@
 {% load ui %}
 <div
-  x-data="{ delOpen: false, delTitle: '', delName: '', delDesc: '', delUrl: '', delTarget: '#queue-content' }"
-  @confirm-delete.window="delOpen = true; delTitle = $event.detail.title; delName = $event.detail.name; delDesc = $event.detail.desc; delUrl = $event.detail.url; delTarget = $event.detail.target || '#queue-content'"
+  x-data="deleteModal()"
+  @confirm-delete.window="open($event.detail)"
   @keydown.escape.window="delOpen = false"
 >
   {% modal openStateKey="delOpen" %}
@@ -28,7 +28,7 @@
         </button>
         <button
           type="button"
-          @click="htmx.ajax('DELETE', delUrl, { target: delTarget, swap: 'innerHTML', source: $el }); delOpen = false"
+          @click="confirmDelete()"
           class="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg shadow-rose-600/20 transition-colors"
         >
           Delete
@@ -37,3 +37,32 @@
     </div>
   {% endmodal %}
 </div>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('deleteModal', () => ({
+      delOpen: false,
+      delTitle: '',
+      delName: '',
+      delDesc: '',
+      delUrl: '',
+      delTarget: '#queue-content',
+      open(detail) {
+        this.delOpen = true
+        this.delTitle = detail.title
+        this.delName = detail.name
+        this.delDesc = detail.desc
+        this.delUrl = detail.url
+        this.delTarget = detail.target || '#queue-content'
+      },
+      confirmDelete() {
+        htmx.ajax('DELETE', this.delUrl, { target: this.delTarget, swap: 'innerHTML' })
+        this.delOpen = false
+      },
+    }))
+  })
+
+  function promptDelete(title, name, desc, url, target) {
+    window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { title, name, desc, url, target } }))
+  }
+</script>

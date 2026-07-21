@@ -1,10 +1,7 @@
 <section>
   <div class="flex items-center gap-2 mb-4">
     <div class="w-8 h-8 rounded-lg bg-clay-500/10 flex items-center justify-center shrink-0">
-      <svg class="w-4 h-4 text-clay-600 dark:text-clay-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-        <circle cx="12" cy="13" r="8" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4l2.5 2.5M9 2h6" />
-      </svg>
+      {% include 'common/icons/clock.html' with class='w-4 h-4 text-clay-600 dark:text-clay-400' %}
     </div>
     <div>
       <h3 class="text-sm font-bold text-slate-900 dark:text-white">Pomodoro</h3>
@@ -15,13 +12,7 @@
   <form
     hx-post="{% url 'accounts:pomodoro-settings' %}"
     hx-swap="none"
-    hx-on::after-request="
-      if (event.detail.successful) {
-        const d = new FormData(this);
-        Alpine.store('pomodoro').setSettings({ focus: d.get('focus'), short: d.get('short'), long: d.get('long'), every: d.get('every') });
-        this.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }));
-      }
-    "
+    hx-on::after-request="pomodoroSettingsComplete(event)"
     class="space-y-3"
   >
     <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
@@ -60,4 +51,18 @@
       Save
     </button>
   </form>
+  <script>
+    function pomodoroSettingsComplete(event) {
+      if (!event.detail.successful) return
+      const d = new FormData(event.target)
+      Alpine.store('pomodoro').setSettings({
+        focus: d.get('focus'),
+        short: d.get('short'),
+        long: d.get('long'),
+        every: d.get('every'),
+      })
+      event.target.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }))
+    }
+  </script>
 </section>
+

@@ -1,14 +1,8 @@
 {% load ui %}
 <div
-  x-data="{
-    open: false, taskId: null, parentId: null, groupId: null, name: '', weight: 0, hover: 0,
-    reset() { this.taskId = null; this.parentId = null; this.groupId = null; this.name = ''; this.weight = 0; this.hover = 0 },
-    openNew(groupId) { this.reset(); this.groupId = groupId; this.open = true },
-    openSubtask(parentId) { this.reset(); this.parentId = parentId; this.open = true },
-    openEdit(d) { this.reset(); this.taskId = d.id; this.name = d.name; this.weight = d.weight; this.groupId = d.group; this.open = true },
-  }"
+  x-data="taskForm()"
   @keydown.escape.window="open = false"
-  @task-added="open = false; reset()"
+  @task-saved="open = false; reset()"
   @edit-task.window="openEdit($event.detail)"
   @add-subtask.window="openSubtask($event.detail.parentId)"
 >
@@ -38,7 +32,7 @@
       hx-post="{% url 'tasks:task' %}{{ group_query }}"
       hx-target="#queue-content"
       hx-swap="innerHTML"
-      hx-on::after-request="if(event.detail.successful){ this.dispatchEvent(new CustomEvent('task-added', { bubbles: true })) }"
+      hx-on::after-request="taskFormComplete(event)"
       class="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto"
     >
       <input type="hidden" name="task_id" :value="taskId">
@@ -94,3 +88,57 @@
     </form>
   {% enddrawer %}
 </div>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('taskForm', () => ({
+      open: false,
+      taskId: null,
+      parentId: null,
+      groupId: null,
+      name: '',
+      weight: 0,
+      hover: 0,
+      reset() {
+        this.taskId = null
+        this.parentId = null
+        this.groupId = null
+        this.name = ''
+        this.weight = 0
+        this.hover = 0
+      },
+      openNew(groupId) {
+        this.reset()
+        this.groupId = groupId
+        this.open = true
+      },
+      openSubtask(parentId) {
+        this.reset()
+        this.parentId = parentId
+        this.open = true
+      },
+      openEdit(detail) {
+        this.reset()
+        this.taskId = detail.id
+        this.name = detail.name
+        this.weight = detail.weight
+        this.groupId = detail.group
+        this.open = true
+      },
+    }))
+  })
+
+  function editTask(id, name, weight, group) {
+    window.dispatchEvent(new CustomEvent('edit-task', { detail: { id, name, weight, group } }))
+  }
+
+  function addSubtask(parentId) {
+    window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId } }))
+  }
+
+  function taskFormComplete(event) {
+    if (event.detail.successful) {
+      event.target.dispatchEvent(new CustomEvent('task-saved', { bubbles: true }))
+    }
+  }
+</script>
