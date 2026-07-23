@@ -1,0 +1,11 @@
+Hi {{ user.first_name|default:user.username }},
+
+Here's what needs your attention on wupnext.
+{% if overdue %}
+Overdue:
+{% for task in overdue %}  - {{ task.name }} (due {{ task.due_date|date:"M j" }})
+{% endfor %}{% endif %}{% if due_today %}
+Due today:
+{% for task in due_today %}  - {{ task.name }}
+{% endfor %}{% endif %}
+— wupnext

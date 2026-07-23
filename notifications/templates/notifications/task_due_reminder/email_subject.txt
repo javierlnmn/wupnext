@@ -1,0 +1,1 @@
+Your wupnext tasks for {{ date|date:"F j" }}

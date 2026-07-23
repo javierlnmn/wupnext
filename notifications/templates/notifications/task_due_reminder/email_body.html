@@ -1,0 +1,29 @@
+<div style="font-family: 'Manrope', -apple-system, Segoe UI, Roboto, sans-serif; max-width: 520px; margin: 0 auto; color: #1c1917; line-height: 1.5;">
+  <p style="font-size: 20px; font-weight: 700; margin: 0 0 4px;">wupnext<span style="color: #b45309;">.</span></p>
+  <p style="margin: 0 0 20px;">Hi {{ user.first_name|default:user.username }}, here's what needs your attention.</p>
+
+  {% if overdue %}
+  <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b91c1c; margin: 0 0 8px;">Overdue</p>
+  <ul style="list-style: none; padding: 0; margin: 0 0 24px;">
+    {% for task in overdue %}
+    <li style="padding: 10px 14px; margin-bottom: 6px; background: #fef2f2; border-radius: 8px;">
+      <span style="font-weight: 600;">{{ task.name }}</span>
+      <span style="color: #78716c; font-size: 13px;"> — due {{ task.due_date|date:"M j" }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if due_today %}
+  <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; margin: 0 0 8px;">Due today</p>
+  <ul style="list-style: none; padding: 0; margin: 0 0 24px;">
+    {% for task in due_today %}
+    <li style="padding: 10px 14px; margin-bottom: 6px; background: #fafaf9; border-radius: 8px;">
+      <span style="font-weight: 600;">{{ task.name }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p style="color: #a8a29e; font-size: 13px; margin: 24px 0 0;">— wupnext</p>
+</div>
