@@ -29,6 +29,11 @@ urlpatterns = [
         views.ArchiveView.as_view(),
         name="archive-task-detail",
     ),
+    path(
+        "archive/period/<str:period>/",
+        views.ArchivePeriodView.as_view(),
+        name="archive-period-delete",
+    ),
     path("group/", views.GroupView.as_view(), name="group-create"),
     path("group/<int:group_id>/", views.GroupView.as_view(), name="group-detail"),
 ]

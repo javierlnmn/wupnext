@@ -11,6 +11,18 @@
   {% include 'tasks/partials/archive/periods.html' %}
 
   <div class="flex-1 min-w-0 flex flex-col gap-5 pt-4 md:pt-0">
+    {% if active_period %}
+    <div class="flex justify-end">
+      <button
+        type="button"
+        onclick="promptDelete('Clear month', '{{ archived_tasks.0.archived_at|date:"F Y" }}', 'All its archived tasks will be permanently deleted.', '{% url 'tasks:archive-period-delete' active_period %}{% querystring %}', '#archive-content')"
+        class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors"
+      >
+        {% include 'common/icons/trash.html' with class='w-3.5 h-3.5' %}
+        <span>Clear month</span>
+      </button>
+    </div>
+    {% endif %}
     {% regroup archived_tasks by day as day_groups %}
     {% for day in day_groups %}
     <div>

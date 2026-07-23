@@ -104,6 +104,21 @@ class ArchiveView(BoardMixin, ArchiveMixin, View):
         return self.archive_response()
 
 
+class ArchivePeriodView(ArchiveMixin, View):
+    def delete(self, request, period):
+        try:
+            year, month = (int(part) for part in period.split("-"))
+        except ValueError:
+            return HttpResponse(status=400)
+        Task.objects.filter_archived().filter(
+            user=request.user,
+            parent__isnull=True,
+            archived_at__year=year,
+            archived_at__month=month,
+        ).delete()
+        return self.archive_response()
+
+
 class UnarchiveTaskView(BoardMixin, ArchiveMixin, View):
     def post(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)

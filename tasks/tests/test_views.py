@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from tasks.models import Group, Task
@@ -291,3 +292,67 @@ class UnarchiveViewTests(BoardClientTestCase):
         self.client.post(reverse("tasks:task-unarchive", args=[task.id]))
         task.refresh_from_db()
         self.assertIsNotNone(task.archived_at)
+
+
+class ArchivePeriodDeleteTests(BoardClientTestCase):
+    def archive_task(self, year, month, **kwargs):
+        task = TaskFactory(user=self.user, completed=True, **kwargs)
+        moment = timezone.make_aware(datetime(year, month, 15, 12, 0))
+        Task.objects.filter(pk=task.pk).update(archived_at=moment)
+        return task
+
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.delete(
+            reverse("tasks:archive-period-delete", args=["2026-07"])
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_deletes_every_task_in_the_month(self):
+        a = self.archive_task(2026, 7)
+        b = self.archive_task(2026, 7)
+        response = self.client.delete(
+            reverse("tasks:archive-period-delete", args=["2026-07"])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nothing archived")
+        self.assertFalse(Task.objects.filter(pk__in=[a.pk, b.pk]).exists())
+
+    def test_leaves_other_months_untouched(self):
+        july = self.archive_task(2026, 7)
+        may = self.archive_task(2026, 5)
+        self.client.delete(reverse("tasks:archive-period-delete", args=["2026-07"]))
+        self.assertFalse(Task.objects.filter(pk=july.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=may.pk).exists())
+
+    def test_cascades_to_subtasks(self):
+        parent = self.archive_task(2026, 7)
+        subtask = TaskFactory(user=self.user, parent=parent)
+        self.client.delete(reverse("tasks:archive-period-delete", args=["2026-07"]))
+        self.assertFalse(Task.objects.filter(pk=subtask.pk).exists())
+
+    def test_does_not_delete_unarchived_tasks(self):
+        today = timezone.localdate()
+        pending = TaskFactory(user=self.user, due_date=today)
+        archived = self.archive_task(today.year, today.month)
+        self.client.delete(
+            reverse("tasks:archive-period-delete", args=[today.strftime("%Y-%m")])
+        )
+        self.assertTrue(Task.objects.filter(pk=pending.pk).exists())
+        self.assertFalse(Task.objects.filter(pk=archived.pk).exists())
+
+    def test_scoped_to_user(self):
+        mine = self.archive_task(2026, 7)
+        other = TaskFactory(user=UserFactory(), completed=True)
+        Task.objects.filter(pk=other.pk).update(
+            archived_at=timezone.make_aware(datetime(2026, 7, 15, 12, 0))
+        )
+        self.client.delete(reverse("tasks:archive-period-delete", args=["2026-07"]))
+        self.assertFalse(Task.objects.filter(pk=mine.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=other.pk).exists())
+
+    def test_invalid_period_returns_400(self):
+        response = self.client.delete(
+            reverse("tasks:archive-period-delete", args=["not-a-period"])
+        )
+        self.assertEqual(response.status_code, 400)
