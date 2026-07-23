@@ -1,3 +1,4 @@
+from django.db.models import Max
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -66,11 +67,14 @@ class GroupView(BoardMixin, View):
         form = GroupForm(request.POST)
         if not form.is_valid():
             return self.board_response()
+        last_position = Group.objects.filter(user=request.user).aggregate(
+            max_position=Max("position")
+        )["max_position"]
         group = Group.objects.create(
             user=request.user,
             name=form.cleaned_data["name"],
             color=form.cleaned_data["color"],
-            position=Group.objects.filter(user=request.user).count(),
+            position=last_position + 1 if last_position is not None else 0,
         )
         response = HttpResponse(status=204)
         response["HX-Location"] = f"{reverse('tasks:board')}?group={group.id}"
