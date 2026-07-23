@@ -51,11 +51,14 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "django_browser_reload",
+    # Task queue / scheduler
+    "django_q",
     # Other apps
     "common",
     "accounts",
     "tasks",
     "pomodoro",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -184,6 +187,32 @@ JET_THEMES = [
     {"theme": "light-blue", "color": "#5EADDE", "title": "Light Blue"},
     {"theme": "light-gray", "color": "#222", "title": "Light Gray"},
 ]
+
+# Email
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"
+    if DEBUG
+    else "anymail.backends.resend.EmailBackend",
+)
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "wupnext <onboarding@resend.dev>")
+
+ANYMAIL = {
+    "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
+}
+
+
+# Django Q2 (ORM broker — no Redis/Celery)
+Q_CLUSTER = {
+    "name": "wupnext",
+    "workers": int(os.getenv("Q_WORKERS", "2")),
+    "timeout": int(os.getenv("Q_TIMEOUT", "60")),
+    "retry": int(os.getenv("Q_RETRY", "120")),
+    "catch_up": False,
+    "orm": "default",
+}
+
 
 # Accounts redirect urls
 LOGIN_REDIRECT_URL = "tasks:board"
