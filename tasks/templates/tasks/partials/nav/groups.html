@@ -10,14 +10,24 @@
     <span class="flex-1 text-left truncate">{{ group.name }}</span>
     <span class="text-xs tabular-nums transition-opacity lg:group-hover/nav:opacity-0 {% if active_task_group.id == group.id %}{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ group.pending_count }}</span>
   </a>
-  <button
-    type="button"
-    onclick="promptDelete('Delete group', '{{ group.name|escapejs }}', 'Its tasks are kept and moved to No group.', '{% url 'tasks:group-detail' group.id %}{{ board_query }}')"
-    class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity"
-    aria-label="Delete group"
-  >
-    {% include 'common/icons/trash.html' with class='w-4 h-4' %}
-  </button>
+  <div class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity">
+    <button
+      type="button"
+      onclick="window.dispatchEvent(new CustomEvent('edit-group', { detail: { id: {{ group.id }}, name: '{{ group.name|escapejs }}', color: '{{ group.color }}' } }))"
+      class="p-1 rounded-md text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
+      aria-label="Edit group"
+    >
+      {% include 'common/icons/edit.html' with class='w-4 h-4' %}
+    </button>
+    <button
+      type="button"
+      onclick="promptDelete('Delete group', '{{ group.name|escapejs }}', 'Its tasks are kept and moved to No group.', '{% url 'tasks:group-detail' group.id %}{{ board_query }}')"
+      class="p-1 rounded-md text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+      aria-label="Delete group"
+    >
+      {% include 'common/icons/trash.html' with class='w-4 h-4' %}
+    </button>
+  </div>
 </div>
 {% endfor %}
 

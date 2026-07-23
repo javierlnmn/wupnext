@@ -55,6 +55,7 @@ class TaskForm(forms.Form):
 
 
 class GroupForm(forms.Form):
+    group_id = forms.IntegerField(required=False)
     name = forms.CharField(max_length=100)
     color = forms.CharField(max_length=9, required=False)
 

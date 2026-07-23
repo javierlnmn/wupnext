@@ -202,6 +202,62 @@ class GroupCreateTests(BoardClientTestCase):
         self.assertFalse(Group.objects.exists())
 
 
+class GroupEditTests(BoardClientTestCase):
+    def test_requires_login(self):
+        group = GroupFactory(user=self.user)
+        self.client.logout()
+        response = self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Renamed", "color": group.color},
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_renames_group(self):
+        group = GroupFactory(user=self.user, name="Old")
+        response = self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Renamed", "color": group.color},
+        )
+        self.assertEqual(response.status_code, 200)
+        group.refresh_from_db()
+        self.assertEqual(group.name, "Renamed")
+
+    def test_updates_color(self):
+        group = GroupFactory(user=self.user)
+        self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": group.name, "color": "#8b5cf6"},
+        )
+        group.refresh_from_db()
+        self.assertEqual(group.color, "#8b5cf6")
+
+    def test_refreshes_group_nav_with_new_name(self):
+        group = GroupFactory(user=self.user, name="Old")
+        response = self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Renamed", "color": group.color},
+        )
+        self.assertContains(response, "innerHTML:#group-nav")
+        self.assertContains(response, "Renamed")
+
+    def test_does_not_create_a_new_group(self):
+        group = GroupFactory(user=self.user, name="Old")
+        self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Renamed", "color": group.color},
+        )
+        self.assertEqual(Group.objects.filter(user=self.user).count(), 1)
+
+    def test_cannot_edit_other_users_group(self):
+        group = GroupFactory(user=UserFactory(), name="Theirs")
+        self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Hijacked", "color": group.color},
+        )
+        group.refresh_from_db()
+        self.assertEqual(group.name, "Theirs")
+
+
 class GroupDeleteTests(BoardClientTestCase):
     def test_requires_login(self):
         group = GroupFactory(user=self.user)
