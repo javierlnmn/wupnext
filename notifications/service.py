@@ -25,7 +25,7 @@ class NotificationService:
         for channel_key in channels or self.channels:
             channel = self.channels[channel_key]
 
-            if not channel.is_enabled(user):
+            if not channel.is_enabled():
                 continue
 
             log = None

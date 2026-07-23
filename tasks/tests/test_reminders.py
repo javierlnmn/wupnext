@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
-from notifications.models import NotificationLog
+from notifications.models import Channel, NotificationLog
 from tasks.reminders import send_due_reminders
 from tasks.tests.factories import TaskFactory
 
@@ -59,6 +59,16 @@ class SendDueRemindersTests(TestCase):
         send_due_reminders()
 
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_skips_user_who_disabled_the_channel(self):
+        self.user.preferences.notifications_disabled_channels = [Channel.EMAIL]
+        self.user.preferences.save()
+        TaskFactory(user=self.user, due_date=self.today)
+
+        send_due_reminders()
+
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(NotificationLog.objects.count(), 0)
 
     def test_no_email_when_nothing_due(self):
         TaskFactory(user=self.user, due_date=self.tomorrow)

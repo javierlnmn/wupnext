@@ -15,6 +15,8 @@ class UserPreferences(models.Model):
         on_delete=models.CASCADE,
         related_name="preferences",
     )
+
+    # Pomodoro
     pomodoro_focus = models.PositiveSmallIntegerField(
         default=25,
         validators=[MinValueValidator(1), MaxValueValidator(180)],
@@ -31,6 +33,9 @@ class UserPreferences(models.Model):
         default=4,
         validators=[MinValueValidator(1), MaxValueValidator(12)],
     )
+
+    # Notifications
+    notifications_disabled_channels = models.JSONField(default=list)
 
     def __str__(self):
         return f"Preferences for {self.user}"

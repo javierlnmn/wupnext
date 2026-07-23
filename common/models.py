@@ -27,4 +27,4 @@ class AbstractSingleton(models.Model):
 
 
 class SiteSettings(AbstractSingleton):
-    email_notifications_enabled = models.BooleanField(default=True)
+    notifications_disabled_channels = models.JSONField(default=list)

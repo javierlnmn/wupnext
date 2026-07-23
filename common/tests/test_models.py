@@ -10,14 +10,15 @@ class SiteSettingsTests(TestCase):
         cache.clear()
 
     def test_save_forces_singleton_pk(self):
-        first = SiteSettings(email_notifications_enabled=True)
+        first = SiteSettings(notifications_disabled_channels=[])
         first.save()
-        second = SiteSettings(email_notifications_enabled=False)
+        second = SiteSettings(notifications_disabled_channels=["email"])
         second.save()
         self.assertEqual(first.pk, 1)
         self.assertEqual(second.pk, 1)
         self.assertEqual(SiteSettings.objects.count(), 1)
-        self.assertFalse(SiteSettings.objects.get().email_notifications_enabled)
+        saved = SiteSettings.objects.get()
+        self.assertEqual(saved.notifications_disabled_channels, ["email"])
 
     def test_delete_is_a_noop(self):
         obj = SiteSettings.objects.create()
@@ -32,10 +33,10 @@ class SiteSettingsTests(TestCase):
         self.assertEqual(cache.get("SiteSettings").pk, 1)
 
     def test_load_returns_existing_instance(self):
-        SiteSettings.objects.create(email_notifications_enabled=False)
+        SiteSettings.objects.create(notifications_disabled_channels=["email"])
         cache.clear()
         loaded = SiteSettings.load()
-        self.assertFalse(loaded.email_notifications_enabled)
+        self.assertEqual(loaded.notifications_disabled_channels, ["email"])
         self.assertEqual(SiteSettings.objects.count(), 1)
 
 

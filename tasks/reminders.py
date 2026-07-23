@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from accounts.models import UserPreferences
 from notifications.models import NotificationEvent
 from notifications.service import notification_service
 
@@ -28,6 +29,15 @@ def send_due_reminders():
         if not tasks:
             continue
 
+        prefs = UserPreferences.for_user(user)
+        channels = [
+            key
+            for key in notification_service.channels
+            if key not in prefs.notifications_disabled_channels
+        ]
+        if not channels:
+            continue
+
         try:
             notification_service.notify(
                 user,
@@ -37,6 +47,7 @@ def send_due_reminders():
                     "overdue": [task for task in tasks if task.due_date < today],
                     "due_today": [task for task in tasks if task.due_date == today],
                 },
+                channels=channels,
                 dedup_key=str(today),
             )
         except Exception:

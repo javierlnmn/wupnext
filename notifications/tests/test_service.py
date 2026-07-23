@@ -6,7 +6,7 @@ from django.utils import timezone
 from accounts.tests.factories import UserFactory
 from common.models import SiteSettings
 from notifications.exceptions import MissingRecipient
-from notifications.models import NotificationEvent, NotificationLog
+from notifications.models import Channel, NotificationEvent, NotificationLog
 from notifications.service import NotificationService, notification_service
 
 EVENT = NotificationEvent.TASK_DUE_REMINDER
@@ -64,9 +64,9 @@ class NotificationServiceTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(NotificationLog.objects.count(), 0)
 
-    def test_disabled_channel_is_skipped(self):
+    def test_globally_disabled_channel_is_skipped(self):
         site = SiteSettings.load()
-        site.email_notifications_enabled = False
+        site.notifications_disabled_channels = [Channel.EMAIL]
         site.save()
 
         notification_service.notify(

@@ -7,7 +7,7 @@ from accounts.tests.factories import UserFactory
 from common.models import SiteSettings
 from notifications.channels.email import EmailChannel
 from notifications.exceptions import MissingRecipient
-from notifications.models import NotificationEvent
+from notifications.models import Channel, NotificationEvent
 
 EVENT = NotificationEvent.TASK_DUE_REMINDER.value
 
@@ -18,13 +18,13 @@ class EmailChannelTests(TestCase):
         self.channel = EmailChannel()
         self.user = UserFactory(email="user@example.com")
 
-    def test_is_enabled_reflects_site_settings(self):
-        self.assertTrue(self.channel.is_enabled(self.user))
+    def test_is_enabled_reflects_global_notifications_disabled_channels(self):
+        self.assertTrue(self.channel.is_enabled())
 
         site = SiteSettings.load()
-        site.email_notifications_enabled = False
+        site.notifications_disabled_channels = [Channel.EMAIL]
         site.save()
-        self.assertFalse(self.channel.is_enabled(self.user))
+        self.assertFalse(self.channel.is_enabled())
 
     def test_recipient_is_none_when_blank(self):
         self.assertIsNone(self.channel.recipient(UserFactory(email="")))

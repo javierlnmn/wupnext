@@ -2,8 +2,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
-from common.models import SiteSettings
-
 from ..exceptions import MissingRecipient
 from ..models import Channel
 from .base import BaseChannel
@@ -11,9 +9,6 @@ from .base import BaseChannel
 
 class EmailChannel(BaseChannel):
     key = Channel.EMAIL
-
-    def is_enabled(self, user):
-        return SiteSettings.load().email_notifications_enabled
 
     def recipient(self, user):
         return user.email or None
