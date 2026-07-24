@@ -13,8 +13,8 @@ urlpatterns = [
     ),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path(
-        'preferences/pomodoro/',
-        views.PomodoroSettingsView.as_view(),
-        name='pomodoro-settings',
+        'preferences/',
+        views.PreferencesView.as_view(),
+        name='preferences',
     ),
 ]

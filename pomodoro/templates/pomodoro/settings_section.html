@@ -9,60 +9,34 @@
     </div>
   </div>
 
-  <form
-    hx-post="{% url 'accounts:pomodoro-settings' %}"
-    hx-swap="none"
-    hx-on::after-request="pomodoroSettingsComplete(event)"
-    class="space-y-3"
-  >
+  <div class="space-y-3">
     <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
       <span>Focus</span>
       <span class="flex items-center gap-1.5">
-        <input type="number" name="focus" min="1" max="180" value="{{ pomodoro_settings.focus }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <input type="number" name="pomodoro_focus" min="1" max="180" value="{{ pomodoro_settings.focus }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
         <span class="text-xs text-slate-400">min</span>
       </span>
     </label>
     <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
       <span>Short break</span>
       <span class="flex items-center gap-1.5">
-        <input type="number" name="short" min="1" max="180" value="{{ pomodoro_settings.short }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <input type="number" name="pomodoro_short_break" min="1" max="180" value="{{ pomodoro_settings.short }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
         <span class="text-xs text-slate-400">min</span>
       </span>
     </label>
     <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
       <span>Long break</span>
       <span class="flex items-center gap-1.5">
-        <input type="number" name="long" min="1" max="180" value="{{ pomodoro_settings.long }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <input type="number" name="pomodoro_long_break" min="1" max="180" value="{{ pomodoro_settings.long }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
         <span class="text-xs text-slate-400">min</span>
       </span>
     </label>
     <label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
       <span>Long break every</span>
       <span class="flex items-center gap-1.5">
-        <input type="number" name="every" min="1" max="12" value="{{ pomodoro_settings.every }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
+        <input type="number" name="pomodoro_long_every" min="1" max="12" value="{{ pomodoro_settings.every }}" class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner">
         <span class="text-xs text-slate-400">🍅</span>
       </span>
     </label>
-
-    <button
-      type="submit"
-      class="w-full h-9 mt-4 bg-clay-500 hover:bg-clay-600 text-white text-sm font-semibold rounded-lg transition-colors"
-    >
-      Save
-    </button>
-  </form>
-  <script>
-    function pomodoroSettingsComplete(event) {
-      if (!event.detail.successful) return
-      const d = new FormData(event.target)
-      Alpine.store('pomodoro').setSettings({
-        focus: d.get('focus'),
-        short: d.get('short'),
-        long: d.get('long'),
-        every: d.get('every'),
-      })
-      event.target.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }))
-    }
-  </script>
+  </div>
 </section>
-

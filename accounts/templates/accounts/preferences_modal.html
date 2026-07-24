@@ -5,7 +5,7 @@
   @close-preferences="prefsOpen = false"
   @keydown.escape.window="prefsOpen = false"
 >
-  {% modal openStateKey="prefsOpen" %}
+  {% modal openStateKey="prefsOpen" width="30rem" %}
     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
       <h2 class="text-lg font-bold text-slate-900 dark:text-white">Preferences</h2>
       <button
@@ -18,8 +18,39 @@
       </button>
     </div>
 
-    <div class="px-6 py-6">
-      {% include 'pomodoro/settings_section.html' %}
-    </div>
+    <form
+      hx-post="{% url 'accounts:preferences' %}"
+      hx-swap="none"
+      hx-on::after-request="preferencesComplete(event)"
+    >
+      <div class="px-6 py-6 space-y-6">
+        {% include 'pomodoro/settings_section.html' %}
+        <div class="border-t border-slate-200 dark:border-slate-800"></div>
+        {% include 'accounts/notification_settings_section.html' %}
+      </div>
+
+      <div class="px-6 py-5 border-t border-slate-200 dark:border-slate-800">
+        <button
+          type="submit"
+          class="w-full h-9 bg-clay-500 hover:bg-clay-600 text-white text-sm font-semibold rounded-lg transition-colors"
+        >
+          Save
+        </button>
+      </div>
+    </form>
   {% endmodal %}
 </div>
+
+<script>
+  function preferencesComplete(event) {
+    if (!event.detail.successful) return
+    const d = new FormData(event.target)
+    Alpine.store('pomodoro').setSettings({
+      focus: d.get('pomodoro_focus'),
+      short: d.get('pomodoro_short_break'),
+      long: d.get('pomodoro_long_break'),
+      every: d.get('pomodoro_long_every'),
+    })
+    event.target.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }))
+  }
+</script>
