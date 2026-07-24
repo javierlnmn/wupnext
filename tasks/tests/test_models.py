@@ -4,9 +4,9 @@ from django.test import TestCase
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
-from tasks.models import Task
+from tasks.models import Group, Task
 
-from .factories import TaskFactory
+from .factories import GroupFactory, TaskFactory
 
 
 class DueDatePropertiesTests(TestCase):
@@ -85,3 +85,35 @@ class TaskQuerySetTests(TestCase):
         self.assertEqual(
             Task.objects.filter(user=self.user).filter_archived().count(), 2
         )
+
+
+class NextPositionTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+
+    def test_next_position_starts_at_zero(self):
+        self.assertEqual(Task.next_position(self.user, None), 0)
+        self.assertEqual(Group.next_position(self.user), 0)
+
+    def test_next_position_is_one_past_the_highest(self):
+        TaskFactory(user=self.user, position=0)
+        TaskFactory(user=self.user, position=4)
+        self.assertEqual(Task.next_position(self.user, None), 5)
+
+    def test_next_position_is_scoped_per_parent(self):
+        parent = TaskFactory(user=self.user)
+        TaskFactory(user=self.user, parent=parent, position=2)
+        self.assertEqual(Task.next_position(self.user, parent), 3)
+        self.assertEqual(Task.next_position(self.user, None), 1)
+
+    def test_next_group_position_scoped_to_group(self):
+        group = GroupFactory(user=self.user)
+        other = GroupFactory(user=self.user)
+        TaskFactory(user=self.user, group=group, group_position=0)
+        TaskFactory(user=self.user, group=group, group_position=1)
+        self.assertEqual(Task.next_group_position(self.user, group), 2)
+        self.assertEqual(Task.next_group_position(self.user, other), 0)
+
+    def test_group_next_position_ignores_other_users(self):
+        GroupFactory(user=UserFactory(), position=9)
+        self.assertEqual(Group.next_position(self.user), 0)

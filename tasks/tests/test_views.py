@@ -66,6 +66,18 @@ class TaskCreateTests(BoardClientTestCase):
         )
         self.assertEqual(parent.subtasks.get().name, "Sub")
 
+    def test_appends_to_the_end_of_position_and_group(self):
+        group = GroupFactory(user=self.user)
+        TaskFactory(user=self.user, position=0)
+        TaskFactory(user=self.user, group=group, position=1, group_position=0)
+        self.client.post(
+            reverse("tasks:task"),
+            {"name": "Newest", "group_id": group.id},
+        )
+        task = Task.objects.get(user=self.user, name="Newest")
+        self.assertEqual(task.position, 2)
+        self.assertEqual(task.group_position, 1)
+
     def test_invalid_form_creates_nothing(self):
         response = self.client.post(reverse("tasks:task"), {"name": "   "})
         self.assertEqual(response.status_code, 200)
@@ -101,6 +113,28 @@ class TaskEditTests(BoardClientTestCase):
         )
         task.refresh_from_db()
         self.assertEqual(task.name, "Theirs")
+
+    def test_moving_to_a_group_appends_to_that_groups_end(self):
+        group = GroupFactory(user=self.user)
+        TaskFactory(user=self.user, group=group, group_position=0)
+        moving = TaskFactory(user=self.user, name="Move me", group_position=0)
+        self.client.post(
+            reverse("tasks:task"),
+            {"task_id": moving.id, "name": "Move me", "group_id": group.id},
+        )
+        moving.refresh_from_db()
+        self.assertEqual(moving.group, group)
+        self.assertEqual(moving.group_position, 1)
+
+    def test_editing_without_group_change_keeps_group_position(self):
+        group = GroupFactory(user=self.user)
+        task = TaskFactory(user=self.user, group=group, group_position=4)
+        self.client.post(
+            reverse("tasks:task"),
+            {"task_id": task.id, "name": "Renamed", "group_id": group.id},
+        )
+        task.refresh_from_db()
+        self.assertEqual(task.group_position, 4)
 
 
 class TaskDeleteTests(BoardClientTestCase):
@@ -412,3 +446,116 @@ class ArchivePeriodDeleteTests(BoardClientTestCase):
             reverse("tasks:archive-period-delete", args=["not-a-period"])
         )
         self.assertEqual(response.status_code, 400)
+
+
+class TaskReorderTests(BoardClientTestCase):
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.post(reverse("tasks:task-reorder"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_unfiltered_view_reindexes_global_position(self):
+        a = TaskFactory(user=self.user, position=0)
+        b = TaskFactory(user=self.user, position=1)
+        c = TaskFactory(user=self.user, position=2)
+        response = self.client.post(
+            reverse("tasks:task-reorder"),
+            {"order": f"{c.id},{a.id},{b.id}"},
+        )
+        self.assertEqual(response.status_code, 200)
+        c.refresh_from_db()
+        a.refresh_from_db()
+        b.refresh_from_db()
+        self.assertEqual([c.position, a.position, b.position], [0, 1, 2])
+
+    def test_group_view_reindexes_group_position_only(self):
+        group = GroupFactory(user=self.user)
+        a = TaskFactory(user=self.user, group=group, position=7, group_position=0)
+        b = TaskFactory(user=self.user, group=group, position=9, group_position=1)
+        response = self.client.post(
+            f"{reverse('tasks:task-reorder')}?group={group.id}",
+            {"order": f"{b.id},{a.id}"},
+        )
+        self.assertEqual(response.status_code, 200)
+        a.refresh_from_db()
+        b.refresh_from_db()
+        self.assertEqual([b.group_position, a.group_position], [0, 1])
+        self.assertEqual([a.position, b.position], [7, 9])
+
+    def test_rejects_partial_scope(self):
+        a = TaskFactory(user=self.user, position=0)
+        b = TaskFactory(user=self.user, position=1)
+        c = TaskFactory(user=self.user, position=2)
+        response = self.client.post(
+            reverse("tasks:task-reorder"),
+            {"order": f"{c.id},{a.id}"},
+        )
+        self.assertEqual(response.status_code, 400)
+        a.refresh_from_db()
+        b.refresh_from_db()
+        c.refresh_from_db()
+        self.assertEqual([a.position, b.position, c.position], [0, 1, 2])
+
+    def test_rejects_foreign_id(self):
+        mine = TaskFactory(user=self.user, position=0)
+        other = TaskFactory(user=UserFactory(), position=0)
+        response = self.client.post(
+            reverse("tasks:task-reorder"),
+            {"order": f"{mine.id},{other.id}"},
+        )
+        self.assertEqual(response.status_code, 400)
+        mine.refresh_from_db()
+        self.assertEqual(mine.position, 0)
+
+    def test_completed_tasks_are_outside_the_pending_scope(self):
+        pending = TaskFactory(user=self.user, position=0)
+        completed = TaskFactory(user=self.user, completed=True, position=1)
+        response = self.client.post(
+            reverse("tasks:task-reorder"),
+            {"order": f"{pending.id},{completed.id}"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_noop_when_scope_empty(self):
+        response = self.client.post(reverse("tasks:task-reorder"), {"order": ""})
+        self.assertEqual(response.status_code, 200)
+
+
+class GroupReorderTests(BoardClientTestCase):
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.post(reverse("tasks:group-reorder"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_reindexes_positions_to_submitted_order(self):
+        a = GroupFactory(user=self.user, position=0)
+        b = GroupFactory(user=self.user, position=1)
+        response = self.client.post(
+            reverse("tasks:group-reorder"),
+            {"order": f"{b.id},{a.id}"},
+        )
+        self.assertEqual(response.status_code, 200)
+        a.refresh_from_db()
+        b.refresh_from_db()
+        self.assertEqual([b.position, a.position], [0, 1])
+
+    def test_rejects_partial_scope(self):
+        a = GroupFactory(user=self.user, position=0)
+        b = GroupFactory(user=self.user, position=1)
+        GroupFactory(user=self.user, position=2)
+        response = self.client.post(
+            reverse("tasks:group-reorder"),
+            {"order": f"{b.id},{a.id}"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_rejects_foreign_id(self):
+        mine = GroupFactory(user=self.user, position=0)
+        other = GroupFactory(user=UserFactory(), position=0)
+        response = self.client.post(
+            reverse("tasks:group-reorder"),
+            {"order": f"{mine.id},{other.id}"},
+        )
+        self.assertEqual(response.status_code, 400)
+        mine.refresh_from_db()
+        self.assertEqual(mine.position, 0)

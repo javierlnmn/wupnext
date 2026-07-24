@@ -41,6 +41,13 @@ class Group(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def next_position(cls, user):
+        last = cls.objects.filter(user=user).aggregate(
+            max_position=models.Max("position")
+        )["max_position"]
+        return last + 1 if last is not None else 0
+
 
 class TaskQuerySet(models.QuerySet):
     def filter_unarchived(self):
@@ -76,6 +83,8 @@ class Task(models.Model):
         related_name="subtasks",
     )
     due_date = models.DateField(null=True, blank=True)
+    position = models.PositiveIntegerField(default=0)
+    group_position = models.PositiveIntegerField(default=0)
     completed_at = models.DateTimeField(null=True, blank=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -83,10 +92,24 @@ class Task(models.Model):
     objects = TaskQuerySet.as_manager()
 
     class Meta:
-        ordering = ["created_at"]
+        ordering = ["position", "created_at"]
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def next_position(cls, user, parent):
+        last = cls.objects.filter(user=user, parent=parent).aggregate(
+            max_position=models.Max("position")
+        )["max_position"]
+        return last + 1 if last is not None else 0
+
+    @classmethod
+    def next_group_position(cls, user, group):
+        last = cls.objects.filter(
+            user=user, group=group, parent__isnull=True
+        ).aggregate(max_position=models.Max("group_position"))["max_position"]
+        return last + 1 if last is not None else 0
 
     @property
     def subtask_count(self):

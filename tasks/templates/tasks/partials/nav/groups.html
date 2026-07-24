@@ -1,5 +1,6 @@
+<div data-sortable="{% url 'tasks:group-reorder' %}{{ board_query }}" class="flex lg:flex-col gap-1.5">
 {% for group in task_groups %}
-<div class="relative shrink-0 lg:w-full group/nav">
+<div class="relative shrink-0 lg:w-full group/nav" data-id="{{ group.id }}">
   <a
     href="{% url 'tasks:board' %}?group={{ group.id }}"
     hx-boost="true"
@@ -11,6 +12,13 @@
     <span class="text-xs tabular-nums transition-opacity lg:group-hover/nav:opacity-0 {% if active_task_group.id == group.id %}{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ group.pending_count }}</span>
   </a>
   <div class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity">
+    <span
+      data-drag-handle
+      class="p-1 cursor-grab touch-none text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
+      aria-label="Drag to reorder"
+    >
+      {% include 'common/icons/grip.html' with class='w-4 h-4' %}
+    </span>
     <button
       type="button"
       onclick="window.dispatchEvent(new CustomEvent('edit-group', { detail: { id: {{ group.id }}, name: '{{ group.name|escapejs }}', color: '{{ group.color }}' } }))"
@@ -30,6 +38,7 @@
   </div>
 </div>
 {% endfor %}
+</div>
 
 <button
   type="button"

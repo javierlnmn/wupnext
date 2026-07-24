@@ -109,6 +109,32 @@ class BoardContextFilterTests(BoardMixinTestCase):
         self.assertEqual(context["max_task_weight"], MAX_TASK_WEIGHT)
         self.assertEqual(context["today"], self.today)
 
+    def test_unfiltered_view_orders_by_global_position(self):
+        last = TaskFactory(user=self.user, position=2)
+        first = TaskFactory(user=self.user, position=0)
+        middle = TaskFactory(user=self.user, position=1)
+        context = self.board_view(self.user).board_context()
+        self.assertEqual(list(context["pending_tasks"]), [first, middle, last])
+
+    def test_group_view_orders_by_group_position(self):
+        a = TaskFactory(user=self.user, group=self.group, group_position=1)
+        b = TaskFactory(user=self.user, group=self.group, group_position=0)
+        context = self.board_view(self.user, group=self.group.id).board_context()
+        self.assertEqual(list(context["pending_tasks"]), [b, a])
+
+    def test_reorderable_flag_tracks_due_filter(self):
+        self.assertTrue(self.board_view(self.user).board_context()["reorderable"])
+        self.assertTrue(
+            self.board_view(self.user, group=self.group.id).board_context()[
+                "reorderable"
+            ]
+        )
+        self.assertFalse(
+            self.board_view(self.user, due=DueFilter.TODAY).board_context()[
+                "reorderable"
+            ]
+        )
+
 
 class BoardQueryTests(BoardMixinTestCase):
     def setUp(self):

@@ -22,11 +22,13 @@ class BoardMixin(LoginRequiredMixin):
         active_due = due if due in DueFilter.values else None
         today = timezone.localdate()
 
+        order_field = "group_position" if active_group else "position"
         top_level = (
             Task.objects.filter_unarchived()
             .filter(user=self.request.user, parent__isnull=True)
             .select_related("group")
             .prefetch_related("subtasks")
+            .order_by(order_field, "created_at")
         )
         if active_group:
             top_level = top_level.filter(group=active_group)
@@ -49,6 +51,7 @@ class BoardMixin(LoginRequiredMixin):
             "active_due": active_due,
             "today": today,
             "board_query": f"?{urlencode(params)}" if params else "",
+            "reorderable": active_due is None,
         }
 
     def board_response(self):
@@ -57,6 +60,26 @@ class BoardMixin(LoginRequiredMixin):
             "tasks/partials/shared/board_response.html",
             self.board_context(),
         )
+
+
+class ReorderMixin(LoginRequiredMixin):
+    def ordered_ids(self):
+        raw = self.request.POST.get("order", "")
+        return [int(part) for part in raw.split(",") if part.isdigit()]
+
+    def is_full_scope(self, ids, objects):
+        expected = {obj.id for obj in objects}
+        return len(ids) == len(expected) and set(ids) == expected
+
+    def assign_positions(self, objects, ids, field="position"):
+        by_id = {obj.id: obj for obj in objects}
+        updated = []
+        for position, obj_id in enumerate(ids):
+            obj = by_id.get(obj_id)
+            if obj and getattr(obj, field) != position:
+                setattr(obj, field, position)
+                updated.append(obj)
+        return updated
 
 
 class ArchiveMixin(LoginRequiredMixin):

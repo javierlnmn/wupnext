@@ -1,4 +1,3 @@
-from django.db.models import Max
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -7,7 +6,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from .forms import GroupForm, TaskForm
-from .mixins import ArchiveMixin, BoardMixin
+from .mixins import ArchiveMixin, BoardMixin, ReorderMixin
 from .models import Group, Task
 
 
@@ -25,21 +24,37 @@ class TaskView(BoardMixin, View):
         form = TaskForm(request.POST, user=request.user)
         if form.is_valid():
             data = form.cleaned_data
+            group = data["group"]
             if data["task_id"]:
-                Task.objects.filter(id=data["task_id"], user=request.user).update(
-                    name=data["name"],
-                    weight=data["weight"],
-                    group=data["group"],
-                    due_date=data["due_date"],
-                )
+                task = Task.objects.filter(
+                    id=data["task_id"], user=request.user
+                ).first()
+                if task:
+                    fields = ["name", "weight", "group", "due_date"]
+                    if task.group_id != (group.id if group else None):
+                        task.group_position = (
+                            Task.next_group_position(request.user, group)
+                            if group
+                            else 0
+                        )
+                        fields.append("group_position")
+                    task.name = data["name"]
+                    task.weight = data["weight"]
+                    task.group = group
+                    task.due_date = data["due_date"]
+                    task.save(update_fields=fields)
             else:
                 Task.objects.create(
                     user=request.user,
                     name=data["name"],
                     weight=data["weight"],
-                    group=data["group"],
+                    group=group,
                     parent=data["parent"],
                     due_date=data["due_date"],
+                    position=Task.next_position(request.user, data["parent"]),
+                    group_position=(
+                        Task.next_group_position(request.user, group) if group else 0
+                    ),
                 )
         return self.board_response()
 
@@ -77,15 +92,11 @@ class GroupView(BoardMixin, View):
             )
             return self.board_response()
 
-        last_position = Group.objects.filter(user=request.user).aggregate(
-            max_position=Max("position")
-        )["max_position"]
-
         group = Group.objects.create(
             user=request.user,
             name=form.cleaned_data["name"],
             color=form.cleaned_data["color"],
-            position=last_position + 1 if last_position is not None else 0,
+            position=Group.next_position(request.user),
         )
 
         response = HttpResponse(status=204)
@@ -99,6 +110,38 @@ class GroupView(BoardMixin, View):
         if was_active:
             response["HX-Push-Url"] = reverse("tasks:board")
         return response
+
+
+class TaskReorderView(BoardMixin, ReorderMixin, View):
+    def post(self, request):
+        group = self.active_group()
+        field = "group_position" if group else "position"
+        scope = Task.objects.filter_unarchived().filter(
+            user=request.user, parent__isnull=True, completed_at__isnull=True
+        )
+        if group:
+            scope = scope.filter(group=group)
+
+        objects = list(scope)
+        ids = self.ordered_ids()
+        if not self.is_full_scope(ids, objects):
+            return HttpResponse(status=400)
+
+        updated = self.assign_positions(objects, ids, field)
+        Task.objects.bulk_update(updated, [field])
+        return self.board_response()
+
+
+class GroupReorderView(BoardMixin, ReorderMixin, View):
+    def post(self, request):
+        objects = list(Group.objects.filter(user=request.user))
+        ids = self.ordered_ids()
+        if not self.is_full_scope(ids, objects):
+            return HttpResponse(status=400)
+
+        updated = self.assign_positions(objects, ids)
+        Group.objects.bulk_update(updated, ["position"])
+        return self.board_response()
 
 
 class ArchiveView(BoardMixin, ArchiveMixin, View):

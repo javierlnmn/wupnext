@@ -1,0 +1,43 @@
+<script>
+  function initSortables(root) {
+    root.querySelectorAll('[data-sortable]').forEach(function (el) {
+      if (el._sortable) return
+      el._sortable = Sortable.create(el, {
+        animation: 150,
+        handle: '[data-drag-handle]',
+        ghostClass: 'opacity-40',
+        onEnd: function () {
+          const ids = Array.from(el.children)
+            .map(function (child) { return child.dataset.id })
+            .filter(Boolean)
+          htmx.ajax('POST', el.dataset.sortable, {
+            target: '#queue-content',
+            swap: 'innerHTML',
+            values: { order: ids.join(',') },
+          })
+        },
+      })
+    })
+  }
+
+  const savedScroll = {}
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initSortables(document)
+
+    document.body.addEventListener('htmx:afterSettle', function () {
+      initSortables(document)
+      Object.keys(savedScroll).forEach(function (id) {
+        const el = document.getElementById(id)
+        if (el) el.scrollTop = savedScroll[id]
+        delete savedScroll[id]
+      })
+    })
+
+    document.body.addEventListener('htmx:beforeSwap', function () {
+      document.querySelectorAll('[data-preserve-scroll]').forEach(function (el) {
+        if (!(el.id in savedScroll)) savedScroll[el.id] = el.scrollTop
+      })
+    })
+  })
+</script>
