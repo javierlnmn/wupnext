@@ -28,3 +28,4 @@ class AbstractSingleton(models.Model):
 
 class SiteSettings(AbstractSingleton):
     notifications_disabled_channels = models.JSONField(default=list)
+    tasks_notification_due_reminders_enabled = models.BooleanField(default=True)

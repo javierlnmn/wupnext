@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from accounts.models import UserPreferences
+from common.models import SiteSettings
 from notifications.models import NotificationEvent
 from notifications.service import notification_service
 
@@ -13,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 def send_due_reminders():
+    if not SiteSettings.load().tasks_notification_due_reminders_enabled:
+        return
+
     today = timezone.localdate()
     for user in get_user_model().objects.filter(is_active=True):
         tasks = list(
