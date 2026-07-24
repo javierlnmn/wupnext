@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - wupnext-db:/app/db
+    expose:
+      - "8000"
+
+  worker:
+    build: .
+    command: python manage.py qcluster
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - wupnext-db:/app/db
+    depends_on:
+      - web
+
+volumes:
+  wupnext-db:
