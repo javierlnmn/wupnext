@@ -34,12 +34,7 @@ def send_due_reminders():
             continue
 
         prefs = UserPreferences.for_user(user)
-        channels = [
-            key
-            for key in notification_service.channels
-            if key not in prefs.notifications_disabled_channels
-        ]
-        if not channels:
+        if not prefs.notification_channels_email_enabled:
             continue
 
         try:
@@ -51,7 +46,6 @@ def send_due_reminders():
                     "overdue": [task for task in tasks if task.due_date < today],
                     "due_today": [task for task in tasks if task.due_date == today],
                 },
-                channels=channels,
                 dedup_key=str(today),
             )
         except Exception:

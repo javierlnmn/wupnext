@@ -35,7 +35,7 @@ class UserPreferences(models.Model):
     )
 
     # Notifications
-    notifications_disabled_channels = models.JSONField(default=list)
+    notification_channels_email_enabled = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Preferences for {self.user}"
