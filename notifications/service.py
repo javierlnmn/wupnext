@@ -26,6 +26,11 @@ class NotificationService:
             channel = self.channels[channel_key]
 
             if not channel.is_enabled():
+                # TODO: Log skip
+                continue
+
+            if not channel.is_enabled_for_user(user):
+                # TODO: Log skip
                 continue
 
             log = None
@@ -42,14 +47,11 @@ class NotificationService:
                     continue
 
             try:
-                self._deliver(channel, user, event, context)
+                channel.deliver(user=user, event=event.value, context=context)
             except Exception:
                 if log is not None:
                     log.delete()
                 raise
-
-    def _deliver(self, channel, user, event, context):
-        channel.deliver(user=user, event=event.value, context=context)
 
 
 notification_service = NotificationService()

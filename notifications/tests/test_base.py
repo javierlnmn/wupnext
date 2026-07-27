@@ -3,6 +3,7 @@ from unittest import mock
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
+from accounts.models import UserPreferences
 from accounts.tests.factories import UserFactory
 from notifications.base import BaseNotification
 from notifications.models import NotificationEvent
@@ -11,6 +12,15 @@ from notifications.service import notification_service
 
 class NotificationHost(BaseNotification):
     event = NotificationEvent.TASK_DUE_REMINDER
+
+    def _is_enabled_on_site(self):
+        return True
+
+    def _is_enabled_for_user(self, user):
+        return UserPreferences.for_user(user).notification_channels_email_enabled
+
+    def _dedup_key(self, user, context):
+        return ""
 
     def context(self, user):
         return {"username": user.username}
@@ -21,17 +31,17 @@ class EventlessHost(NotificationHost):
 
 
 class DisabledHost(NotificationHost):
-    def is_enabled(self):
+    def _is_enabled_on_site(self):
         return False
 
 
 class NotificationContractTests(TestCase):
-    def test_cannot_instantiate_a_notification_without_a_context(self):
-        class Contextless(BaseNotification):
+    def test_cannot_instantiate_a_notification_without_its_hooks(self):
+        class Hookless(BaseNotification):
             event = NotificationEvent.TASK_DUE_REMINDER
 
         with self.assertRaises(TypeError):
-            Contextless()
+            Hookless()
 
 
 class NotificationSendTests(TestCase):
@@ -74,15 +84,6 @@ class NotificationSendTests(TestCase):
         self.notify.assert_called_once()
         self.assertEqual(self.notify.call_args.args[0], self.user)
 
-    def test_skips_user_without_context(self):
-        class NothingToSay(NotificationHost):
-            def context(self, user):
-                return None
-
-        NothingToSay().send()
-
-        self.notify.assert_not_called()
-
     def test_skips_user_who_disabled_the_channel(self):
         self.user.preferences.notification_channels_email_enabled = False
         self.user.preferences.save()
@@ -93,14 +94,14 @@ class NotificationSendTests(TestCase):
 
     def test_passes_the_dedup_key(self):
         class Deduped(NotificationHost):
-            def dedup_key(self, user, context):
+            def _dedup_key(self, user, context):
                 return context["username"]
 
         Deduped().send()
 
         self.assertEqual(self.notify.call_args.kwargs["dedup_key"], self.user.username)
 
-    def test_defaults_to_no_dedup_key(self):
+    def test_passes_an_empty_dedup_key_when_there_is_none(self):
         NotificationHost().send()
 
         self.assertEqual(self.notify.call_args.kwargs["dedup_key"], "")

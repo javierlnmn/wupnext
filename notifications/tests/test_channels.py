@@ -36,9 +36,6 @@ class EmailChannelTests(TestCase):
         site.save()
         self.assertFalse(self.channel.is_enabled())
 
-    def test_recipient_is_none_when_blank(self):
-        self.assertIsNone(self.channel.recipient(UserFactory(email="")))
-
     def test_deliver_renders_subject_and_body(self):
         context = {"date": timezone.localdate(), "overdue": [], "due_today": []}
 

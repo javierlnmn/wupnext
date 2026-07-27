@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
+from accounts.models import UserPreferences
 from common.models import SiteSettings
 
 from ..exceptions import MissingRecipient
@@ -16,8 +17,8 @@ class EmailChannel(BaseNotificationChannel):
     def is_enabled(self):
         return SiteSettings.load().notification_channels_email_enabled
 
-    def recipient(self, user):
-        return user.email or None
+    def is_enabled_for_user(self, user):
+        return UserPreferences.for_user(user).notification_channels_email_enabled
 
     def render(self, event, context):
         ctx = {"site_url": settings.SITE_URL, **context}
@@ -40,7 +41,7 @@ class EmailChannel(BaseNotificationChannel):
         return message
 
     def deliver(self, *, user, event, context):
-        recipient = self.recipient(user)
+        recipient = user.email
         if not recipient:
             raise MissingRecipient(f"No email address for {user}")
 
