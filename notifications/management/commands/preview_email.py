@@ -1,14 +1,10 @@
 from django.core.exceptions import ValidationError
-from django.core.mail import get_connection
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
 from django.template import TemplateDoesNotExist
 
-from notifications.channels.email import EmailChannel
+from notifications.email_previews import LIVE_EMAIL_BACKEND, PREVIEWS, get_preview
 from notifications.exceptions import MissingPreview
-from notifications.previews import PREVIEWS, preview_context
-
-LIVE_EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
 
 class Command(BaseCommand):
@@ -35,6 +31,11 @@ class Command(BaseCommand):
             for name in sorted(PREVIEWS):
                 self.stdout.write(f"  {name}")
             return
+        else:
+            try:
+                preview = get_preview(event)
+            except MissingPreview as exc:
+                raise CommandError(str(exc)) from exc
 
         if recipient:
             try:
@@ -44,13 +45,11 @@ class Command(BaseCommand):
                     f"'{recipient}' is not a valid email address."
                 ) from exc
 
-        channel = EmailChannel()
-
         try:
-            with preview_context(event) as context:
-                subject, body, html = channel.render(event, context)
-        except MissingPreview as exc:
-            raise CommandError(str(exc)) from exc
+            if recipient:
+                subject, body, html = preview.send(recipient)
+            else:
+                subject, body, html = preview.render()
         except TemplateDoesNotExist as exc:
             raise CommandError(f"Missing template '{exc}' for '{event}'.") from exc
 
@@ -66,9 +65,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("No HTML template for this event."))
 
         if recipient:
-            message = channel.build_message(subject, body, html, [recipient])
-            message.connection = get_connection(LIVE_EMAIL_BACKEND)
-            message.send()
             self.stdout.write(
                 self.style.SUCCESS(f"Sent to {recipient} using {LIVE_EMAIL_BACKEND}")
             )

@@ -53,7 +53,7 @@ class PreviewEmailTests(PreviewCommandTestCase):
 class PreviewEmailSendTests(PreviewCommandTestCase):
     def setUp(self):
         patcher = patch(
-            "notifications.management.commands.preview_email.get_connection",
+            "notifications.email_previews.base.get_connection",
             return_value=mail.get_connection(LOCMEM),
         )
         self.get_connection = patcher.start()
