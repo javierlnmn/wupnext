@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from datetime import timedelta
 
@@ -12,18 +13,18 @@ PREVIEW_USERNAME = "preview"
 PREVIEW_EMAIL = "preview@wupnext.invalid"
 
 
-class EmailPreview:
+class BaseEmailPreview(ABC):
     event = None
     user = None
 
-    def seed(self):
-        raise NotImplementedError
+    @abstractmethod
+    def seed(self): ...
 
-    def context(self):
-        raise NotImplementedError
+    @abstractmethod
+    def context(self): ...
 
 
-class TaskDueReminderPreview(EmailPreview):
+class TaskDueReminderPreview(BaseEmailPreview):
     event = NotificationEvent.TASK_DUE_REMINDER.value
 
     def seed(self):

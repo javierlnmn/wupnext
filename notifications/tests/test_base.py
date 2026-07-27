@@ -4,12 +4,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
 from accounts.tests.factories import UserFactory
-from notifications.base import Notification
+from notifications.base import BaseNotification
 from notifications.models import NotificationEvent
 from notifications.service import notification_service
 
 
-class NotificationHost(Notification):
+class NotificationHost(BaseNotification):
     event = NotificationEvent.TASK_DUE_REMINDER
 
     def context(self, user):
@@ -23,6 +23,15 @@ class EventlessHost(NotificationHost):
 class DisabledHost(NotificationHost):
     def is_enabled(self):
         return False
+
+
+class NotificationContractTests(TestCase):
+    def test_cannot_instantiate_a_notification_without_a_context(self):
+        class Contextless(BaseNotification):
+            event = NotificationEvent.TASK_DUE_REMINDER
+
+        with self.assertRaises(TypeError):
+            Contextless()
 
 
 class NotificationSendTests(TestCase):

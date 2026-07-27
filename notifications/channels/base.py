@@ -1,8 +1,11 @@
-class BaseChannel:
+from abc import ABC, abstractmethod
+
+
+class BaseNotificationChannel(ABC):
     key = None
 
-    def is_enabled(self):
-        raise NotImplementedError
+    @abstractmethod
+    def is_enabled(self): ...
 
-    def deliver(self, *, user, event, context):
-        raise NotImplementedError
+    @abstractmethod
+    def deliver(self, *, user, event, context): ...

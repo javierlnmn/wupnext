@@ -7,7 +7,7 @@ from django.utils import timezone
 from accounts.tests.factories import UserFactory
 from notifications.exceptions import MissingPreview
 from notifications.models import NotificationEvent
-from notifications.previews import EmailPreview, build_registry, preview_context
+from notifications.previews import BaseEmailPreview, build_registry, preview_context
 from tasks.models import Group, Task
 from tasks.tests.factories import TaskFactory
 
@@ -60,18 +60,33 @@ class PreviewContextTests(TestCase):
         self.assertEqual(Group.objects.count(), 0)
 
 
+class StubPreview(BaseEmailPreview):
+    def seed(self):
+        pass
+
+    def context(self):
+        return {}
+
+
 class BuildRegistryTests(TestCase):
     def test_rejects_a_preview_without_an_event(self):
-        class Unnamed(EmailPreview):
+        class Unnamed(StubPreview):
             pass
 
         with self.assertRaises(ImproperlyConfigured):
             build_registry(Unnamed())
 
     def test_keys_previews_by_event(self):
-        class Named(EmailPreview):
+        class Named(StubPreview):
             event = "something"
 
         registry = build_registry(Named())
 
         self.assertEqual(sorted(registry), ["something"])
+
+    def test_cannot_instantiate_a_preview_without_its_hooks(self):
+        class Hookless(BaseEmailPreview):
+            event = "hookless"
+
+        with self.assertRaises(TypeError):
+            Hookless()

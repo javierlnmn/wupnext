@@ -1,4 +1,5 @@
 import logging
+from abc import ABC, abstractmethod
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
@@ -10,7 +11,7 @@ from .service import notification_service
 logger = logging.getLogger(__name__)
 
 
-class Notification:
+class BaseNotification(ABC):
     event = None
 
     def is_enabled(self):
@@ -22,8 +23,8 @@ class Notification:
     def recipients(self):
         return get_user_model().objects.filter(is_active=True)
 
-    def context(self, user):
-        raise NotImplementedError
+    @abstractmethod
+    def context(self, user): ...
 
     def dedup_key(self, user, context):
         return ""

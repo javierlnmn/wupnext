@@ -1,13 +1,13 @@
 from django.utils import timezone
 
 from common.models import SiteSettings
-from notifications.base import Notification
+from notifications.base import BaseNotification
 from notifications.models import NotificationEvent
 
 from ..models import Task
 
 
-class DueReminderNotification(Notification):
+class DueReminderNotification(BaseNotification):
     event = NotificationEvent.TASK_DUE_REMINDER
 
     def is_enabled(self):

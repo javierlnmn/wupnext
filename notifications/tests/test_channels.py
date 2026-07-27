@@ -5,11 +5,21 @@ from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from common.models import SiteSettings
+from notifications.channels.base import BaseNotificationChannel
 from notifications.channels.email import EmailChannel
 from notifications.exceptions import MissingRecipient
 from notifications.models import NotificationEvent
 
 EVENT = NotificationEvent.TASK_DUE_REMINDER.value
+
+
+class BaseChannelTests(TestCase):
+    def test_cannot_instantiate_a_channel_without_its_hooks(self):
+        class Hookless(BaseNotificationChannel):
+            key = "hookless"
+
+        with self.assertRaises(TypeError):
+            Hookless()
 
 
 class EmailChannelTests(TestCase):

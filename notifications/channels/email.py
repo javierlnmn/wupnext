@@ -7,10 +7,10 @@ from common.models import SiteSettings
 
 from ..exceptions import MissingRecipient
 from ..models import Channel
-from .base import BaseChannel
+from .base import BaseNotificationChannel
 
 
-class EmailChannel(BaseChannel):
+class EmailChannel(BaseNotificationChannel):
     key = Channel.EMAIL
 
     def is_enabled(self):
