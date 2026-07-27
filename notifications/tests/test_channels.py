@@ -35,7 +35,7 @@ class EmailChannelTests(TestCase):
         self.channel.deliver(user=self.user, event=EVENT, context=context)
 
         message = mail.outbox[0]
-        self.assertIn("wupnext", message.subject)
+        self.assertIn("WupNext", message.subject)
         self.assertIn(self.user.username, message.body)
 
     def test_deliver_raises_when_no_recipient(self):

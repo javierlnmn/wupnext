@@ -198,11 +198,13 @@ EMAIL_BACKEND = os.getenv(
     else "anymail.backends.resend.EmailBackend",
 )
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "wupnext <onboarding@resend.dev>")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "WupNext <onboarding@resend.dev>")
 
 ANYMAIL = {
     "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
 }
+
+SITE_URL = os.getenv("SITE_URL", "").rstrip("/")
 
 
 # Django Q2 (ORM broker — no Redis/Celery)
