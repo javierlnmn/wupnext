@@ -1,1 +1,1 @@
-Your wupnext tasks for {{ date|date:"F j" }}
+Your WupNext tasks for {{ date|date:"F j" }}
