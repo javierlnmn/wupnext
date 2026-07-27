@@ -559,3 +559,54 @@ class GroupReorderTests(BoardClientTestCase):
         self.assertEqual(response.status_code, 400)
         mine.refresh_from_db()
         self.assertEqual(mine.position, 0)
+
+
+@override_settings(
+    STORAGES={
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    },
+)
+class ManageGroupsTests(BoardClientTestCase):
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.get(reverse("tasks:board"))
+        self.assertEqual(response.status_code, 302)
+
+    TRIGGER = "CustomEvent('open-manage-groups')"
+
+    def test_board_renders_the_manage_drawer_and_its_trigger(self):
+        GroupFactory(user=self.user)
+        response = self.client.get(reverse("tasks:board"))
+        self.assertContains(response, 'id="manage-groups"')
+        self.assertContains(response, self.TRIGGER)
+
+    def test_trigger_is_hidden_when_there_are_no_groups(self):
+        response = self.client.get(reverse("tasks:board"))
+        self.assertNotContains(response, self.TRIGGER)
+
+    def test_list_offers_every_group_to_the_reorder_endpoint(self):
+        first = GroupFactory(user=self.user, position=0)
+        second = GroupFactory(user=self.user, position=1)
+        response = self.client.get(reverse("tasks:board"))
+        self.assertContains(response, reverse("tasks:group-reorder"))
+        self.assertContains(response, f'data-id="{first.id}"')
+        self.assertContains(response, f'data-id="{second.id}"')
+
+    def test_board_response_refreshes_the_manage_list(self):
+        group = GroupFactory(user=self.user, name="Old")
+        response = self.client.post(
+            reverse("tasks:group-create"),
+            {"group_id": group.id, "name": "Renamed", "color": group.color},
+        )
+        self.assertContains(response, "innerHTML:#manage-groups")
+        self.assertContains(response, "Renamed")
+
+    def test_deleting_a_group_refreshes_the_manage_list(self):
+        group = GroupFactory(user=self.user, name="Doomed")
+        response = self.client.delete(
+            reverse("tasks:group-detail", args=[group.id]),
+        )
+        self.assertContains(response, "innerHTML:#manage-groups")
+        self.assertNotContains(response, "Doomed")

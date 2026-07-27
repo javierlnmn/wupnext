@@ -11,7 +11,7 @@
     <span class="flex-1 text-left truncate">{{ group.name }}</span>
     <span class="text-xs tabular-nums transition-opacity lg:group-hover/nav:opacity-0 {% if active_task_group.id == group.id %}{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ group.pending_count }}</span>
   </a>
-  <div class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity">
+  <div class="absolute right-1.5 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-0.5 opacity-0 lg:group-hover/nav:opacity-100 transition-opacity">
     <span
       data-drag-handle
       class="p-1 cursor-grab touch-none text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
@@ -48,3 +48,14 @@
   {% include 'common/icons/plus.html' with class='w-4 h-4 shrink-0' stroke='1.8' %}
   <span>New group</span>
 </button>
+
+{% if task_groups %}
+<button
+  type="button"
+  onclick="window.dispatchEvent(new CustomEvent('open-manage-groups'))"
+  class="shrink-0 lg:w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-clay-600 dark:hover:text-clay-400 hover:border-clay-400 dark:hover:border-clay-600 transition-colors"
+>
+  {% include 'common/icons/sliders.html' with class='w-4 h-4 shrink-0' %}
+  <span>Manage</span>
+</button>
+{% endif %}

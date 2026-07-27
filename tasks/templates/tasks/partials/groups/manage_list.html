@@ -1,0 +1,36 @@
+<div data-sortable="{% url 'tasks:group-reorder' %}{{ board_query }}" class="flex flex-col gap-2">
+{% for group in task_groups %}
+  <div class="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 pl-1 pr-1.5 py-1" data-id="{{ group.id }}">
+    <span
+      data-drag-handle
+      class="w-10 h-10 grid place-items-center shrink-0 cursor-grab touch-none text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
+      aria-label="Drag to reorder"
+    >
+      {% include 'common/icons/grip.html' with class='w-4 h-4' %}
+    </span>
+    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ group.color }}"></span>
+    <span class="flex-1 min-w-0 truncate px-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">{{ group.name }}</span>
+    <span class="px-1 text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ group.pending_count }}</span>
+    <button
+      type="button"
+      onclick="window.dispatchEvent(new CustomEvent('edit-group', { detail: { id: {{ group.id }}, name: '{{ group.name|escapejs }}', color: '{{ group.color }}' } }))"
+      class="w-10 h-10 grid place-items-center shrink-0 rounded-lg text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
+      aria-label="Edit group"
+    >
+      {% include 'common/icons/edit.html' with class='w-4 h-4' %}
+    </button>
+    <button
+      type="button"
+      onclick="promptDelete('Delete group', '{{ group.name|escapejs }}', 'Its tasks are kept and moved to No group.', '{% url 'tasks:group-detail' group.id %}{{ board_query }}')"
+      class="w-10 h-10 grid place-items-center shrink-0 rounded-lg text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+      aria-label="Delete group"
+    >
+      {% include 'common/icons/trash.html' with class='w-4 h-4' %}
+    </button>
+  </div>
+{% endfor %}
+</div>
+
+{% if not task_groups %}
+<p class="py-8 text-center text-sm text-slate-400 dark:text-slate-500">No groups yet.</p>
+{% endif %}

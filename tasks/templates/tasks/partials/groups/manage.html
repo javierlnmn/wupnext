@@ -1,0 +1,25 @@
+{% load ui %}
+<div
+  x-data="{ manageOpen: false }"
+  @open-manage-groups.window="manageOpen = true"
+  @edit-group.window="manageOpen = false"
+  @keydown.escape.window="manageOpen = false"
+>
+  {% drawer openStateKey="manageOpen" %}
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white">Manage groups</h2>
+      <button
+        type="button"
+        @click="manageOpen = false"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+        aria-label="Close"
+      >
+        {% include 'common/icons/close.html' with class='w-5 h-5' %}
+      </button>
+    </div>
+
+    <div id="manage-groups" class="flex-1 overflow-y-auto px-4 py-4">
+      {% include 'tasks/partials/groups/manage_list.html' %}
+    </div>
+  {% enddrawer %}
+</div>
