@@ -14,7 +14,7 @@ from tasks.management.commands._periodic import PeriodicScheduleCommand
 
 class ConfiguredHost(PeriodicScheduleCommand):
     schedule_name = "host-schedule"
-    func = "tasks.reminders.send_due_reminders"
+    func = "tasks.jobs.send_due_reminders"
 
     def schedule_defaults(self):
         return {"schedule_type": Schedule.DAILY, "next_run": timezone.now()}
@@ -55,7 +55,7 @@ class ScheduleDueRemindersCommandTests(TestCase):
         self.call()
 
         schedule = Schedule.objects.get(name="due-reminders")
-        self.assertEqual(schedule.func, "tasks.reminders.send_due_reminders")
+        self.assertEqual(schedule.func, "tasks.jobs.send_due_reminders")
         self.assertEqual(schedule.schedule_type, Schedule.DAILY)
 
     def test_next_run_is_the_upcoming_seven_am(self):
@@ -81,7 +81,7 @@ class ScheduleDueRemindersCommandTests(TestCase):
         with (
             self.assertLogs("django-q", level="INFO"),
             mock.patch("django_q.conf.Conf.SYNC", True),
-            mock.patch("tasks.reminders.send_due_reminders", return_value=None) as job,
+            mock.patch("tasks.jobs.send_due_reminders", return_value=None) as job,
         ):
             scheduler()
 

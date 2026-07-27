@@ -42,9 +42,9 @@ class TaskDueReminderPreview(EmailPreview):
         TaskFactory(user=self.user, due_date=today)
 
     def context(self):
-        from tasks.reminders import due_reminder_context
+        from tasks.notifications.due_reminders import DueReminderNotification
 
-        return {**due_reminder_context(self.user), "user": self.user}
+        return {**DueReminderNotification().context(self.user), "user": self.user}
 
 
 def build_registry(*previews):

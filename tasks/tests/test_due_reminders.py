@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from notifications.models import NotificationLog
-from tasks.reminders import send_due_reminders
+from tasks.jobs import send_due_reminders
 from tasks.tests.factories import TaskFactory
 
 
@@ -82,7 +82,7 @@ class SendDueRemindersTests(TestCase):
         TaskFactory(user=no_email, due_date=self.today)
         TaskFactory(user=self.user, due_date=self.today)
 
-        with self.assertLogs("tasks.reminders", level="ERROR"):
+        with self.assertLogs("notifications.base", level="ERROR"):
             send_due_reminders()
 
         self.assertEqual(len(mail.outbox), 1)

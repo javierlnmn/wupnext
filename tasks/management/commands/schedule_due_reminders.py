@@ -11,7 +11,7 @@ REMINDER_HOUR = 7
 class Command(PeriodicScheduleCommand):
     help = "Register the daily due-reminder schedule (idempotent)."
     schedule_name = "due-reminders"
-    func = "tasks.reminders.send_due_reminders"
+    func = "tasks.jobs.send_due_reminders"
 
     def schedule_defaults(self):
         return {
