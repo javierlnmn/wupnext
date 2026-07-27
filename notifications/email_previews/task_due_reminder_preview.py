@@ -26,5 +26,5 @@ class TaskDueReminderPreview(BaseEmailPreview):
         TaskFactory(user=self.user, parent=overdue)
         TaskFactory(user=self.user, due_date=today)
 
-    def _context(self):
+    def _get_notification_context(self):
         return {**DueReminderNotification().context(self.user), "user": self.user}

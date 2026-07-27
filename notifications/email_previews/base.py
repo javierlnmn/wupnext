@@ -19,13 +19,13 @@ class BaseEmailPreview(ABC):
     def _seed(self): ...
 
     @abstractmethod
-    def _context(self): ...
+    def _get_notification_context(self): ...
 
     @contextmanager
     def _seeded_context(self):
         with transaction.atomic():
             self._seed()
-            yield self._context()
+            yield self._get_notification_context()
             transaction.set_rollback(True)
 
     def render(self):

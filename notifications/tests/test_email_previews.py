@@ -33,7 +33,7 @@ class StubPreview(BaseEmailPreview):
         self.log = NotificationLogFactory()
         self.user = self.log.user
 
-    def _context(self):
+    def _get_notification_context(self):
         return {
             "user": self.user,
             "date": timezone.localdate(),
@@ -84,7 +84,7 @@ class PreviewRenderTests(TestCase):
 
     def test_rolls_back_when_rendering_raises(self):
         class Exploding(StubPreview):
-            def _context(self):
+            def _get_notification_context(self):
                 raise RuntimeError("boom")
 
         with self.assertRaises(RuntimeError):
