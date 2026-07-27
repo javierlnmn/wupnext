@@ -1,11 +1,15 @@
 Hi {{ user.first_name|default:user.username }},
 
-Here's what needs your attention on wupnext.
+Here's what needs your attention on WupNext.
 {% if overdue %}
-Overdue:
-{% for task in overdue %}  - {{ task.name }} (due {{ task.due_date|date:"M j" }})
+OVERDUE ({{ overdue|length }})
+{% for task in overdue %}  - {{ task.name }}{% if task.group %} [{{ task.group.name }}]{% endif %} (due {{ task.due_date|date:"M j" }}){% if task.subtask_count %} {{ task.completed_subtask_count }}/{{ task.subtask_count }} subtasks done{% endif %}
 {% endfor %}{% endif %}{% if due_today %}
-Due today:
-{% for task in due_today %}  - {{ task.name }}
-{% endfor %}{% endif %}
-— wupnext
+DUE TODAY ({{ due_today|length }})
+{% for task in due_today %}  - {{ task.name }}{% if task.group %} [{{ task.group.name }}]{% endif %}{% if task.subtask_count %} ({{ task.completed_subtask_count }}/{{ task.subtask_count }} subtasks done){% endif %}
+{% endfor %}{% endif %}{% if site_url %}
+Open your board: {{ site_url }}
+{% endif %}
+You're getting this because deadline reminders are on for your account.
+
+WupNext

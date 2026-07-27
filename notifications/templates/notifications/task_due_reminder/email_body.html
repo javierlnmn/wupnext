@@ -1,29 +1,117 @@
-<div style="font-family: 'Manrope', -apple-system, Segoe UI, Roboto, sans-serif; max-width: 520px; margin: 0 auto; color: #1c1917; line-height: 1.5;">
-  <p style="font-size: 20px; font-weight: 700; margin: 0 0 4px;">wupnext<span style="color: #b45309;">.</span></p>
-  <p style="margin: 0 0 20px;">Hi {{ user.first_name|default:user.username }}, here's what needs your attention.</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>WupNext</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .page { background: #12100f !important; }
+    .card { background: #1b1817 !important; border-color: #2c2724 !important; }
+    .t-strong { color: #f2efec !important; }
+    .t-body { color: #c3bcb7 !important; }
+    .t-muted { color: #8e8681 !important; }
+    .rule { border-color: #2c2724 !important; }
+    .list { border-color: #2c2724 !important; }
+    .row { border-color: #2c2724 !important; }
+  }
+  @media only screen and (max-width: 620px) {
+    .pad { padding-left: 20px !important; padding-right: 20px !important; }
+  }
+</style>
+</head>
+<body class="page" style="margin: 0; padding: 0; background: #f6f4f2; -webkit-font-smoothing: antialiased;">
 
-  {% if overdue %}
-  <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b91c1c; margin: 0 0 8px;">Overdue</p>
-  <ul style="list-style: none; padding: 0; margin: 0 0 24px;">
-    {% for task in overdue %}
-    <li style="padding: 10px 14px; margin-bottom: 6px; background: #fef2f2; border-radius: 8px;">
-      <span style="font-weight: 600;">{{ task.name }}</span>
-      <span style="color: #78716c; font-size: 13px;"> — due {{ task.due_date|date:"M j" }}</span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
-  {% if due_today %}
-  <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; margin: 0 0 8px;">Due today</p>
-  <ul style="list-style: none; padding: 0; margin: 0 0 24px;">
-    {% for task in due_today %}
-    <li style="padding: 10px 14px; margin-bottom: 6px; background: #fafaf9; border-radius: 8px;">
-      <span style="font-weight: 600;">{{ task.name }}</span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
-  <p style="color: #a8a29e; font-size: 13px; margin: 24px 0 0;">— wupnext</p>
+<div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+  {% if overdue %}{{ overdue|length }} overdue{% if due_today %} and {% endif %}{% endif %}{% if due_today %}{{ due_today|length }} due today{% endif %}.
 </div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="page" style="background: #f6f4f2;">
+  <tr>
+    <td align="center" style="padding: 32px 12px 40px;">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="card" style="width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #ece7e2; border-radius: 16px; border-collapse: separate;">
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">
+                  <span class="t-strong" style="color: #0f172a;">wup</span><span style="color: #d1793f;">next.</span>
+                </td>
+                <td align="right" class="t-muted" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #94a3b8;">
+                  {{ date|date:"D, M j" }}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-body" style="padding: 20px 32px 24px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.55; color: #475569;">
+            Hi {{ user.first_name|default:user.username }}, here's what needs your attention.
+          </td>
+        </tr>
+
+        {% if overdue %}
+        <tr>
+          <td class="pad" style="padding: 0 32px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #be123c;">
+            Overdue &middot; {{ overdue|length }}
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="list" style="border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              {% for task in overdue %}{% include 'notifications/task_due_reminder/_task_row.html' with task=task first=forloop.first badge_label=task.due_date|date:"M j" badge_text='#be123c' badge_bg='#ffe4e6' %}{% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if due_today %}
+        <tr>
+          <td class="pad" style="padding: {% if overdue %}16px{% else %}0{% endif %} 32px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #9c4f31;">
+            Due today &middot; {{ due_today|length }}
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="list" style="border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              {% for task in due_today %}{% include 'notifications/task_due_reminder/_task_row.html' with task=task first=forloop.first badge_label='Today' badge_text='#9c4f31' badge_bg='#fce9dc' %}{% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if site_url %}
+        <tr>
+          <td class="pad" align="center" style="padding: 28px 32px 4px;">
+            <a href="{{ site_url }}" style="display: inline-block; background: #d1793f; color: #ffffff; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; text-decoration: none; padding: 13px 28px; border-radius: 12px;">
+              Open your board
+            </a>
+          </td>
+        </tr>
+        {% endif %}
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px;">
+            <div class="rule" style="border-top: 1px solid #f1ece7; font-size: 0; line-height: 0;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-muted" style="padding: 0 32px 28px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
+            You're getting this because deadline reminders are on for your account.{% if site_url %} <a href="{{ site_url }}" style="color: #b8623f; text-decoration: underline;">Manage your preferences</a>.{% endif %}
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

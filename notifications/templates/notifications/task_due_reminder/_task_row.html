@@ -1,0 +1,19 @@
+<tr>
+  <td class="row" style="padding: 13px 15px;{% if not first %} border-top: 1px solid #f1ece7;{% endif %}">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td colspan="2" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1.4;">
+          <span class="t-strong" style="color: #1e293b;">{{ task.name }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="t-muted" style="padding-top: 6px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.2; color: #94a3b8;">
+          {% if task.subtask_count %}{{ task.completed_subtask_count }}/{{ task.subtask_count }} done{% endif %}
+        </td>
+        <td align="right" style="padding-top: 6px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1;">
+          {% if task.group %}<span style="display: inline-block; font-weight: 600; color: {{ task.group.color }}; background-color: {{ task.group.color }}1a; border-radius: 20px; padding: 4px 9px; margin-right: 4px;">{{ task.group.name }}</span>{% endif %}<span style="display: inline-block; font-weight: 600; color: {{ badge_text }}; background: {{ badge_bg }}; border-radius: 20px; padding: 4px 9px;">{{ badge_label }}</span>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
