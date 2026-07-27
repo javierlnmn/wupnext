@@ -1,6 +1,23 @@
-# Wupnext
+# WupNext
 
-A focused task list built with Django. Add tasks whenever you want, work through them, and check them off — pending and completed tasks always live on the same page, no daily reset.
+A dynamic and focused task list:
+
+- Tasks with weights, deadlines and subtasks
+- Groups to organise and filter the board
+- Drag and drop ordering
+- An archive for finished work
+- A built-in pomodoro timer
+- Email reminders
+
+## Built with
+
+- **Django 5.2** on SQLite, with Poetry for dependency management
+- **HTMX** and **Alpine.js** for interactivity, so the app stays server-rendered rather than an SPA
+- **SortableJS** for drag and drop
+- **Tailwind CSS**, via [django-tailwind](https://django-tailwind.readthedocs.io/)
+- **Django Q2** for scheduled jobs, using the database itself as the queue, so there's no Redis to run
+- **Anymail** with **Resend** for outgoing email
+- **Gunicorn** and **whitenoise** in production, packaged as a Docker image
 
 ## Development
 
