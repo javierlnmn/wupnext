@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.core import mail
-from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
@@ -13,7 +12,6 @@ from tasks.tests.factories import TaskFactory
 
 class SendDueRemindersTests(TestCase):
     def setUp(self):
-        cache.clear()
         self.today = timezone.localdate()
         self.yesterday = self.today - timedelta(days=1)
         self.tomorrow = self.today + timedelta(days=1)

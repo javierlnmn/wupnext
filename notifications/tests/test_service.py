@@ -1,5 +1,4 @@
 from django.core import mail
-from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
@@ -18,7 +17,6 @@ def reminder_context():
 
 class NotificationServiceTests(TestCase):
     def setUp(self):
-        cache.clear()
         self.user = UserFactory(email="user@example.com")
 
     def test_singleton_returns_same_instance(self):

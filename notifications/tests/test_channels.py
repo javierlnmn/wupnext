@@ -1,5 +1,4 @@
 from django.core import mail
-from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
@@ -24,7 +23,6 @@ class BaseChannelTests(TestCase):
 
 class EmailChannelTests(TestCase):
     def setUp(self):
-        cache.clear()
         self.channel = EmailChannel()
         self.user = UserFactory(email="user@example.com")
 
