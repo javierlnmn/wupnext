@@ -3,14 +3,13 @@ from django.utils import timezone
 
 from accounts.models import UserPreferences
 from common.models import SiteSettings
-from notifications.base import BaseNotification
-from notifications.models import NotificationEvent
+from notifications.base import BaseBulkNotification
 
 from ..models import Task
 
 
-class DueReminderNotification(BaseNotification):
-    event = NotificationEvent.TASK_DUE_REMINDER
+class DueReminderNotification(BaseBulkNotification):
+    event = "task_due_reminder"
 
     def _is_enabled_on_site(self):
         return SiteSettings.load().tasks_notification_due_reminders_enabled
@@ -18,6 +17,9 @@ class DueReminderNotification(BaseNotification):
     def _is_enabled_for_user(self, user):
         # TODO: Implement specific per-notification preference
         return UserPreferences.for_user(user).notification_channels_email_enabled
+
+    def _is_applicable_for_user(self, user, context):
+        return bool(context["overdue"] or context["due_today"])
 
     def _dedup_key(self, user, context):
         return str(context["date"])

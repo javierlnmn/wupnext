@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured
+from django_q.tasks import async_task
 
 from .service import notification_service
 
@@ -20,18 +19,55 @@ class BaseNotification(ABC):
     def _is_enabled_for_user(self, user): ...
 
     @abstractmethod
-    def _dedup_key(self, user, context): ...
+    def _is_applicable_for_user(self, user, context): ...
 
-    def _recipients(self):
-        return get_user_model().objects.filter(is_active=True)
+    @abstractmethod
+    def _dedup_key(self, user, context): ...
 
     @abstractmethod
     def context(self, user): ...
 
-    def send(self):
-        if not self.event:
-            raise ImproperlyConfigured(f"{type(self).__name__} must set 'event'.")
+    def send_to(self, user):
+        if not self._is_enabled_on_site():
+            # TODO: Log skip
+            return
 
+        if not self._is_enabled_for_user(user):
+            # TODO: Log skip
+            return
+
+        context = self.context(user)
+
+        if not self._is_applicable_for_user(user, context):
+            # TODO: Log skip
+            return
+
+        notification_service.notify(
+            user,
+            self.event,
+            context=context,
+            dedup_key=self._dedup_key(user, context),
+        )
+
+
+class BaseBulkNotification(BaseNotification):
+    FANOUT_JOB = "notifications.jobs.send_notification_to_user"
+
+    @abstractmethod
+    def _recipients(self): ...
+
+    def _path(self):
+        cls = type(self)
+        return f"{cls.__module__}.{cls.__qualname__}"
+
+    def send(self):
+        for user in self._recipients():
+            try:
+                self.send_to(user)
+            except Exception:
+                logger.exception("Failed to send %s to %s", self.event, user)
+
+    def enqueue(self):
         if not self._is_enabled_on_site():
             # TODO: Log skip
             return
@@ -41,14 +77,4 @@ class BaseNotification(ABC):
                 # TODO: Log skip
                 continue
 
-            context = self.context(user)
-
-            try:
-                notification_service.notify(
-                    user,
-                    self.event,
-                    context=context,
-                    dedup_key=self._dedup_key(user, context),
-                )
-            except Exception:
-                logger.exception("Failed to send %s to %s", self.event, user)
+            async_task(self.FANOUT_JOB, self._path(), user.pk)
