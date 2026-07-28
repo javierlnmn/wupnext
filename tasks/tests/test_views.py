@@ -141,16 +141,12 @@ class TaskDeleteTests(BoardClientTestCase):
     def test_requires_login(self):
         task = TaskFactory(user=self.user)
         self.client.logout()
-        response = self.client.delete(
-            reverse("tasks:task-detail", args=[task.id])
-        )
+        response = self.client.delete(reverse("tasks:task-detail", args=[task.id]))
         self.assertEqual(response.status_code, 302)
 
     def test_deletes_own_task(self):
         task = TaskFactory(user=self.user)
-        response = self.client.delete(
-            reverse("tasks:task-detail", args=[task.id])
-        )
+        response = self.client.delete(reverse("tasks:task-detail", args=[task.id]))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Task.objects.filter(pk=task.pk).exists())
 
@@ -174,9 +170,7 @@ class ToggleCompleteTests(BoardClientTestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_completes_task_and_cascades_to_subtasks(self):
-        self.client.post(
-            reverse("tasks:task-toggle-complete", args=[self.task.id])
-        )
+        self.client.post(reverse("tasks:task-toggle-complete", args=[self.task.id]))
         self.task.refresh_from_db()
         self.subtask.refresh_from_db()
         self.assertIsNotNone(self.task.completed_at)
@@ -296,16 +290,12 @@ class GroupDeleteTests(BoardClientTestCase):
     def test_requires_login(self):
         group = GroupFactory(user=self.user)
         self.client.logout()
-        response = self.client.delete(
-            reverse("tasks:group-detail", args=[group.id])
-        )
+        response = self.client.delete(reverse("tasks:group-detail", args=[group.id]))
         self.assertEqual(response.status_code, 302)
 
     def test_deletes_group(self):
         group = GroupFactory(user=self.user)
-        response = self.client.delete(
-            reverse("tasks:group-detail", args=[group.id])
-        )
+        response = self.client.delete(reverse("tasks:group-detail", args=[group.id]))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Group.objects.filter(pk=group.pk).exists())
 
@@ -317,9 +307,7 @@ class GroupDeleteTests(BoardClientTestCase):
 
     def test_no_push_url_when_group_not_active(self):
         group = GroupFactory(user=self.user)
-        response = self.client.delete(
-            reverse("tasks:group-detail", args=[group.id])
-        )
+        response = self.client.delete(reverse("tasks:group-detail", args=[group.id]))
         self.assertNotIn("HX-Push-Url", response)
 
 
@@ -336,9 +324,7 @@ class ArchiveViewTests(BoardClientTestCase):
 
     def test_archives_completed_task(self):
         task = TaskFactory(user=self.user, completed=True)
-        response = self.client.post(
-            reverse("tasks:task-archive", args=[task.id])
-        )
+        response = self.client.post(reverse("tasks:task-archive", args=[task.id]))
         self.assertEqual(response.status_code, 200)
         task.refresh_from_db()
         self.assertIsNotNone(task.archived_at)
@@ -362,16 +348,12 @@ class UnarchiveViewTests(BoardClientTestCase):
     def test_requires_login(self):
         task = TaskFactory(user=self.user, completed=True, archived=True)
         self.client.logout()
-        response = self.client.post(
-            reverse("tasks:task-unarchive", args=[task.id])
-        )
+        response = self.client.post(reverse("tasks:task-unarchive", args=[task.id]))
         self.assertEqual(response.status_code, 302)
 
     def test_clears_archived_at(self):
         task = TaskFactory(user=self.user, completed=True, archived=True)
-        response = self.client.post(
-            reverse("tasks:task-unarchive", args=[task.id])
-        )
+        response = self.client.post(reverse("tasks:task-unarchive", args=[task.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "innerHTML:#queue-content")
         task.refresh_from_db()

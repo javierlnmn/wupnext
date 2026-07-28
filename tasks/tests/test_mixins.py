@@ -156,9 +156,7 @@ class BoardQueryTests(BoardMixinTestCase):
         query = self.board_view(
             self.user, group=self.group.id, due=DueFilter.OVERDUE
         ).board_context()
-        self.assertEqual(
-            query["board_query"], f"?group={self.group.id}&due=overdue"
-        )
+        self.assertEqual(query["board_query"], f"?group={self.group.id}&due=overdue")
 
 
 class ArchiveContextTests(TestCase):

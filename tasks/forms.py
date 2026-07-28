@@ -44,7 +44,8 @@ class TaskForm(forms.Form):
         group = None
         if not parent and cleaned.get("group_id"):
             group = Group.objects.filter(
-                id=cleaned["group_id"], user=self.user
+                id=cleaned["group_id"],
+                user=self.user,
             ).first()
         cleaned["group"] = group
 

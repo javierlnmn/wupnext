@@ -103,8 +103,10 @@ class ArchiveMixin(LoginRequiredMixin):
 
         requested = self.request.GET.get("period")
         values = {p["value"] for p in periods}
-        active_period = requested if requested in values else (
-            periods[0]["value"] if periods else None
+        active_period = (
+            requested
+            if requested in values
+            else (periods[0]["value"] if periods else None)
         )
 
         tasks = (

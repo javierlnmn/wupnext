@@ -21,9 +21,7 @@ class Command(PeriodicScheduleCommand):
 
     def calculate_next_run(self):
         now = timezone.now()
-        candidate = now.replace(
-            hour=REMINDER_HOUR, minute=0, second=0, microsecond=0
-        )
+        candidate = now.replace(hour=REMINDER_HOUR, minute=0, second=0, microsecond=0)
         if candidate <= now:
             candidate += datetime.timedelta(days=1)
         return candidate
