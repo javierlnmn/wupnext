@@ -31,11 +31,6 @@ class Command(BaseCommand):
             for name in sorted(PREVIEWS):
                 self.stdout.write(f"  {name}")
             return
-        else:
-            try:
-                preview = get_preview(event)
-            except MissingPreview as exc:
-                raise CommandError(str(exc)) from exc
 
         if recipient:
             try:
@@ -44,6 +39,11 @@ class Command(BaseCommand):
                 raise CommandError(
                     f"'{recipient}' is not a valid email address."
                 ) from exc
+
+        try:
+            preview = get_preview(event)
+        except MissingPreview as exc:
+            raise CommandError(str(exc)) from exc
 
         try:
             if recipient:
