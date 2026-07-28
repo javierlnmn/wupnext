@@ -38,7 +38,13 @@ class DueReminderNotification(BaseNotification):
 
     def context(self, user):
         today = timezone.localdate()
-        tasks = list(self._due_tasks(today).filter(user=user).order_by("due_date"))
+        tasks = list(
+            self._due_tasks(today)
+            .filter(user=user)
+            .select_related("group")
+            .prefetch_related("subtasks")
+            .order_by("due_date")
+        )
 
         return {
             "date": today,

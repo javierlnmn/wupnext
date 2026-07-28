@@ -1,13 +1,17 @@
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.core import mail
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
+from common.models import SiteSettings
 from notifications.models import NotificationLog
 from tasks.jobs import send_due_reminders
-from tasks.tests.factories import TaskFactory
+from tasks.tests.factories import GroupFactory, TaskFactory
 
 
 class SendDueRemindersTests(TestCase):
@@ -28,9 +32,7 @@ class SendDueRemindersTests(TestCase):
         TaskFactory(
             user=self.user, name="Archived", due_date=self.yesterday, archived=True
         )
-        TaskFactory(
-            user=self.user, name="Subtask", due_date=self.yesterday, parent=due
-        )
+        TaskFactory(user=self.user, name="Subtask", due_date=self.yesterday, parent=due)
 
         send_due_reminders()
 
@@ -85,3 +87,32 @@ class SendDueRemindersTests(TestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["user@example.com"])
+
+
+class SendDueRemindersQueryTests(TestCase):
+    def setUp(self):
+        SiteSettings.load()
+
+    def seed(self, user, tasks, subtasks_each):
+        today = timezone.localdate()
+        group = GroupFactory(user=user)
+        for index in range(tasks):
+            parent = TaskFactory(
+                user=user, group=group, due_date=today - timedelta(days=index)
+            )
+            for position in range(subtasks_each):
+                TaskFactory(user=user, parent=parent, completed=position == 0)
+
+    def queries_for(self, tasks, subtasks_each):
+        get_user_model().objects.all().delete()
+        self.seed(UserFactory(email="recipient@example.com"), tasks, subtasks_each)
+
+        with CaptureQueriesContext(connection) as captured:
+            send_due_reminders()
+        return len(captured)
+
+    def test_query_count_does_not_grow_with_the_number_of_due_tasks(self):
+        self.assertEqual(self.queries_for(2, 2), self.queries_for(8, 2))
+
+    def test_query_count_does_not_grow_with_the_number_of_subtasks(self):
+        self.assertEqual(self.queries_for(2, 2), self.queries_for(2, 10))
