@@ -1,11 +1,11 @@
 from io import StringIO
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core import mail
 from django.core.management import CommandError, call_command
 from django.test import TestCase
 
-from notifications.management.commands.preview_email import LIVE_EMAIL_BACKEND
 from notifications.models import NotificationLog
 from tasks.models import Group, Task
 
@@ -62,7 +62,7 @@ class PreviewEmailSendTests(PreviewCommandTestCase):
     def test_uses_the_live_backend_not_the_configured_one(self):
         self.run_command(EVENT, "--send", "me@example.com")
 
-        self.get_connection.assert_called_once_with(LIVE_EMAIL_BACKEND)
+        self.get_connection.assert_called_once_with(settings.LIVE_EMAIL_BACKEND)
 
     def test_delivers_to_the_given_address(self):
         output = self.run_command(EVENT, "--send", "me@example.com")

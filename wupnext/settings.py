@@ -191,11 +191,11 @@ JET_THEMES = [
 ]
 
 # Email
+LIVE_EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend"
-    if DEBUG
-    else "anymail.backends.resend.EmailBackend",
+    "django.core.mail.backends.console.EmailBackend" if DEBUG else LIVE_EMAIL_BACKEND,
 )
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "WupNext <onboarding@resend.dev>")

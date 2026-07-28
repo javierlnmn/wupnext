@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
+from django.conf import settings
 from django.core.mail import get_connection
 from django.db import transaction
 
@@ -8,7 +9,6 @@ from ..channels.email import EmailChannel
 
 PREVIEW_USERNAME = "preview"
 PREVIEW_EMAIL = "preview@wupnext.invalid"
-LIVE_EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
 
 class BaseEmailPreview(ABC):
@@ -35,6 +35,6 @@ class BaseEmailPreview(ABC):
     def send(self, recipient):
         subject, body, html = self.render()
         message = EmailChannel().build_message(subject, body, html, [recipient])
-        message.connection = get_connection(LIVE_EMAIL_BACKEND)
+        message.connection = get_connection(settings.LIVE_EMAIL_BACKEND)
         message.send()
         return subject, body, html

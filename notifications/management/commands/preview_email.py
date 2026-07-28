@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
 from django.template import TemplateDoesNotExist
 
-from notifications.email_previews import LIVE_EMAIL_BACKEND, PREVIEWS, get_preview
+from notifications.email_previews import PREVIEWS, get_preview
 from notifications.exceptions import MissingPreview
 
 
@@ -66,5 +67,7 @@ class Command(BaseCommand):
 
         if recipient:
             self.stdout.write(
-                self.style.SUCCESS(f"Sent to {recipient} using {LIVE_EMAIL_BACKEND}")
+                self.style.SUCCESS(
+                    f"Sent to {recipient} using {settings.LIVE_EMAIL_BACKEND}"
+                )
             )

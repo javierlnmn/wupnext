@@ -2,7 +2,7 @@ from django.utils.module_loading import import_string
 
 from ..exceptions import MissingPreview
 from ..models import NotificationEvent
-from .base import LIVE_EMAIL_BACKEND, PREVIEW_EMAIL, PREVIEW_USERNAME, BaseEmailPreview
+from .base import PREVIEW_EMAIL, PREVIEW_USERNAME, BaseEmailPreview
 
 PREVIEWS = {
     NotificationEvent.TASK_DUE_REMINDER.value: (
@@ -11,7 +11,6 @@ PREVIEWS = {
 }
 
 __all__ = [
-    "LIVE_EMAIL_BACKEND",
     "PREVIEWS",
     "PREVIEW_EMAIL",
     "PREVIEW_USERNAME",

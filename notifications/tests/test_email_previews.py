@@ -1,13 +1,13 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from notifications.email_previews import (
-    LIVE_EMAIL_BACKEND,
     PREVIEW_USERNAME,
     PREVIEWS,
     BaseEmailPreview,
@@ -112,7 +112,7 @@ class PreviewSendTests(TestCase):
     def test_delivers_through_the_live_backend(self):
         StubPreview().send("me@example.com")
 
-        self.get_connection.assert_called_once_with(LIVE_EMAIL_BACKEND)
+        self.get_connection.assert_called_once_with(settings.LIVE_EMAIL_BACKEND)
         self.assertEqual(mail.outbox[0].to, ["me@example.com"])
 
     def test_returns_what_it_rendered(self):
