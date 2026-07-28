@@ -6,12 +6,11 @@ from django.utils import timezone
 from tasks.models import Group, Task
 from tasks.notifications.due_reminders import DueReminderNotification
 
-from ..models import NotificationEvent
 from .base import PREVIEW_EMAIL, PREVIEW_USERNAME, BaseEmailPreview
 
 
 class TaskDueReminderPreview(BaseEmailPreview):
-    event = NotificationEvent.TASK_DUE_REMINDER.value
+    event = DueReminderNotification.event
     user = None
 
     def _seed(self):

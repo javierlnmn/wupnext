@@ -5,10 +5,10 @@ from django.utils import timezone
 from accounts.tests.factories import UserFactory
 from common.models import SiteSettings
 from notifications.exceptions import MissingRecipient
-from notifications.models import NotificationEvent, NotificationLog
+from notifications.models import NotificationLog
 from notifications.service import NotificationService, notification_service
 
-EVENT = NotificationEvent.TASK_DUE_REMINDER
+EVENT = "task_due_reminder"
 
 
 def reminder_context():

@@ -1,5 +1,5 @@
 from .channels.email import EmailChannel
-from .models import NotificationEvent, NotificationLog
+from .models import NotificationLog
 
 
 class NotificationService:
@@ -20,7 +20,6 @@ class NotificationService:
 
     def notify(self, user, event, context=None, *, channels=None, dedup_key=""):
         context = context or {}
-        event = NotificationEvent(event)
 
         for channel_key in channels or self.channels:
             channel = self.channels[channel_key]
@@ -38,7 +37,7 @@ class NotificationService:
             if dedup_key:
                 log, created = NotificationLog.objects.get_or_create(
                     user=user,
-                    event=event.value,
+                    event=event,
                     channel=channel_key,
                     dedup_key=dedup_key,
                 )
@@ -47,7 +46,7 @@ class NotificationService:
                     continue
 
             try:
-                channel.deliver(user=user, event=event.value, context=context)
+                channel.deliver(user=user, event=event, context=context)
             except Exception:
                 if log is not None:
                     log.delete()

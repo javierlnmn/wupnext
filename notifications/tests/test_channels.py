@@ -7,9 +7,8 @@ from common.models import SiteSettings
 from notifications.channels.base import BaseNotificationChannel
 from notifications.channels.email import EmailChannel
 from notifications.exceptions import MissingRecipient
-from notifications.models import NotificationEvent
 
-EVENT = NotificationEvent.TASK_DUE_REMINDER.value
+EVENT = "task_due_reminder"
 
 
 class BaseChannelTests(TestCase):

@@ -17,12 +17,12 @@ from notifications.email_previews.task_due_reminder_preview import (
     TaskDueReminderPreview,
 )
 from notifications.exceptions import MissingPreview
-from notifications.models import NotificationEvent, NotificationLog
+from notifications.models import NotificationLog
 from notifications.tests.factories import NotificationLogFactory
 from tasks.models import Group, Task
 from tasks.tests.factories import TaskFactory
 
-EVENT = NotificationEvent.TASK_DUE_REMINDER.value
+EVENT = "task_due_reminder"
 LOCMEM = "django.core.mail.backends.locmem.EmailBackend"
 
 

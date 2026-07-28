@@ -2,7 +2,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from accounts.tests.factories import UserFactory
-from notifications.models import Channel, NotificationEvent
+from notifications.models import Channel
 from notifications.tests.factories import NotificationLogFactory
 
 
@@ -11,7 +11,7 @@ class NotificationLogTests(TestCase):
         log = NotificationLogFactory(dedup_key="2026-07-23")
         self.assertEqual(
             str(log),
-            f"{NotificationEvent.TASK_DUE_REMINDER} → {Channel.EMAIL} (2026-07-23)",
+            f"task_due_reminder → {Channel.EMAIL} (2026-07-23)",
         )
 
     def test_unique_per_user_event_channel_key(self):

@@ -6,17 +6,13 @@ class Channel(models.TextChoices):
     EMAIL = "email", "Email"
 
 
-class NotificationEvent(models.TextChoices):
-    TASK_DUE_REMINDER = "task_due_reminder", "Task due reminder"
-
-
 class NotificationLog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="notification_logs",
     )
-    event = models.CharField(max_length=64, choices=NotificationEvent.choices)
+    event = models.CharField(max_length=64)
     channel = models.CharField(max_length=32, choices=Channel.choices)
     dedup_key = models.CharField(max_length=128)
     created_at = models.DateTimeField(auto_now_add=True)
