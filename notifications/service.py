@@ -12,13 +12,13 @@ class NotificationService:
         return cls._instance
 
     def __init__(self):
-        if getattr(self, "_initialized", False):
+        if getattr(self, '_initialized', False):
             return
 
         self.channels = {cls.key: cls() for cls in self.channel_classes}
         self._initialized = True
 
-    def notify(self, user, event, context=None, *, channels=None, dedup_key=""):
+    def notify(self, user, event, context=None, *, channels=None, dedup_key=''):
         context = context or {}
 
         for channel_key in channels or self.channels:

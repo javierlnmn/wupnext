@@ -9,7 +9,7 @@ from ..models import Task
 
 
 class DueReminderNotification(BaseBulkNotification):
-    event = "task_due_reminder"
+    event = 'task_due_reminder'
 
     def _is_enabled_on_site(self):
         return SiteSettings.load().tasks_notification_due_reminders_enabled
@@ -19,15 +19,15 @@ class DueReminderNotification(BaseBulkNotification):
         return UserPreferences.for_user(user).notification_channels_email_enabled
 
     def _is_applicable_for_user(self, user, context):
-        return bool(context["overdue"] or context["due_today"])
+        return bool(context['overdue'] or context['due_today'])
 
     def _dedup_key(self, user, context):
-        return str(context["date"])
+        return str(context['date'])
 
     def _recipients(self):
         return get_user_model().objects.filter(
             is_active=True,
-            pk__in=self._due_tasks(timezone.localdate()).values("user_id"),
+            pk__in=self._due_tasks(timezone.localdate()).values('user_id'),
         )
 
     def _due_tasks(self, today):
@@ -43,13 +43,13 @@ class DueReminderNotification(BaseBulkNotification):
         tasks = list(
             self._due_tasks(today)
             .filter(user=user)
-            .select_related("group")
-            .prefetch_related("subtasks")
-            .order_by("due_date")
+            .select_related('group')
+            .prefetch_related('subtasks')
+            .order_by('due_date')
         )
 
         return {
-            "date": today,
-            "overdue": [task for task in tasks if task.due_date < today],
-            "due_today": [task for task in tasks if task.due_date == today],
+            'date': today,
+            'overdue': [task for task in tasks if task.due_date < today],
+            'due_today': [task for task in tasks if task.due_date == today],
         }

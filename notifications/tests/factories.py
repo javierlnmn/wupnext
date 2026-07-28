@@ -9,6 +9,6 @@ class NotificationLogFactory(factory.django.DjangoModelFactory):
         model = NotificationLog
 
     user = factory.SubFactory(UserFactory)
-    event = "task_due_reminder"
+    event = 'task_due_reminder'
     channel = Channel.EMAIL
-    dedup_key = factory.Sequence(lambda n: f"key-{n}")
+    dedup_key = factory.Sequence(lambda n: f'key-{n}')

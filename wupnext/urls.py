@@ -21,16 +21,16 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path(
-        "favicon.ico",
-        RedirectView.as_view(url="/static/favicon/favicon.ico", permanent=True),
+        'favicon.ico',
+        RedirectView.as_view(url='/static/favicon/favicon.ico', permanent=True),
     ),
     # JET urls
-    path("jet/", include("jet.urls", "jet")),
-    path("jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")),
+    path('jet/', include('jet.urls', 'jet')),
+    path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     # Django Browser Reload
-    path("__reload__/", include("django_browser_reload.urls")),
-    path("admin/", admin.site.urls),
-    path("", include("tasks.urls")),
-    path("accounts/", include("accounts.urls")),
-    path("pomodoro/", include("pomodoro.urls")),
+    path('__reload__/', include('django_browser_reload.urls')),
+    path('admin/', admin.site.urls),
+    path('', include('tasks.urls')),
+    path('accounts/', include('accounts.urls')),
+    path('pomodoro/', include('pomodoro.urls')),
 ]

@@ -8,16 +8,16 @@ from notifications.exceptions import MissingRecipient
 from notifications.models import NotificationLog
 from notifications.service import NotificationService, notification_service
 
-EVENT = "task_due_reminder"
+EVENT = 'task_due_reminder'
 
 
 def reminder_context():
-    return {"date": timezone.localdate(), "overdue": [], "due_today": []}
+    return {'date': timezone.localdate(), 'overdue': [], 'due_today': []}
 
 
 class NotificationServiceTests(TestCase):
     def setUp(self):
-        self.user = UserFactory(email="user@example.com")
+        self.user = UserFactory(email='user@example.com')
 
     def test_singleton_returns_same_instance(self):
         self.assertIs(NotificationService(), notification_service)
@@ -26,19 +26,19 @@ class NotificationServiceTests(TestCase):
         notification_service.notify(self.user, EVENT, reminder_context())
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["user@example.com"])
+        self.assertEqual(mail.outbox[0].to, ['user@example.com'])
 
     def test_notify_attaches_html_alternative(self):
         notification_service.notify(self.user, EVENT, reminder_context())
 
         alternatives = mail.outbox[0].alternatives
         self.assertEqual(len(alternatives), 1)
-        self.assertEqual(alternatives[0][1], "text/html")
+        self.assertEqual(alternatives[0][1], 'text/html')
 
     def test_dedup_key_sends_only_once(self):
         for _ in range(3):
             notification_service.notify(
-                self.user, EVENT, reminder_context(), dedup_key="2026-07-23"
+                self.user, EVENT, reminder_context(), dedup_key='2026-07-23'
             )
 
         self.assertEqual(len(mail.outbox), 1)
@@ -46,10 +46,10 @@ class NotificationServiceTests(TestCase):
 
     def test_distinct_dedup_keys_send_again(self):
         notification_service.notify(
-            self.user, EVENT, reminder_context(), dedup_key="day-1"
+            self.user, EVENT, reminder_context(), dedup_key='day-1'
         )
         notification_service.notify(
-            self.user, EVENT, reminder_context(), dedup_key="day-2"
+            self.user, EVENT, reminder_context(), dedup_key='day-2'
         )
 
         self.assertEqual(len(mail.outbox), 2)
@@ -68,18 +68,18 @@ class NotificationServiceTests(TestCase):
         site.save()
 
         notification_service.notify(
-            self.user, EVENT, reminder_context(), dedup_key="day-1"
+            self.user, EVENT, reminder_context(), dedup_key='day-1'
         )
 
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(NotificationLog.objects.count(), 0)
 
     def test_missing_recipient_raises_and_rolls_back_log(self):
-        user = UserFactory(email="")
+        user = UserFactory(email='')
 
         with self.assertRaises(MissingRecipient):
             notification_service.notify(
-                user, EVENT, reminder_context(), dedup_key="day-1"
+                user, EVENT, reminder_context(), dedup_key='day-1'
             )
 
         self.assertEqual(len(mail.outbox), 0)

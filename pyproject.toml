@@ -44,6 +44,11 @@ select = ["E", "F", "I"]
 [tool.ruff.lint.isort]
 combine-as-imports = true
 force-single-line = false
+
+[tool.ruff.format]
+quote-style = "single"
+
+
 [dependency-groups]
 dev = [
     "factory-boy (>=3.3.3,<4.0.0)"

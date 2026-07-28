@@ -5,17 +5,17 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField("email address", unique=True)
+    email = models.EmailField('email address', unique=True)
 
     def __str__(self):
-        return f"{self.username} ({self.first_name} {self.last_name})"
+        return f'{self.username} ({self.first_name} {self.last_name})'
 
 
 class UserPreferences(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="preferences",
+        related_name='preferences',
     )
 
     # Pomodoro
@@ -40,7 +40,7 @@ class UserPreferences(models.Model):
     notification_channels_email_enabled = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Preferences for {self.user}"
+        return f'Preferences for {self.user}'
 
     @classmethod
     def for_user(cls, user):
@@ -48,8 +48,8 @@ class UserPreferences(models.Model):
 
     def pomodoro_dict(self):
         return {
-            "focus": self.pomodoro_focus,
-            "short": self.pomodoro_short_break,
-            "long": self.pomodoro_long_break,
-            "every": self.pomodoro_long_every,
+            'focus': self.pomodoro_focus,
+            'short': self.pomodoro_short_break,
+            'long': self.pomodoro_long_break,
+            'every': self.pomodoro_long_every,
         }

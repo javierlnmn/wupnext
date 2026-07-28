@@ -20,9 +20,9 @@ class PeriodicScheduleCommand(BaseCommand):
 
         _, created = Schedule.objects.update_or_create(
             name=self.schedule_name,
-            defaults={"func": self.func, **self.schedule_defaults()},
+            defaults={'func': self.func, **self.schedule_defaults()},
         )
-        action = "Created" if created else "Updated"
+        action = 'Created' if created else 'Updated'
         self.stdout.write(
             self.style.SUCCESS(f"{action} schedule '{self.schedule_name}': {self.func}")
         )

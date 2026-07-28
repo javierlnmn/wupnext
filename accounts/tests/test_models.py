@@ -8,11 +8,11 @@ from .factories import UserFactory
 
 class CustomUserTests(TestCase):
     def test_email_must_be_unique(self):
-        UserFactory(email="taken@example.com")
+        UserFactory(email='taken@example.com')
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                UserFactory(email="taken@example.com")
+                UserFactory(email='taken@example.com')
 
 
 class PreferencesSignalTests(TestCase):
@@ -22,7 +22,7 @@ class PreferencesSignalTests(TestCase):
 
     def test_preferences_not_duplicated_on_update(self):
         user = UserFactory()
-        user.first_name = "Javier"
+        user.first_name = 'Javier'
         user.save()
         self.assertEqual(UserPreferences.objects.filter(user=user).count(), 1)
 
@@ -38,7 +38,7 @@ class PomodoroDictTests(TestCase):
         prefs = UserFactory().preferences
         self.assertEqual(
             prefs.pomodoro_dict(),
-            {"focus": 25, "short": 5, "long": 15, "every": 4},
+            {'focus': 25, 'short': 5, 'long': 15, 'every': 4},
         )
 
     def test_serializes_custom_values(self):
@@ -50,5 +50,5 @@ class PomodoroDictTests(TestCase):
         prefs.save()
         self.assertEqual(
             prefs.pomodoro_dict(),
-            {"focus": 50, "short": 10, "long": 20, "every": 3},
+            {'focus': 50, 'short': 10, 'long': 20, 'every': 3},
         )

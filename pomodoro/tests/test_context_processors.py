@@ -9,7 +9,7 @@ from pomodoro.models import PomodoroState
 
 class PomodoroContextTests(TestCase):
     def pomodoro_context(self, user):
-        request = RequestFactory().get("/")
+        request = RequestFactory().get('/')
         request.user = user
         return pomodoro(request)
 
@@ -20,11 +20,11 @@ class PomodoroContextTests(TestCase):
         user = UserFactory()
         context = self.pomodoro_context(user)
         self.assertEqual(
-            context["pomodoro_settings"],
+            context['pomodoro_settings'],
             UserPreferences.for_user(user).pomodoro_dict(),
         )
         self.assertEqual(
-            context["pomodoro_state"],
+            context['pomodoro_state'],
             PomodoroState.for_user(user).state_dict(),
         )
 

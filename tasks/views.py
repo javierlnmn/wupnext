@@ -11,7 +11,7 @@ from .models import Group, Task
 
 
 class BoardView(BoardMixin, TemplateView):
-    template_name = "tasks/board.html"
+    template_name = 'tasks/board.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -24,34 +24,34 @@ class TaskView(BoardMixin, View):
         form = TaskForm(request.POST, user=request.user)
         if form.is_valid():
             data = form.cleaned_data
-            group = data["group"]
-            if data["task_id"]:
+            group = data['group']
+            if data['task_id']:
                 task = Task.objects.filter(
-                    id=data["task_id"], user=request.user
+                    id=data['task_id'], user=request.user
                 ).first()
                 if task:
-                    fields = ["name", "weight", "group", "due_date"]
+                    fields = ['name', 'weight', 'group', 'due_date']
                     if task.group_id != (group.id if group else None):
                         task.group_position = (
                             Task.next_group_position(request.user, group)
                             if group
                             else 0
                         )
-                        fields.append("group_position")
-                    task.name = data["name"]
-                    task.weight = data["weight"]
+                        fields.append('group_position')
+                    task.name = data['name']
+                    task.weight = data['weight']
                     task.group = group
-                    task.due_date = data["due_date"]
+                    task.due_date = data['due_date']
                     task.save(update_fields=fields)
             else:
                 Task.objects.create(
                     user=request.user,
-                    name=data["name"],
-                    weight=data["weight"],
+                    name=data['name'],
+                    weight=data['weight'],
                     group=group,
-                    parent=data["parent"],
-                    due_date=data["due_date"],
-                    position=Task.next_position(request.user, data["parent"]),
+                    parent=data['parent'],
+                    due_date=data['due_date'],
+                    position=Task.next_position(request.user, data['parent']),
                     group_position=(
                         Task.next_group_position(request.user, group) if group else 0
                     ),
@@ -71,7 +71,7 @@ class ToggleCompleteTaskView(BoardMixin, View):
 
         now = None if task.completed_at else timezone.now()
         task.completed_at = now
-        task.save(update_fields=["completed_at"])
+        task.save(update_fields=['completed_at'])
         task.subtasks.update(completed_at=now)
 
         return self.board_response()
@@ -83,39 +83,39 @@ class GroupView(BoardMixin, View):
         if not form.is_valid():
             return self.board_response()
 
-        if form.cleaned_data["group_id"]:
+        if form.cleaned_data['group_id']:
             Group.objects.filter(
-                id=form.cleaned_data["group_id"], user=request.user
+                id=form.cleaned_data['group_id'], user=request.user
             ).update(
-                name=form.cleaned_data["name"],
-                color=form.cleaned_data["color"],
+                name=form.cleaned_data['name'],
+                color=form.cleaned_data['color'],
             )
             return self.board_response()
 
         group = Group.objects.create(
             user=request.user,
-            name=form.cleaned_data["name"],
-            color=form.cleaned_data["color"],
+            name=form.cleaned_data['name'],
+            color=form.cleaned_data['color'],
             position=Group.next_position(request.user),
         )
 
         response = HttpResponse(status=204)
-        response["HX-Location"] = f"{reverse('tasks:board')}?group={group.id}"
+        response['HX-Location'] = f'{reverse("tasks:board")}?group={group.id}'
         return response
 
     def delete(self, request, group_id):
-        was_active = request.GET.get("group") == str(group_id)
+        was_active = request.GET.get('group') == str(group_id)
         Group.objects.filter(id=group_id, user=request.user).delete()
         response = self.board_response()
         if was_active:
-            response["HX-Push-Url"] = reverse("tasks:board")
+            response['HX-Push-Url'] = reverse('tasks:board')
         return response
 
 
 class TaskReorderView(BoardMixin, ReorderMixin, View):
     def post(self, request):
         group = self.active_group()
-        field = "group_position" if group else "position"
+        field = 'group_position' if group else 'position'
         scope = Task.objects.filter_unarchived().filter(
             user=request.user, parent__isnull=True, completed_at__isnull=True
         )
@@ -140,7 +140,7 @@ class GroupReorderView(BoardMixin, ReorderMixin, View):
             return HttpResponse(status=400)
 
         updated = self.assign_positions(objects, ids)
-        Group.objects.bulk_update(updated, ["position"])
+        Group.objects.bulk_update(updated, ['position'])
         return self.board_response()
 
 
@@ -162,7 +162,7 @@ class ArchiveView(BoardMixin, ArchiveMixin, View):
 class ArchivePeriodView(ArchiveMixin, View):
     def delete(self, request, period):
         try:
-            year, month = (int(part) for part in period.split("-"))
+            year, month = (int(part) for part in period.split('-'))
         except ValueError:
             return HttpResponse(status=400)
         Task.objects.filter_archived().filter(
@@ -179,6 +179,6 @@ class UnarchiveTaskView(BoardMixin, ArchiveMixin, View):
         Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
         return render(
             request,
-            "tasks/partials/archive/unarchive_response.html",
+            'tasks/partials/archive/unarchive_response.html',
             {**self.archive_context(), **self.board_context()},
         )

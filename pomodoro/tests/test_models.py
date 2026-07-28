@@ -36,13 +36,13 @@ class StateDictTests(TestCase):
         data = state.state_dict()
         self.assertEqual(
             set(data),
-            {"phase", "running", "endsAt", "remaining", "completed", "updatedAt"},
+            {'phase', 'running', 'endsAt', 'remaining', 'completed', 'updatedAt'},
         )
-        self.assertEqual(data["phase"], Phase.FOCUS)
-        self.assertFalse(data["running"])
-        self.assertIsNone(data["endsAt"])
-        self.assertIsNone(data["remaining"])
-        self.assertEqual(data["completed"], 0)
+        self.assertEqual(data['phase'], Phase.FOCUS)
+        self.assertFalse(data['running'])
+        self.assertIsNone(data['endsAt'])
+        self.assertIsNone(data['remaining'])
+        self.assertEqual(data['completed'], 0)
 
     def test_serializes_running_state(self):
         state = PomodoroStateFactory(
@@ -53,13 +53,13 @@ class StateDictTests(TestCase):
             completed=3,
         )
         data = state.state_dict()
-        self.assertEqual(data["phase"], Phase.LONG)
-        self.assertTrue(data["running"])
-        self.assertEqual(data["endsAt"], 1_800_000_000_000)
-        self.assertEqual(data["remaining"], 900)
-        self.assertEqual(data["completed"], 3)
+        self.assertEqual(data['phase'], Phase.LONG)
+        self.assertTrue(data['running'])
+        self.assertEqual(data['endsAt'], 1_800_000_000_000)
+        self.assertEqual(data['remaining'], 900)
+        self.assertEqual(data['completed'], 3)
 
     def test_updated_at_is_serialized_as_epoch_ms(self):
         state = PomodoroStateFactory()
         expected = int(state.updated_at.timestamp() * 1000)
-        self.assertEqual(state.state_dict()["updatedAt"], expected)
+        self.assertEqual(state.state_dict()['updatedAt'], expected)

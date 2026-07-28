@@ -52,13 +52,13 @@ class SubtaskCountTests(TestCase):
     def test_counts_reflect_subtasks(self):
         TaskFactory(user=self.parent.user, parent=self.parent)
         TaskFactory(user=self.parent.user, parent=self.parent, completed=True)
-        parent = Task.objects.prefetch_related("subtasks").get(pk=self.parent.pk)
+        parent = Task.objects.prefetch_related('subtasks').get(pk=self.parent.pk)
         self.assertEqual(parent.subtask_count, 2)
         self.assertEqual(parent.completed_subtask_count, 1)
 
     def test_counts_read_prefetch_cache_without_extra_queries(self):
         TaskFactory(user=self.parent.user, parent=self.parent, completed=True)
-        parent = Task.objects.prefetch_related("subtasks").get(pk=self.parent.pk)
+        parent = Task.objects.prefetch_related('subtasks').get(pk=self.parent.pk)
         with self.assertNumQueries(0):
             self.assertEqual(parent.subtask_count, 1)
             self.assertEqual(parent.completed_subtask_count, 1)

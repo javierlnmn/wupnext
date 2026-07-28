@@ -22,35 +22,35 @@ class TaskForm(forms.Form):
         super().__init__(*args, **kwargs)
 
     def clean_name(self):
-        name = self.cleaned_data["name"].strip()
+        name = self.cleaned_data['name'].strip()
         if not name:
-            raise forms.ValidationError("Name is required.")
+            raise forms.ValidationError('Name is required.')
         return name
 
     def clean_weight(self):
-        weight = self.cleaned_data.get("weight") or 0
+        weight = self.cleaned_data.get('weight') or 0
         return min(max(weight, 0), MAX_TASK_WEIGHT)
 
     def clean(self):
         cleaned = super().clean()
 
         parent = None
-        if cleaned.get("parent_id"):
+        if cleaned.get('parent_id'):
             parent = Task.objects.filter(
-                id=cleaned["parent_id"], user=self.user, parent__isnull=True
+                id=cleaned['parent_id'], user=self.user, parent__isnull=True
             ).first()
-        cleaned["parent"] = parent
+        cleaned['parent'] = parent
 
         group = None
-        if not parent and cleaned.get("group_id"):
+        if not parent and cleaned.get('group_id'):
             group = Group.objects.filter(
-                id=cleaned["group_id"],
+                id=cleaned['group_id'],
                 user=self.user,
             ).first()
-        cleaned["group"] = group
+        cleaned['group'] = group
 
         if parent:
-            cleaned["due_date"] = None
+            cleaned['due_date'] = None
 
         return cleaned
 
@@ -61,11 +61,11 @@ class GroupForm(forms.Form):
     color = forms.CharField(max_length=9, required=False)
 
     def clean_name(self):
-        name = self.cleaned_data["name"].strip()
+        name = self.cleaned_data['name'].strip()
         if not name:
-            raise forms.ValidationError("Name is required.")
+            raise forms.ValidationError('Name is required.')
         return name
 
     def clean_color(self):
-        color = self.cleaned_data.get("color") or ""
+        color = self.cleaned_data.get('color') or ''
         return color if color in GROUP_COLOR_VALUES else DEFAULT_GROUP_COLOR

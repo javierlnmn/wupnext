@@ -8,15 +8,15 @@ from accounts.tests.factories import UserFactory
 from notifications.jobs import send_notification_to_user
 from tasks.tests.factories import TaskFactory
 
-NOTIFICATION = "tasks.notifications.due_reminders.DueReminderNotification"
+NOTIFICATION = 'tasks.notifications.due_reminders.DueReminderNotification'
 
 
 class SendNotificationToUserTests(TestCase):
     def setUp(self):
-        self.user = UserFactory(email="user@example.com")
+        self.user = UserFactory(email='user@example.com')
         TaskFactory(
             user=self.user,
-            name="Renew the domain",
+            name='Renew the domain',
             due_date=timezone.localdate() - timedelta(days=1),
         )
 
@@ -24,8 +24,8 @@ class SendNotificationToUserTests(TestCase):
         send_notification_to_user(NOTIFICATION, self.user.pk)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["user@example.com"])
-        self.assertIn("Renew the domain", mail.outbox[0].body)
+        self.assertEqual(mail.outbox[0].to, ['user@example.com'])
+        self.assertIn('Renew the domain', mail.outbox[0].body)
 
     def test_does_nothing_when_the_user_no_longer_exists(self):
         user_id = self.user.pk
@@ -36,7 +36,7 @@ class SendNotificationToUserTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_does_nothing_when_the_user_has_nothing_due(self):
-        quiet = UserFactory(email="quiet@example.com")
+        quiet = UserFactory(email='quiet@example.com')
 
         send_notification_to_user(NOTIFICATION, quiet.pk)
 

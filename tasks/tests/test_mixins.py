@@ -21,7 +21,7 @@ class ArchiveHost(ArchiveMixin, View):
 
 class BoardMixinTestCase(TestCase):
     def board_view(self, user, **params):
-        request = RequestFactory().get("/", params)
+        request = RequestFactory().get('/', params)
         request.user = user
         view = BoardHost()
         view.setup(request)
@@ -41,7 +41,7 @@ class ActiveGroupTests(BoardMixinTestCase):
         self.assertIsNone(self.board_view(self.user).active_group())
 
     def test_none_for_non_digit_value(self):
-        self.assertIsNone(self.board_view(self.user, group="all").active_group())
+        self.assertIsNone(self.board_view(self.user, group='all').active_group())
 
     def test_none_for_other_users_group(self):
         other_group = GroupFactory(user=UserFactory())
@@ -59,36 +59,36 @@ class BoardContextFilterTests(BoardMixinTestCase):
         pending = TaskFactory(user=self.user)
         completed = TaskFactory(user=self.user, completed=True)
         context = self.board_view(self.user).board_context()
-        self.assertIn(pending, context["pending_tasks"])
-        self.assertIn(completed, context["completed_tasks"])
-        self.assertNotIn(completed, context["pending_tasks"])
+        self.assertIn(pending, context['pending_tasks'])
+        self.assertIn(completed, context['completed_tasks'])
+        self.assertNotIn(completed, context['pending_tasks'])
 
     def test_excludes_archived_and_subtasks(self):
         parent = TaskFactory(user=self.user)
         TaskFactory(user=self.user, parent=parent)
         TaskFactory(user=self.user, archived=True)
         context = self.board_view(self.user).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [parent])
+        self.assertEqual(list(context['pending_tasks']), [parent])
 
     def test_scoped_to_user(self):
         TaskFactory(user=UserFactory())
         mine = TaskFactory(user=self.user)
         context = self.board_view(self.user).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [mine])
+        self.assertEqual(list(context['pending_tasks']), [mine])
 
     def test_group_filter(self):
         in_group = TaskFactory(user=self.user, group=self.group)
         TaskFactory(user=self.user)
         context = self.board_view(self.user, group=self.group.id).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [in_group])
-        self.assertEqual(context["active_task_group"], self.group)
+        self.assertEqual(list(context['pending_tasks']), [in_group])
+        self.assertEqual(context['active_task_group'], self.group)
 
     def test_today_filter(self):
         due_today = TaskFactory(user=self.user, due_date=self.today)
         TaskFactory(user=self.user, due_date=self.today - timedelta(days=1))
         context = self.board_view(self.user, due=DueFilter.TODAY).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [due_today])
-        self.assertEqual(context["active_due"], DueFilter.TODAY)
+        self.assertEqual(list(context['pending_tasks']), [due_today])
+        self.assertEqual(context['active_due'], DueFilter.TODAY)
 
     def test_overdue_filter_excludes_completed(self):
         overdue = TaskFactory(user=self.user, due_date=self.today - timedelta(days=1))
@@ -98,40 +98,40 @@ class BoardContextFilterTests(BoardMixinTestCase):
             completed=True,
         )
         context = self.board_view(self.user, due=DueFilter.OVERDUE).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [overdue])
+        self.assertEqual(list(context['pending_tasks']), [overdue])
 
     def test_invalid_due_value_ignored(self):
-        context = self.board_view(self.user, due="someday").board_context()
-        self.assertIsNone(context["active_due"])
+        context = self.board_view(self.user, due='someday').board_context()
+        self.assertIsNone(context['active_due'])
 
     def test_exposes_max_task_weight_and_today(self):
         context = self.board_view(self.user).board_context()
-        self.assertEqual(context["max_task_weight"], MAX_TASK_WEIGHT)
-        self.assertEqual(context["today"], self.today)
+        self.assertEqual(context['max_task_weight'], MAX_TASK_WEIGHT)
+        self.assertEqual(context['today'], self.today)
 
     def test_unfiltered_view_orders_by_global_position(self):
         last = TaskFactory(user=self.user, position=2)
         first = TaskFactory(user=self.user, position=0)
         middle = TaskFactory(user=self.user, position=1)
         context = self.board_view(self.user).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [first, middle, last])
+        self.assertEqual(list(context['pending_tasks']), [first, middle, last])
 
     def test_group_view_orders_by_group_position(self):
         a = TaskFactory(user=self.user, group=self.group, group_position=1)
         b = TaskFactory(user=self.user, group=self.group, group_position=0)
         context = self.board_view(self.user, group=self.group.id).board_context()
-        self.assertEqual(list(context["pending_tasks"]), [b, a])
+        self.assertEqual(list(context['pending_tasks']), [b, a])
 
     def test_reorderable_flag_tracks_due_filter(self):
-        self.assertTrue(self.board_view(self.user).board_context()["reorderable"])
+        self.assertTrue(self.board_view(self.user).board_context()['reorderable'])
         self.assertTrue(
             self.board_view(self.user, group=self.group.id).board_context()[
-                "reorderable"
+                'reorderable'
             ]
         )
         self.assertFalse(
             self.board_view(self.user, due=DueFilter.TODAY).board_context()[
-                "reorderable"
+                'reorderable'
             ]
         )
 
@@ -142,21 +142,21 @@ class BoardQueryTests(BoardMixinTestCase):
         self.group = GroupFactory(user=self.user)
 
     def test_empty_without_filters(self):
-        self.assertEqual(self.board_view(self.user).board_context()["board_query"], "")
+        self.assertEqual(self.board_view(self.user).board_context()['board_query'], '')
 
     def test_group_only(self):
         query = self.board_view(self.user, group=self.group.id).board_context()
-        self.assertEqual(query["board_query"], f"?group={self.group.id}")
+        self.assertEqual(query['board_query'], f'?group={self.group.id}')
 
     def test_due_only(self):
         query = self.board_view(self.user, due=DueFilter.TODAY).board_context()
-        self.assertEqual(query["board_query"], "?due=today")
+        self.assertEqual(query['board_query'], '?due=today')
 
     def test_group_and_due_combined(self):
         query = self.board_view(
             self.user, group=self.group.id, due=DueFilter.OVERDUE
         ).board_context()
-        self.assertEqual(query["board_query"], f"?group={self.group.id}&due=overdue")
+        self.assertEqual(query['board_query'], f'?group={self.group.id}&due=overdue')
 
 
 class ArchiveContextTests(TestCase):
@@ -164,7 +164,7 @@ class ArchiveContextTests(TestCase):
         self.user = UserFactory()
 
     def archive_view(self, user, **params):
-        request = RequestFactory().get("/", params)
+        request = RequestFactory().get('/', params)
         request.user = user
         view = ArchiveHost()
         view.setup(request)
@@ -178,43 +178,43 @@ class ArchiveContextTests(TestCase):
 
     def test_empty_when_nothing_archived(self):
         context = self.archive_view(self.user).archive_context()
-        self.assertEqual(context["archive_periods"], [])
-        self.assertIsNone(context["active_period"])
-        self.assertEqual(list(context["archived_tasks"]), [])
+        self.assertEqual(context['archive_periods'], [])
+        self.assertIsNone(context['active_period'])
+        self.assertEqual(list(context['archived_tasks']), [])
 
     def test_periods_ordered_most_recent_first_with_counts(self):
         self.archive_task(2026, 7)
         self.archive_task(2026, 7)
         self.archive_task(2026, 5)
         context = self.archive_view(self.user).archive_context()
-        values = [p["value"] for p in context["archive_periods"]]
-        counts = {p["value"]: p["count"] for p in context["archive_periods"]}
-        self.assertEqual(values, ["2026-07", "2026-05"])
-        self.assertEqual(counts["2026-07"], 2)
-        self.assertEqual(counts["2026-05"], 1)
+        values = [p['value'] for p in context['archive_periods']]
+        counts = {p['value']: p['count'] for p in context['archive_periods']}
+        self.assertEqual(values, ['2026-07', '2026-05'])
+        self.assertEqual(counts['2026-07'], 2)
+        self.assertEqual(counts['2026-05'], 1)
 
     def test_active_period_defaults_to_most_recent(self):
         self.archive_task(2026, 7)
         self.archive_task(2026, 5)
         context = self.archive_view(self.user).archive_context()
-        self.assertEqual(context["active_period"], "2026-07")
+        self.assertEqual(context['active_period'], '2026-07')
 
     def test_requested_period_selects_that_month(self):
         recent = self.archive_task(2026, 7)
         older = self.archive_task(2026, 5)
-        context = self.archive_view(self.user, period="2026-05").archive_context()
-        self.assertEqual(context["active_period"], "2026-05")
-        self.assertIn(older, context["archived_tasks"])
-        self.assertNotIn(recent, context["archived_tasks"])
+        context = self.archive_view(self.user, period='2026-05').archive_context()
+        self.assertEqual(context['active_period'], '2026-05')
+        self.assertIn(older, context['archived_tasks'])
+        self.assertNotIn(recent, context['archived_tasks'])
 
     def test_invalid_period_falls_back_to_default(self):
         self.archive_task(2026, 7)
-        context = self.archive_view(self.user, period="1999-01").archive_context()
-        self.assertEqual(context["active_period"], "2026-07")
+        context = self.archive_view(self.user, period='1999-01').archive_context()
+        self.assertEqual(context['active_period'], '2026-07')
 
     def test_scoped_to_user(self):
         mine = self.archive_task(2026, 7)
         other = TaskFactory(user=UserFactory(), completed=True, archived=True)
         context = self.archive_view(self.user).archive_context()
-        self.assertIn(mine, context["archived_tasks"])
-        self.assertNotIn(other, context["archived_tasks"])
+        self.assertIn(mine, context['archived_tasks'])
+        self.assertNotIn(other, context['archived_tasks'])

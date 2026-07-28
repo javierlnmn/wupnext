@@ -21,20 +21,20 @@ class SendDueRemindersTests(TestCase):
         self.today = timezone.localdate()
         self.yesterday = self.today - timedelta(days=1)
         self.tomorrow = self.today + timedelta(days=1)
-        self.user = UserFactory(email="user@example.com")
+        self.user = UserFactory(email='user@example.com')
 
     def test_reminds_about_due_and_overdue_only(self):
-        due = TaskFactory(user=self.user, name="Due today", due_date=self.today)
-        overdue = TaskFactory(user=self.user, name="Overdue", due_date=self.yesterday)
-        TaskFactory(user=self.user, name="Future", due_date=self.tomorrow)
-        TaskFactory(user=self.user, name="No deadline", due_date=None)
+        due = TaskFactory(user=self.user, name='Due today', due_date=self.today)
+        overdue = TaskFactory(user=self.user, name='Overdue', due_date=self.yesterday)
+        TaskFactory(user=self.user, name='Future', due_date=self.tomorrow)
+        TaskFactory(user=self.user, name='No deadline', due_date=None)
         TaskFactory(
-            user=self.user, name="Done", due_date=self.yesterday, completed=True
+            user=self.user, name='Done', due_date=self.yesterday, completed=True
         )
         TaskFactory(
-            user=self.user, name="Archived", due_date=self.yesterday, archived=True
+            user=self.user, name='Archived', due_date=self.yesterday, archived=True
         )
-        TaskFactory(user=self.user, name="Subtask", due_date=self.yesterday, parent=due)
+        TaskFactory(user=self.user, name='Subtask', due_date=self.yesterday, parent=due)
 
         DueReminderNotification().send()
 
@@ -42,7 +42,7 @@ class SendDueRemindersTests(TestCase):
         body = mail.outbox[0].body
         self.assertIn(due.name, body)
         self.assertIn(overdue.name, body)
-        for excluded in ("Future", "No deadline", "Done", "Archived", "Subtask"):
+        for excluded in ('Future', 'No deadline', 'Done', 'Archived', 'Subtask'):
             self.assertNotIn(excluded, body)
 
     def test_creates_dedup_log_for_today(self):
@@ -80,15 +80,15 @@ class SendDueRemindersTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_one_user_failure_does_not_block_others(self):
-        no_email = UserFactory(email="")
+        no_email = UserFactory(email='')
         TaskFactory(user=no_email, due_date=self.today)
         TaskFactory(user=self.user, due_date=self.today)
 
-        with self.assertLogs("notifications.base", level="ERROR"):
+        with self.assertLogs('notifications.base', level='ERROR'):
             DueReminderNotification().send()
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["user@example.com"])
+        self.assertEqual(mail.outbox[0].to, ['user@example.com'])
 
 
 class SendDueRemindersQueryTests(TestCase):
@@ -107,7 +107,7 @@ class SendDueRemindersQueryTests(TestCase):
 
     def queries_for(self, tasks, subtasks_each):
         get_user_model().objects.all().delete()
-        self.seed(UserFactory(email="recipient@example.com"), tasks, subtasks_each)
+        self.seed(UserFactory(email='recipient@example.com'), tasks, subtasks_each)
 
         with CaptureQueriesContext(connection) as captured:
             DueReminderNotification().send()
@@ -123,16 +123,16 @@ class SendDueRemindersQueryTests(TestCase):
 class SendDueRemindersJobTests(TestCase):
     def setUp(self):
         self.today = timezone.localdate()
-        patcher = mock.patch("notifications.base.async_task")
+        patcher = mock.patch('notifications.base.async_task')
         self.async_task = patcher.start()
         self.addCleanup(patcher.stop)
 
     def test_enqueues_one_job_per_user_with_due_work(self):
-        overdue = UserFactory(email="overdue@example.com")
+        overdue = UserFactory(email='overdue@example.com')
         TaskFactory(user=overdue, due_date=self.today - timedelta(days=1))
-        due = UserFactory(email="due@example.com")
+        due = UserFactory(email='due@example.com')
         TaskFactory(user=due, due_date=self.today)
-        quiet = UserFactory(email="quiet@example.com")
+        quiet = UserFactory(email='quiet@example.com')
         TaskFactory(user=quiet, due_date=self.today + timedelta(days=1))
 
         send_due_reminders()
@@ -143,7 +143,7 @@ class SendDueRemindersJobTests(TestCase):
         )
 
     def test_sends_nothing_inline(self):
-        user = UserFactory(email="user@example.com")
+        user = UserFactory(email='user@example.com')
         TaskFactory(user=user, due_date=self.today)
 
         send_due_reminders()
@@ -155,7 +155,7 @@ class SendDueRemindersJobTests(TestCase):
         site = SiteSettings.load()
         site.tasks_notification_due_reminders_enabled = False
         site.save()
-        user = UserFactory(email="user@example.com")
+        user = UserFactory(email='user@example.com')
         TaskFactory(user=user, due_date=self.today)
 
         send_due_reminders()

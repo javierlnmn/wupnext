@@ -10,7 +10,7 @@ class GroupFactory(factory.django.DjangoModelFactory):
         model = Group
 
     user = factory.SubFactory(UserFactory)
-    name = factory.Sequence(lambda n: f"Group {n}")
+    name = factory.Sequence(lambda n: f'Group {n}')
 
 
 class TaskFactory(factory.django.DjangoModelFactory):
@@ -18,7 +18,7 @@ class TaskFactory(factory.django.DjangoModelFactory):
         model = Task
 
     user = factory.SubFactory(UserFactory)
-    name = factory.Sequence(lambda n: f"Task {n}")
+    name = factory.Sequence(lambda n: f'Task {n}')
 
     class Params:
         completed = factory.Trait(completed_at=factory.LazyFunction(timezone.now))

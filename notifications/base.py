@@ -51,21 +51,21 @@ class BaseNotification(ABC):
 
 
 class BaseBulkNotification(BaseNotification):
-    FANOUT_JOB = "notifications.jobs.send_notification_to_user"
+    FANOUT_JOB = 'notifications.jobs.send_notification_to_user'
 
     @abstractmethod
     def _recipients(self): ...
 
     def _path(self):
         cls = type(self)
-        return f"{cls.__module__}.{cls.__qualname__}"
+        return f'{cls.__module__}.{cls.__qualname__}'
 
     def send(self):
         for user in self._recipients():
             try:
                 self.send_to(user)
             except Exception:
-                logger.exception("Failed to send %s to %s", self.event, user)
+                logger.exception('Failed to send %s to %s', self.event, user)
 
     def enqueue(self):
         if not self._is_enabled_on_site():

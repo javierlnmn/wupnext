@@ -9,15 +9,15 @@ class PreferencesViewTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
         self.client.force_login(self.user)
-        self.url = reverse("accounts:preferences")
+        self.url = reverse('accounts:preferences')
 
     def payload(self, **overrides):
         data = {
-            "pomodoro_focus": 30,
-            "pomodoro_short_break": 10,
-            "pomodoro_long_break": 20,
-            "pomodoro_long_every": 3,
-            "notification_channels_email_enabled": "on",
+            'pomodoro_focus': 30,
+            'pomodoro_short_break': 10,
+            'pomodoro_long_break': 20,
+            'pomodoro_long_every': 3,
+            'notification_channels_email_enabled': 'on',
         }
         data.update(overrides)
         return data
@@ -30,7 +30,7 @@ class PreferencesViewTests(TestCase):
     def test_saves_pomodoro_and_notification_settings(self):
         response = self.client.post(self.url, self.payload())
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"ok": True})
+        self.assertEqual(response.json(), {'ok': True})
         prefs = UserPreferences.for_user(self.user)
         self.assertEqual(prefs.pomodoro_focus, 30)
         self.assertEqual(prefs.pomodoro_short_break, 10)
@@ -40,7 +40,7 @@ class PreferencesViewTests(TestCase):
 
     def test_unchecked_checkbox_disables_email(self):
         payload = self.payload()
-        payload.pop("notification_channels_email_enabled")
+        payload.pop('notification_channels_email_enabled')
 
         response = self.client.post(self.url, payload)
 
@@ -52,5 +52,5 @@ class PreferencesViewTests(TestCase):
         response = self.client.post(self.url, self.payload(pomodoro_focus=999))
         self.assertEqual(response.status_code, 400)
         body = response.json()
-        self.assertFalse(body["ok"])
-        self.assertIn("pomodoro_focus", body["errors"])
+        self.assertFalse(body['ok'])
+        self.assertIn('pomodoro_focus', body['errors'])

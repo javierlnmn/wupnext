@@ -23,27 +23,27 @@ class TaskDueReminderPreview(BaseEmailPreview):
         self.user.set_unusable_password()
         self.user.save()
 
-        group = Group.objects.create(user=self.user, name="Side project")
+        group = Group.objects.create(user=self.user, name='Side project')
 
         overdue = Task.objects.create(
             user=self.user,
-            name="Renew the domain",
+            name='Renew the domain',
             due_date=today - timedelta(days=2),
             weight=4,
             group=group,
         )
         Task.objects.create(
             user=self.user,
-            name="Compare registrars",
+            name='Compare registrars',
             parent=overdue,
             completed_at=timezone.now(),
         )
         Task.objects.create(
-            user=self.user, name="Update the DNS records", parent=overdue
+            user=self.user, name='Update the DNS records', parent=overdue
         )
         Task.objects.create(
-            user=self.user, name="Reply to the tax email", due_date=today
+            user=self.user, name='Reply to the tax email', due_date=today
         )
 
     def _get_notification_context(self):
-        return {**DueReminderNotification().context(self.user), "user": self.user}
+        return {**DueReminderNotification().context(self.user), 'user': self.user}

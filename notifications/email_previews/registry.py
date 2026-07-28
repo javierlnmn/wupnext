@@ -11,6 +11,6 @@ def get_preview(event):
     if preview_class is None:
         raise MissingPreview(
             f"No preview registered for '{event}'. "
-            f"Available: {', '.join(sorted(PREVIEWS)) or 'none'}."
+            f'Available: {", ".join(sorted(PREVIEWS)) or "none"}.'
         )
     return preview_class()

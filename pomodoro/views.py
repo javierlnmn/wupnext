@@ -16,11 +16,11 @@ class PomodoroStateView(LoginRequiredMixin, View):
     def post(self, request):
         state = PomodoroState.for_user(request.user)
         try:
-            data = json.loads(request.body or "{}")
+            data = json.loads(request.body or '{}')
         except json.JSONDecodeError:
-            return JsonResponse({"ok": False}, status=400)
+            return JsonResponse({'ok': False}, status=400)
         form = PomodoroStateForm(data, instance=state)
         if form.is_valid():
             form.save()
             return JsonResponse(state.state_dict())
-        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+        return JsonResponse({'ok': False, 'errors': form.errors}, status=400)

@@ -9,28 +9,28 @@ from notifications.exceptions import MissingPreview
 
 
 class Command(BaseCommand):
-    help = "Render a notification email from its template folder, for previewing."
+    help = 'Render a notification email from its template folder, for previewing.'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "event",
-            nargs="?",
-            help="Template folder name, e.g. task_due_reminder.",
+            'event',
+            nargs='?',
+            help='Template folder name, e.g. task_due_reminder.',
         )
         parser.add_argument(
-            "--send",
-            metavar="EMAIL",
-            help="Also deliver the rendered email to this address.",
+            '--send',
+            metavar='EMAIL',
+            help='Also deliver the rendered email to this address.',
         )
 
     def handle(self, *args, **options):
-        event = options["event"]
-        recipient = options["send"]
+        event = options['event']
+        recipient = options['send']
 
         if not event:
-            self.stdout.write(self.style.MIGRATE_HEADING("Available emails"))
+            self.stdout.write(self.style.MIGRATE_HEADING('Available emails'))
             for name in sorted(PREVIEWS):
-                self.stdout.write(f"  {name}")
+                self.stdout.write(f'  {name}')
             return
 
         if recipient:
@@ -54,20 +54,20 @@ class Command(BaseCommand):
         except TemplateDoesNotExist as exc:
             raise CommandError(f"Missing template '{exc}' for '{event}'.") from exc
 
-        self.stdout.write(self.style.MIGRATE_HEADING("Subject"))
-        self.stdout.write(f"{subject}\n")
-        self.stdout.write(self.style.MIGRATE_HEADING("Plain text"))
+        self.stdout.write(self.style.MIGRATE_HEADING('Subject'))
+        self.stdout.write(f'{subject}\n')
+        self.stdout.write(self.style.MIGRATE_HEADING('Plain text'))
         self.stdout.write(body)
 
         if html:
-            self.stdout.write(self.style.MIGRATE_HEADING("HTML"))
+            self.stdout.write(self.style.MIGRATE_HEADING('HTML'))
             self.stdout.write(html)
         else:
-            self.stdout.write(self.style.WARNING("No HTML template for this event."))
+            self.stdout.write(self.style.WARNING('No HTML template for this event.'))
 
         if recipient:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Sent to {recipient} using {settings.LIVE_EMAIL_BACKEND}"
+                    f'Sent to {recipient} using {settings.LIVE_EMAIL_BACKEND}'
                 )
             )

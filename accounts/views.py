@@ -12,6 +12,6 @@ class PreferencesView(LoginRequiredMixin, View):
         form = PreferencesForm(request.POST, instance=prefs)
         if form.is_valid():
             form.save()
-            return JsonResponse({"ok": True})
+            return JsonResponse({'ok': True})
 
-        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+        return JsonResponse({'ok': False, 'errors': form.errors}, status=400)

@@ -14,8 +14,8 @@ def sidebar(request):
     )
     groups = list(Group.objects.filter(user=user))
     counts = {
-        row["group"]: row["c"]
-        for row in pending.values("group").annotate(c=Count("id"))
+        row['group']: row['c']
+        for row in pending.values('group').annotate(c=Count('id'))
     }
     for group in groups:
         group.pending_count = counts.get(group.id, 0)
@@ -23,11 +23,11 @@ def sidebar(request):
     today = timezone.localdate()
 
     return {
-        "task_groups": groups,
-        "all_tasks_count": sum(counts.values()),
-        "today_count": pending.filter(due_date=today).count(),
-        "overdue_count": pending.filter(due_date__lt=today).count(),
-        "task_group_palette": GROUP_COLORS,
-        "default_task_group_color": DEFAULT_GROUP_COLOR,
-        "DueFilter": DueFilter,
+        'task_groups': groups,
+        'all_tasks_count': sum(counts.values()),
+        'today_count': pending.filter(due_date=today).count(),
+        'overdue_count': pending.filter(due_date__lt=today).count(),
+        'task_group_palette': GROUP_COLORS,
+        'default_task_group_color': DEFAULT_GROUP_COLOR,
+        'DueFilter': DueFilter,
     }

@@ -4,31 +4,31 @@ from django.db import models
 from django.utils import timezone
 
 GROUP_COLORS = [
-    {"name": "Clay", "hex": "#d1793f"},
-    {"name": "Amber", "hex": "#f59e0b"},
-    {"name": "Olive", "hex": "#8a9b6e"},
-    {"name": "Emerald", "hex": "#10b981"},
-    {"name": "Sky", "hex": "#38bdf8"},
-    {"name": "Violet", "hex": "#8b5cf6"},
-    {"name": "Rose", "hex": "#f43f5e"},
-    {"name": "Slate", "hex": "#64748b"},
+    {'name': 'Clay', 'hex': '#d1793f'},
+    {'name': 'Amber', 'hex': '#f59e0b'},
+    {'name': 'Olive', 'hex': '#8a9b6e'},
+    {'name': 'Emerald', 'hex': '#10b981'},
+    {'name': 'Sky', 'hex': '#38bdf8'},
+    {'name': 'Violet', 'hex': '#8b5cf6'},
+    {'name': 'Rose', 'hex': '#f43f5e'},
+    {'name': 'Slate', 'hex': '#64748b'},
 ]
-DEFAULT_GROUP_COLOR = GROUP_COLORS[0]["hex"]
-GROUP_COLOR_VALUES = {color["hex"] for color in GROUP_COLORS}
+DEFAULT_GROUP_COLOR = GROUP_COLORS[0]['hex']
+GROUP_COLOR_VALUES = {color['hex'] for color in GROUP_COLORS}
 
 MAX_TASK_WEIGHT = 5
 
 
 class DueFilter(models.TextChoices):
-    TODAY = "today", "Today"
-    OVERDUE = "overdue", "Overdue"
+    TODAY = 'today', 'Today'
+    OVERDUE = 'overdue', 'Overdue'
 
 
 class Group(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="task_groups",
+        related_name='task_groups',
     )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=9, default=DEFAULT_GROUP_COLOR)
@@ -36,7 +36,7 @@ class Group(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["position", "created_at"]
+        ordering = ['position', 'created_at']
 
     def __str__(self):
         return self.name
@@ -44,8 +44,8 @@ class Group(models.Model):
     @classmethod
     def next_position(cls, user):
         last = cls.objects.filter(user=user).aggregate(
-            max_position=models.Max("position")
-        )["max_position"]
+            max_position=models.Max('position')
+        )['max_position']
         return last + 1 if last is not None else 0
 
 
@@ -61,7 +61,7 @@ class Task(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="tasks",
+        related_name='tasks',
     )
     name = models.CharField(max_length=255)
     weight = models.PositiveSmallIntegerField(
@@ -73,14 +73,14 @@ class Task(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="tasks",
+        related_name='tasks',
     )
     parent = models.ForeignKey(
-        "self",
+        'self',
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name="subtasks",
+        related_name='subtasks',
     )
     due_date = models.DateField(null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
@@ -92,7 +92,7 @@ class Task(models.Model):
     objects = TaskQuerySet.as_manager()
 
     class Meta:
-        ordering = ["position", "created_at"]
+        ordering = ['position', 'created_at']
 
     def __str__(self):
         return self.name
@@ -100,15 +100,15 @@ class Task(models.Model):
     @classmethod
     def next_position(cls, user, parent):
         last = cls.objects.filter(user=user, parent=parent).aggregate(
-            max_position=models.Max("position")
-        )["max_position"]
+            max_position=models.Max('position')
+        )['max_position']
         return last + 1 if last is not None else 0
 
     @classmethod
     def next_group_position(cls, user, group):
         last = cls.objects.filter(
             user=user, group=group, parent__isnull=True
-        ).aggregate(max_position=models.Max("group_position"))["max_position"]
+        ).aggregate(max_position=models.Max('group_position'))['max_position']
         return last + 1 if last is not None else 0
 
     @property

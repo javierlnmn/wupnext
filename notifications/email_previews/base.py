@@ -7,8 +7,8 @@ from django.db import transaction
 
 from ..channels.email import EmailChannel
 
-PREVIEW_USERNAME = "preview"
-PREVIEW_EMAIL = "preview@wupnext.invalid"
+PREVIEW_USERNAME = 'preview'
+PREVIEW_EMAIL = 'preview@wupnext.invalid'
 
 
 class BaseEmailPreview(ABC):

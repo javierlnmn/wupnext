@@ -43,7 +43,7 @@ class SiteSettingsTests(TestCase):
 
 class SettingsContextProcessorTests(TestCase):
     def test_exposes_site_settings(self):
-        request = RequestFactory().get("/")
+        request = RequestFactory().get('/')
         context = settings(request)
-        self.assertIn("settings", context)
-        self.assertIsInstance(context["settings"], SiteSettings)
+        self.assertIn('settings', context)
+        self.assertIsInstance(context['settings'], SiteSettings)

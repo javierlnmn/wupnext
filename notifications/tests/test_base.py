@@ -12,7 +12,7 @@ from notifications.service import notification_service
 
 
 class SingleHost(BaseNotification):
-    event = "task_due_reminder"
+    event = 'task_due_reminder'
 
     def _is_enabled_on_site(self):
         return True
@@ -24,14 +24,14 @@ class SingleHost(BaseNotification):
         return True
 
     def _dedup_key(self, user, context):
-        return ""
+        return ''
 
     def context(self, user):
-        return {"username": user.username}
+        return {'username': user.username}
 
 
 class BulkHost(BaseBulkNotification):
-    event = "task_due_reminder"
+    event = 'task_due_reminder'
 
     def _is_enabled_on_site(self):
         return True
@@ -43,13 +43,13 @@ class BulkHost(BaseBulkNotification):
         return True
 
     def _dedup_key(self, user, context):
-        return ""
+        return ''
 
     def _recipients(self):
         return get_user_model().objects.filter(is_active=True)
 
     def context(self, user):
-        return {"username": user.username}
+        return {'username': user.username}
 
 
 class DisabledHost(BulkHost):
@@ -60,7 +60,7 @@ class DisabledHost(BulkHost):
 class NotificationContractTests(TestCase):
     def test_cannot_instantiate_a_notification_without_its_hooks(self):
         class Hookless(BaseNotification):
-            event = "task_due_reminder"
+            event = 'task_due_reminder'
 
         with self.assertRaises(TypeError):
             Hookless()
@@ -70,27 +70,27 @@ class NotificationContractTests(TestCase):
             BaseNotification.__abstractmethods__,
             frozenset(
                 {
-                    "_is_enabled_on_site",
-                    "_is_enabled_for_user",
-                    "_is_applicable_for_user",
-                    "_dedup_key",
-                    "context",
+                    '_is_enabled_on_site',
+                    '_is_enabled_for_user',
+                    '_is_applicable_for_user',
+                    '_dedup_key',
+                    'context',
                 }
             ),
         )
 
     def test_a_bulk_notification_also_declares_its_recipients(self):
-        self.assertIn("_recipients", BaseBulkNotification.__abstractmethods__)
+        self.assertIn('_recipients', BaseBulkNotification.__abstractmethods__)
 
     def test_a_single_notification_has_no_batch_entry_points(self):
-        self.assertFalse(hasattr(SingleHost(), "send"))
-        self.assertFalse(hasattr(SingleHost(), "enqueue"))
+        self.assertFalse(hasattr(SingleHost(), 'send'))
+        self.assertFalse(hasattr(SingleHost(), 'enqueue'))
 
 
 class SendToTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
-        patcher = mock.patch.object(notification_service, "notify")
+        patcher = mock.patch.object(notification_service, 'notify')
         self.notify = patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -123,7 +123,7 @@ class SendToTests(TestCase):
         self.notify.assert_called_once()
 
     def test_raises_instead_of_swallowing(self):
-        self.notify.side_effect = Exception("boom")
+        self.notify.side_effect = Exception('boom')
 
         with self.assertRaises(Exception):
             SingleHost().send_to(self.user)
@@ -132,7 +132,7 @@ class SendToTests(TestCase):
 class BulkSendTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
-        patcher = mock.patch.object(notification_service, "notify")
+        patcher = mock.patch.object(notification_service, 'notify')
         self.notify = patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -147,13 +147,13 @@ class BulkSendTests(TestCase):
         BulkHost().send()
 
         notified = {
-            call.args[0]: call.kwargs["context"] for call in self.notify.call_args_list
+            call.args[0]: call.kwargs['context'] for call in self.notify.call_args_list
         }
         self.assertEqual(
             notified,
             {
-                self.user: {"username": self.user.username},
-                other: {"username": other.username},
+                self.user: {'username': self.user.username},
+                other: {'username': other.username},
             },
         )
 
@@ -176,17 +176,17 @@ class BulkSendTests(TestCase):
     def test_passes_the_dedup_key(self):
         class Deduped(BulkHost):
             def _dedup_key(self, user, context):
-                return context["username"]
+                return context['username']
 
         Deduped().send()
 
-        self.assertEqual(self.notify.call_args.kwargs["dedup_key"], self.user.username)
+        self.assertEqual(self.notify.call_args.kwargs['dedup_key'], self.user.username)
 
     def test_one_failure_does_not_stop_the_batch(self):
         UserFactory()
-        self.notify.side_effect = [Exception("boom"), None]
+        self.notify.side_effect = [Exception('boom'), None]
 
-        with self.assertLogs("notifications.base", level="ERROR"):
+        with self.assertLogs('notifications.base', level='ERROR'):
             BulkHost().send()
 
         self.assertEqual(self.notify.call_count, 2)
@@ -195,7 +195,7 @@ class BulkSendTests(TestCase):
 class BulkEnqueueTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
-        patcher = mock.patch("notifications.base.async_task")
+        patcher = mock.patch('notifications.base.async_task')
         self.async_task = patcher.start()
         self.addCleanup(patcher.stop)
 
