@@ -6,7 +6,13 @@ from django.core import mail
 from django.core.management import CommandError, call_command
 from django.test import TestCase
 
-from notifications.models import NotificationLog
+from notifications.models import (
+    Channel,
+    NotificationChannelSwitch,
+    NotificationEventSwitch,
+    NotificationLog,
+)
+from notifications.tests.factories import NotificationEventSwitchFactory
 from tasks.models import Group, Task
 
 EVENT = 'task_due_reminder'
@@ -93,3 +99,64 @@ class PreviewEmailSendTests(PreviewCommandTestCase):
 
         self.assertEqual(len(mail.outbox), 0)
         self.get_connection.assert_not_called()
+
+
+class SyncNotificationSwitchesTests(TestCase):
+    def run_command(self):
+        out = StringIO()
+        call_command('sync_notification_switches', stdout=out)
+        return out.getvalue()
+
+    def test_creates_a_switch_per_channel_and_registered_cell(self):
+        output = self.run_command()
+
+        self.assertTrue(
+            NotificationChannelSwitch.objects.filter(channel=Channel.EMAIL).exists()
+        )
+        self.assertTrue(
+            NotificationEventSwitch.objects.filter(
+                event=EVENT, channel=Channel.EMAIL
+            ).exists()
+        )
+        self.assertIn(EVENT, output)
+
+    def test_new_switches_are_disabled(self):
+        self.run_command()
+
+        self.assertFalse(NotificationChannelSwitch.objects.get().enabled)
+        switch = NotificationEventSwitch.objects.get()
+        self.assertFalse(switch.enabled)
+        self.assertFalse(switch.on_by_default)
+
+    def test_running_twice_creates_nothing_new(self):
+        self.run_command()
+        output = self.run_command()
+
+        self.assertEqual(NotificationChannelSwitch.objects.count(), 1)
+        self.assertEqual(NotificationEventSwitch.objects.count(), 1)
+        self.assertIn('Already in sync', output)
+
+    def test_leaves_an_enabled_switch_alone(self):
+        self.run_command()
+        NotificationEventSwitch.objects.update(enabled=True)
+
+        self.run_command()
+
+        self.assertTrue(NotificationEventSwitch.objects.get().enabled)
+
+    def test_reports_a_switch_no_longer_registered(self):
+        NotificationEventSwitchFactory(event='retired_event')
+
+        output = self.run_command()
+
+        self.assertIn('retired_event', output)
+        self.assertIn('No longer registered', output)
+
+    def test_does_not_delete_a_switch_no_longer_registered(self):
+        NotificationEventSwitchFactory(event='retired_event')
+
+        self.run_command()
+
+        self.assertTrue(
+            NotificationEventSwitch.objects.filter(event='retired_event').exists()
+        )
