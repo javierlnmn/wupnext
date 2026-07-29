@@ -1,5 +1,5 @@
 from .base import PREVIEW_EMAIL, PREVIEW_USERNAME, BaseEmailPreview
-from .registry import PREVIEWS, get_preview
+from .registry import PREVIEWS, get_preview, get_previews
 
 __all__ = [
     'PREVIEWS',
@@ -7,4 +7,5 @@ __all__ = [
     'PREVIEW_USERNAME',
     'BaseEmailPreview',
     'get_preview',
+    'get_previews',
 ]

@@ -110,13 +110,13 @@ class PreviewSendTests(TestCase):
         self.addCleanup(patcher.stop)
 
     def test_delivers_through_the_live_backend(self):
-        StubPreview().send('me@example.com')
+        StubPreview().send_preview('me@example.com')
 
         self.get_connection.assert_called_once_with(settings.LIVE_EMAIL_BACKEND)
         self.assertEqual(mail.outbox[0].to, ['me@example.com'])
 
     def test_returns_what_it_rendered(self):
-        subject, body, html = StubPreview().send('me@example.com')
+        subject, body, html = StubPreview().send_preview('me@example.com')
 
         message = mail.outbox[0]
         self.assertEqual(message.subject, subject)
@@ -124,7 +124,7 @@ class PreviewSendTests(TestCase):
         self.assertEqual(message.alternatives[0][0], html)
 
     def test_leaves_no_rows_behind(self):
-        StubPreview().send('me@example.com')
+        StubPreview().send_preview('me@example.com')
 
         self.assertEqual(NotificationLog.objects.count(), 0)
 

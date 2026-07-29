@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
         try:
             if recipient:
-                subject, body, html = preview.send(recipient)
+                subject, body, html = preview.send_preview(recipient)
             else:
                 subject, body, html = preview.render()
         except TemplateDoesNotExist as exc:

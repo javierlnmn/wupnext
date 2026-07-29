@@ -32,7 +32,7 @@ class BaseEmailPreview(ABC):
         with self._seeded_context() as context:
             return EmailChannel().render(self.event, context)
 
-    def send(self, recipient):
+    def send_preview(self, recipient):
         subject, body, html = self.render()
         message = EmailChannel().build_message(subject, body, html, [recipient])
         message.connection = get_connection(settings.LIVE_EMAIL_BACKEND)
