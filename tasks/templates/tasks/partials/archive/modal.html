@@ -19,7 +19,7 @@
       </div>
       <div
         id="archive-content"
-        class="flex flex-col flex-1 overflow-y-auto px-6 py-5"
+        class="flex flex-col flex-1 min-h-0 overflow-hidden px-6 py-5"
         hx-get="{% url 'tasks:archive' %}{{ board_query }}"
         hx-trigger="open-archive from:window"
         hx-swap="innerHTML"

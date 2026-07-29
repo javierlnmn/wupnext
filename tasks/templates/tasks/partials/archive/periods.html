@@ -1,4 +1,4 @@
-<div class="flex md:hidden gap-2 overflow-x-auto pb-3 -mx-1 px-1 border-b border-slate-200 dark:border-slate-800">
+<div class="flex md:hidden shrink-0 gap-2 overflow-x-auto pb-3 -mx-1 px-1 border-b border-slate-200 dark:border-slate-800">
   {% for p in archive_periods %}
   <button
     type="button"
@@ -12,7 +12,7 @@
   {% endfor %}
 </div>
 
-<div class="hidden md:flex md:flex-col gap-4 w-40 shrink-0 overflow-y-auto pr-4 border-r border-slate-200 dark:border-slate-800">
+<div class="hidden md:flex md:flex-col gap-4 w-40 shrink-0 min-h-0 overflow-y-auto pr-4 border-r border-slate-200 dark:border-slate-800">
   {% regroup archive_periods by year as year_groups %}
   {% for year in year_groups %}
   <div>
