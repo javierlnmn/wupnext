@@ -3,35 +3,59 @@ from django.test import TestCase
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
-from common.models import SiteSettings
 from notifications.channels.base import BaseNotificationChannel
 from notifications.channels.email import EmailChannel
-from notifications.exceptions import MissingRecipient
+from notifications.channels.registry import CHANNELS, get_channel
+from notifications.exceptions import MissingRecipient, UnknownChannel
+from notifications.models import Channel
+from notifications.tests.factories import NotificationChannelSwitchFactory
 
 EVENT = 'task_due_reminder'
 
 
 class BaseChannelTests(TestCase):
-    def test_cannot_instantiate_a_channel_without_its_hooks(self):
+    def test_cannot_instantiate_a_channel_without_deliver(self):
         class Hookless(BaseNotificationChannel):
             key = 'hookless'
 
         with self.assertRaises(TypeError):
             Hookless()
 
+    def test_is_enabled_without_a_switch(self):
+        self.assertFalse(EmailChannel().is_enabled())
+
+    def test_is_enabled_follows_the_switch(self):
+        switch = NotificationChannelSwitchFactory()
+        self.assertTrue(EmailChannel().is_enabled())
+
+        switch.enabled = False
+        switch.save()
+        self.assertFalse(EmailChannel().is_enabled())
+
+
+class ChannelRegistryTests(TestCase):
+    def test_discovers_the_email_channel(self):
+        self.assertIsInstance(CHANNELS[Channel.EMAIL], EmailChannel)
+
+    def test_does_not_register_the_keyless_base_class(self):
+        self.assertNotIn(None, CHANNELS)
+
+    def test_get_channel_resolves_a_known_key(self):
+        self.assertIs(get_channel(Channel.EMAIL), CHANNELS[Channel.EMAIL])
+
+    def test_get_channel_names_the_key_and_the_alternatives(self):
+        with self.assertRaises(UnknownChannel) as caught:
+            get_channel('emial')
+
+        message = str(caught.exception)
+        self.assertIn('emial', message)
+        self.assertIn(Channel.EMAIL, message)
+
 
 class EmailChannelTests(TestCase):
     def setUp(self):
         self.channel = EmailChannel()
         self.user = UserFactory(email='user@example.com')
-
-    def test_is_enabled_reflects_global_channel_setting(self):
-        self.assertTrue(self.channel.is_enabled())
-
-        site = SiteSettings.load()
-        site.notification_channels_email_enabled = False
-        site.save()
-        self.assertFalse(self.channel.is_enabled())
 
     def test_deliver_renders_subject_and_body(self):
         context = {'date': timezone.localdate(), 'overdue': [], 'due_today': []}
