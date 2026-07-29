@@ -17,7 +17,6 @@ class PreferencesViewTests(TestCase):
             'pomodoro_short_break': 10,
             'pomodoro_long_break': 20,
             'pomodoro_long_every': 3,
-            'notification_channels_email_enabled': 'on',
         }
         data.update(overrides)
         return data
@@ -27,7 +26,7 @@ class PreferencesViewTests(TestCase):
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 302)
 
-    def test_saves_pomodoro_and_notification_settings(self):
+    def test_saves_pomodoro_settings(self):
         response = self.client.post(self.url, self.payload())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'ok': True})
@@ -36,17 +35,6 @@ class PreferencesViewTests(TestCase):
         self.assertEqual(prefs.pomodoro_short_break, 10)
         self.assertEqual(prefs.pomodoro_long_break, 20)
         self.assertEqual(prefs.pomodoro_long_every, 3)
-        self.assertTrue(prefs.notification_channels_email_enabled)
-
-    def test_unchecked_checkbox_disables_email(self):
-        payload = self.payload()
-        payload.pop('notification_channels_email_enabled')
-
-        response = self.client.post(self.url, payload)
-
-        self.assertEqual(response.status_code, 200)
-        prefs = UserPreferences.for_user(self.user)
-        self.assertFalse(prefs.notification_channels_email_enabled)
 
     def test_invalid_values_return_400_with_errors(self):
         response = self.client.post(self.url, self.payload(pomodoro_focus=999))

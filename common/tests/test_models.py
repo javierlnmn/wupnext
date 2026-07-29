@@ -6,15 +6,14 @@ from common.models import SiteSettings
 
 class SiteSettingsTests(TestCase):
     def test_save_forces_singleton_pk(self):
-        first = SiteSettings(notification_channels_email_enabled=True)
+        first = SiteSettings()
         first.save()
-        second = SiteSettings(notification_channels_email_enabled=False)
+        second = SiteSettings()
         second.save()
+
         self.assertEqual(first.pk, 1)
         self.assertEqual(second.pk, 1)
         self.assertEqual(SiteSettings.objects.count(), 1)
-        saved = SiteSettings.objects.get()
-        self.assertFalse(saved.notification_channels_email_enabled)
 
     def test_delete_is_a_noop(self):
         obj = SiteSettings.objects.create()
@@ -28,17 +27,10 @@ class SiteSettingsTests(TestCase):
         self.assertEqual(SiteSettings.objects.count(), 1)
 
     def test_load_returns_existing_instance(self):
-        SiteSettings.objects.create(notification_channels_email_enabled=False)
-        loaded = SiteSettings.load()
-        self.assertFalse(loaded.notification_channels_email_enabled)
+        existing = SiteSettings.objects.create()
+
+        self.assertEqual(SiteSettings.load().pk, existing.pk)
         self.assertEqual(SiteSettings.objects.count(), 1)
-
-    def test_load_reflects_a_saved_change_immediately(self):
-        site = SiteSettings.load()
-        site.notification_channels_email_enabled = False
-        site.save()
-
-        self.assertFalse(SiteSettings.load().notification_channels_email_enabled)
 
 
 class SettingsContextProcessorTests(TestCase):

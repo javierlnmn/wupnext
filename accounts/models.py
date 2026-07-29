@@ -36,9 +36,6 @@ class UserPreferences(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(12)],
     )
 
-    # Notifications
-    notification_channels_email_enabled = models.BooleanField(default=True)
-
     def __str__(self):
         return f'Preferences for {self.user}'
 

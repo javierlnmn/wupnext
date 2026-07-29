@@ -18,8 +18,4 @@ class AbstractSingleton(models.Model):
 
 
 class SiteSettings(AbstractSingleton):
-    # Notification channels
-    notification_channels_email_enabled = models.BooleanField(default=True)
-
-    # Task notifications
-    tasks_notification_due_reminders_enabled = models.BooleanField(default=True)
+    pass
