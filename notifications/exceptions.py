@@ -8,3 +8,11 @@ class MissingRecipient(NotificationError):
 
 class MissingPreview(NotificationError):
     pass
+
+
+class DuplicateNotification(NotificationError):
+    pass
+
+
+class UnknownChannel(NotificationError):
+    pass

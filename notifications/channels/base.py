@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 
+from ..models import NotificationChannelSwitch
+
 
 class BaseNotificationChannel(ABC):
     key = None
 
-    @abstractmethod
-    def is_enabled(self): ...
-
-    @abstractmethod
-    def is_enabled_for_user(self, user): ...
+    def is_enabled(self):
+        return NotificationChannelSwitch.is_enabled(self.key)
 
     @abstractmethod
     def deliver(self, *, user, event, context): ...

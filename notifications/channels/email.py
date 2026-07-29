@@ -3,9 +3,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
-from accounts.models import UserPreferences
-from common.models import SiteSettings
-
 from ..exceptions import MissingRecipient
 from ..models import Channel
 from .base import BaseNotificationChannel
@@ -13,12 +10,6 @@ from .base import BaseNotificationChannel
 
 class EmailChannel(BaseNotificationChannel):
     key = Channel.EMAIL
-
-    def is_enabled(self):
-        return SiteSettings.load().notification_channels_email_enabled
-
-    def is_enabled_for_user(self, user):
-        return UserPreferences.for_user(user).notification_channels_email_enabled
 
     def render(self, event, context):
         ctx = {'site_url': settings.SITE_URL, **context}

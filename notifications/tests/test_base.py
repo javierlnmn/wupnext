@@ -4,21 +4,22 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.module_loading import import_string
 
-from accounts.models import UserPreferences
 from accounts.tests.factories import UserFactory
 from notifications.base import BaseBulkNotification, BaseNotification
 from notifications.jobs import send_notification_to_user
-from notifications.service import notification_service
+from notifications.models import Channel
+from notifications.service import NotificationService
+from notifications.tests.factories import (
+    NotificationUserPreferenceFactory,
+    enable_notification,
+)
+
+EVENT = 'task_due_reminder'
 
 
 class SingleHost(BaseNotification):
-    event = 'task_due_reminder'
-
-    def _is_enabled_on_site(self):
-        return True
-
-    def _is_enabled_for_user(self, user):
-        return True
+    event = EVENT
+    channels = (Channel.EMAIL,)
 
     def _is_applicable_for_user(self, user, context):
         return True
@@ -30,37 +31,15 @@ class SingleHost(BaseNotification):
         return {'username': user.username}
 
 
-class BulkHost(BaseBulkNotification):
-    event = 'task_due_reminder'
-
-    def _is_enabled_on_site(self):
-        return True
-
-    def _is_enabled_for_user(self, user):
-        return UserPreferences.for_user(user).notification_channels_email_enabled
-
-    def _is_applicable_for_user(self, user, context):
-        return True
-
-    def _dedup_key(self, user, context):
-        return ''
-
+class BulkHost(BaseBulkNotification, SingleHost):
     def _recipients(self):
         return get_user_model().objects.filter(is_active=True)
-
-    def context(self, user):
-        return {'username': user.username}
-
-
-class DisabledHost(BulkHost):
-    def _is_enabled_on_site(self):
-        return False
 
 
 class NotificationContractTests(TestCase):
     def test_cannot_instantiate_a_notification_without_its_hooks(self):
         class Hookless(BaseNotification):
-            event = 'task_due_reminder'
+            event = EVENT
 
         with self.assertRaises(TypeError):
             Hookless()
@@ -68,29 +47,22 @@ class NotificationContractTests(TestCase):
     def test_a_notification_declares_every_hook_itself(self):
         self.assertEqual(
             BaseNotification.__abstractmethods__,
-            frozenset(
-                {
-                    '_is_enabled_on_site',
-                    '_is_enabled_for_user',
-                    '_is_applicable_for_user',
-                    '_dedup_key',
-                    'context',
-                }
-            ),
+            frozenset({'_is_applicable_for_user', '_dedup_key', 'context'}),
         )
 
     def test_a_bulk_notification_also_declares_its_recipients(self):
         self.assertIn('_recipients', BaseBulkNotification.__abstractmethods__)
 
     def test_a_single_notification_has_no_batch_entry_points(self):
-        self.assertFalse(hasattr(SingleHost(), 'send'))
+        self.assertFalse(hasattr(SingleHost(), '_send'))
         self.assertFalse(hasattr(SingleHost(), 'enqueue'))
 
 
 class SendToTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
-        patcher = mock.patch.object(notification_service, 'notify')
+        self.channel_switch, self.event_switch = enable_notification()
+        patcher = mock.patch.object(NotificationService, 'notify')
         self.notify = patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -100,8 +72,23 @@ class SendToTests(TestCase):
         self.notify.assert_called_once()
         self.assertEqual(self.notify.call_args.args[0], self.user)
 
-    def test_respects_the_site_switch(self):
-        DisabledHost().send_to(self.user)
+    def test_passes_the_declared_channels(self):
+        SingleHost().send_to(self.user)
+
+        self.assertEqual(self.notify.call_args.kwargs['channels'], (Channel.EMAIL,))
+
+    def test_skips_an_event_disabled_on_site(self):
+        self.event_switch.enabled = False
+        self.event_switch.save()
+
+        SingleHost().send_to(self.user)
+
+        self.notify.assert_not_called()
+
+    def test_skips_a_user_who_opted_out(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+
+        SingleHost().send_to(self.user)
 
         self.notify.assert_not_called()
 
@@ -114,13 +101,13 @@ class SendToTests(TestCase):
 
         self.notify.assert_not_called()
 
-    def test_can_ignore_user_preferences(self):
-        self.user.preferences.notification_channels_email_enabled = False
-        self.user.preferences.save()
+    def test_does_not_build_context_for_a_user_who_opted_out(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
 
-        SingleHost().send_to(self.user)
+        with mock.patch.object(SingleHost, 'context') as context:
+            SingleHost().send_to(self.user)
 
-        self.notify.assert_called_once()
+        context.assert_not_called()
 
     def test_raises_instead_of_swallowing(self):
         self.notify.side_effect = Exception('boom')
@@ -132,19 +119,23 @@ class SendToTests(TestCase):
 class BulkSendTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
-        patcher = mock.patch.object(notification_service, 'notify')
+        self.channel_switch, self.event_switch = enable_notification()
+        patcher = mock.patch.object(NotificationService, 'notify')
         self.notify = patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_sends_nothing_when_disabled(self):
-        DisabledHost().send()
+    def test_sends_nothing_when_the_event_is_disabled_on_site(self):
+        self.event_switch.enabled = False
+        self.event_switch.save()
+
+        BulkHost()._send()
 
         self.notify.assert_not_called()
 
     def test_notifies_each_recipient_with_its_own_context(self):
         other = UserFactory()
 
-        BulkHost().send()
+        BulkHost()._send()
 
         notified = {
             call.args[0]: call.kwargs['context'] for call in self.notify.call_args_list
@@ -160,16 +151,15 @@ class BulkSendTests(TestCase):
     def test_skips_inactive_users(self):
         UserFactory(is_active=False)
 
-        BulkHost().send()
+        BulkHost()._send()
 
         self.notify.assert_called_once()
         self.assertEqual(self.notify.call_args.args[0], self.user)
 
-    def test_skips_user_who_disabled_the_channel(self):
-        self.user.preferences.notification_channels_email_enabled = False
-        self.user.preferences.save()
+    def test_skips_a_user_who_opted_out(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
 
-        BulkHost().send()
+        BulkHost()._send()
 
         self.notify.assert_not_called()
 
@@ -178,7 +168,7 @@ class BulkSendTests(TestCase):
             def _dedup_key(self, user, context):
                 return context['username']
 
-        Deduped().send()
+        Deduped()._send()
 
         self.assertEqual(self.notify.call_args.kwargs['dedup_key'], self.user.username)
 
@@ -187,7 +177,7 @@ class BulkSendTests(TestCase):
         self.notify.side_effect = [Exception('boom'), None]
 
         with self.assertLogs('notifications.base', level='ERROR'):
-            BulkHost().send()
+            BulkHost()._send()
 
         self.assertEqual(self.notify.call_count, 2)
 
@@ -195,6 +185,7 @@ class BulkSendTests(TestCase):
 class BulkEnqueueTests(TestCase):
     def setUp(self):
         self.user = UserFactory()
+        self.channel_switch, self.event_switch = enable_notification()
         patcher = mock.patch('notifications.base.async_task')
         self.async_task = patcher.start()
         self.addCleanup(patcher.stop)
@@ -216,7 +207,17 @@ class BulkEnqueueTests(TestCase):
         self.assertIs(import_string(job), send_notification_to_user)
         self.assertIs(import_string(path), BulkHost)
 
-    def test_enqueues_nothing_when_disabled_on_site(self):
-        DisabledHost().enqueue()
+    def test_enqueues_nothing_when_the_event_is_disabled_on_site(self):
+        self.event_switch.enabled = False
+        self.event_switch.save()
+
+        BulkHost().enqueue()
+
+        self.async_task.assert_not_called()
+
+    def test_enqueues_nothing_for_a_user_who_opted_out(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+
+        BulkHost().enqueue()
 
         self.async_task.assert_not_called()
