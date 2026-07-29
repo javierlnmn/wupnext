@@ -12,6 +12,9 @@ class SwitchAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request):
+        return False
+
 
 @admin.register(NotificationChannelSwitch)
 class NotificationChannelSwitchAdmin(SwitchAdmin):
