@@ -46,8 +46,6 @@ class BulkHost(BaseBulkNotification, SingleHost):
 
 
 class NotifyTests(TestCase):
-    """notify delivers what it is given: the gating happened upstream."""
-
     def setUp(self):
         self.user = UserFactory(email='user@example.com')
 

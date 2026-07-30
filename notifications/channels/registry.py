@@ -7,11 +7,6 @@ from .base import BaseNotificationChannel
 
 
 def get_channels():
-    """
-    Channels declared in this package, one instance each.
-    Returns:
-        { key: channel }
-    """
     channels = {}
 
     for found in iter_modules([str(Path(__file__).parent)]):

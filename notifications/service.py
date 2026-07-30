@@ -21,11 +21,6 @@ class NotificationService:
         self.channels = notification.channels
 
     def _get_enabled_channels_defaults(self):
-        """
-        Enabled channels with their default enabled value for an event
-        Returns:
-            { channel: on_by_default }
-        """
         enabled = NotificationEventSwitch.get_enabled_channels_defaults_for_event(
             self.event
         )
@@ -58,11 +53,6 @@ class NotificationService:
         return self._get_enabled_channels_for_user_preferences(channel_defaults, stored)
 
     def _get_delivery_channels_by_user(self, users):
-        """
-        Recipients and their channels, leaving out whoever gets nothing.
-        Returns:
-            { user: [ channel ] }
-        """
         channel_defaults = self._get_enabled_channels_defaults()
 
         if not channel_defaults:

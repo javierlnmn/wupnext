@@ -41,11 +41,6 @@ class NotificationEventSwitch(models.Model):
 
     @classmethod
     def get_enabled_channels_defaults_for_event(cls, event):
-        """
-        Channels with both the event and the channel switch on.
-        Returns:
-            { channel: on_by_default }
-        """
         return dict(
             cls.objects.filter(
                 event=event,
@@ -82,11 +77,6 @@ class NotificationUserPreference(models.Model):
 
     @classmethod
     def get_user_stored_preferences_for_event(cls, user, event, available_channels):
-        """
-        What one user chose. A missing channel means they never chose.
-        Returns:
-            { channel: enabled }
-        """
         return dict(
             cls.objects.filter(
                 user=user, event=event, channel__in=available_channels
@@ -97,11 +87,6 @@ class NotificationUserPreference(models.Model):
     def get_bulk_user_stored_preferences_for_event(
         cls, users, event, available_channels
     ):
-        """
-        What these users chose, in one query. Only stored rows appear.
-        Returns:
-            { user_id: { channel: enabled } }
-        """
         preferences = {}
 
         for user_id, channel, enabled in cls.objects.filter(

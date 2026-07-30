@@ -7,11 +7,6 @@ from .base import BaseEmailPreview
 
 
 def get_previews():
-    """
-    Previews declared in this package.
-    Returns:
-        { event: preview_class }
-    """
     previews = {}
 
     for found in iter_modules([str(Path(__file__).parent)]):

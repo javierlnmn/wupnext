@@ -130,8 +130,6 @@ class PreferencesModalTests(TestCase):
 
 
 class MissingTabTests(PreferencesViewTests):
-    """A tab that never rendered must not be read as "the user cleared it"."""
-
     def test_a_missing_pomodoro_tab_saves_neither_tab(self):
         payload = {'sentinel': '1', EMAIL_FIELD: 'on'}
 
