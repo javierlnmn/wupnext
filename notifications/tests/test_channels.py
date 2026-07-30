@@ -8,7 +8,6 @@ from notifications.channels.email import EmailChannel
 from notifications.channels.registry import CHANNELS, get_channel
 from notifications.exceptions import MissingRecipient, UnknownChannel
 from notifications.models import Channel
-from notifications.tests.factories import NotificationChannelSwitchFactory
 
 EVENT = 'task_due_reminder'
 
@@ -20,17 +19,6 @@ class BaseChannelTests(TestCase):
 
         with self.assertRaises(TypeError):
             Hookless()
-
-    def test_is_enabled_without_a_switch(self):
-        self.assertFalse(EmailChannel().is_enabled())
-
-    def test_is_enabled_follows_the_switch(self):
-        switch = NotificationChannelSwitchFactory()
-        self.assertTrue(EmailChannel().is_enabled())
-
-        switch.enabled = False
-        switch.save()
-        self.assertFalse(EmailChannel().is_enabled())
 
 
 class ChannelRegistryTests(TestCase):

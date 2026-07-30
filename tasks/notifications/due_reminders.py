@@ -15,13 +15,13 @@ class DueReminderNotification(BaseBulkNotification):
     description = 'Daily digest of tasks that are due or overdue.'
     channels = (Channel.EMAIL,)
 
-    def _is_applicable_for_user(self, user, context):
+    def is_applicable_for(self, user, context):
         return bool(context['overdue'] or context['due_today'])
 
-    def _dedup_key(self, user, context):
+    def dedup_key(self, user, context):
         return str(context['date'])
 
-    def _recipients(self):
+    def recipients(self):
         return get_user_model().objects.filter(
             is_active=True,
             pk__in=self._due_tasks(timezone.localdate()).values('user_id'),

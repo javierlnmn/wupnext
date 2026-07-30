@@ -1,5 +1,7 @@
+from notifications.service import NotificationService
+
 from .notifications.due_reminders import DueReminderNotification
 
 
 def send_due_reminders():
-    DueReminderNotification().enqueue()
+    NotificationService(DueReminderNotification()).enqueue()

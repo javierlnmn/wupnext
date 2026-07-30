@@ -12,13 +12,11 @@ class NotificationChannelSwitch(models.Model):
 
     class Meta:
         ordering = ['channel']
+        verbose_name = 'channel switch'
+        verbose_name_plural = 'channel switches'
 
     def __str__(self):
         return f'{self.channel}: {"on" if self.enabled else "off"}'
-
-    @classmethod
-    def is_enabled(cls, channel):
-        return cls.objects.filter(channel=channel, enabled=True).exists()
 
 
 class NotificationEventSwitch(models.Model):
@@ -29,6 +27,8 @@ class NotificationEventSwitch(models.Model):
 
     class Meta:
         ordering = ['event', 'channel']
+        verbose_name = 'event switch'
+        verbose_name_plural = 'event switches'
         constraints = [
             models.UniqueConstraint(
                 fields=['event', 'channel'],
@@ -40,18 +40,21 @@ class NotificationEventSwitch(models.Model):
         return f'{self.event} → {self.channel}: {"on" if self.enabled else "off"}'
 
     @classmethod
-    def is_enabled_for_channel(cls, event, channel):
-        return cls.objects.filter(event=event, channel=channel, enabled=True).exists()
-
-    @classmethod
-    def is_enabled_anywhere(cls, event):
-        return cls.objects.filter(event=event, enabled=True).exists()
-
-    @classmethod
-    def default_for(cls, event, channel):
-        return cls.objects.filter(
-            event=event, channel=channel, enabled=True, on_by_default=True
-        ).exists()
+    def get_enabled_channels_defaults_for_event(cls, event):
+        """
+        Channels with both the event and the channel switch on.
+        Returns:
+            { channel: on_by_default }
+        """
+        return dict(
+            cls.objects.filter(
+                event=event,
+                enabled=True,
+                channel__in=NotificationChannelSwitch.objects.filter(
+                    enabled=True
+                ).values('channel'),
+            ).values_list('channel', 'on_by_default')
+        )
 
 
 class NotificationUserPreference(models.Model):
@@ -78,19 +81,35 @@ class NotificationUserPreference(models.Model):
         return f'{self.event} → {self.channel}: {"on" if self.enabled else "off"}'
 
     @classmethod
-    def is_enabled_for_channel(cls, user, event, channel):
-        chosen = cls.objects.filter(user=user, event=event, channel=channel).first()
-
-        if chosen is None:
-            return NotificationEventSwitch.default_for(event, channel)
-
-        return chosen.enabled
+    def get_user_stored_preferences_for_event(cls, user, event, available_channels):
+        """
+        What one user chose. A missing channel means they never chose.
+        Returns:
+            { channel: enabled }
+        """
+        return dict(
+            cls.objects.filter(
+                user=user, event=event, channel__in=available_channels
+            ).values_list('channel', 'enabled')
+        )
 
     @classmethod
-    def is_enabled_for_any_channel(cls, user, event, channels):
-        return any(
-            cls.is_enabled_for_channel(user, event, channel) for channel in channels
-        )
+    def get_bulk_user_stored_preferences_for_event(
+        cls, users, event, available_channels
+    ):
+        """
+        What these users chose, in one query. Only stored rows appear.
+        Returns:
+            { user_id: { channel: enabled } }
+        """
+        preferences = {}
+
+        for user_id, channel, enabled in cls.objects.filter(
+            user__in=users, event=event, channel__in=available_channels
+        ).values_list('user_id', 'channel', 'enabled'):
+            preferences.setdefault(user_id, {})[channel] = enabled
+
+        return preferences
 
 
 class NotificationLog(models.Model):

@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from notifications.models import NotificationLog
+from notifications.service import NotificationService
 from notifications.tests.factories import (
     NotificationUserPreferenceFactory,
     enable_notification,
@@ -40,7 +41,7 @@ class SendDueRemindersTests(TestCase):
         )
         TaskFactory(user=self.user, name='Subtask', due_date=self.yesterday, parent=due)
 
-        DueReminderNotification()._send()
+        NotificationService(DueReminderNotification()).send_bulk()
 
         self.assertEqual(len(mail.outbox), 1)
         body = mail.outbox[0].body
@@ -52,7 +53,7 @@ class SendDueRemindersTests(TestCase):
     def test_creates_dedup_log_for_today(self):
         TaskFactory(user=self.user, due_date=self.today)
 
-        DueReminderNotification()._send()
+        NotificationService(DueReminderNotification()).send_bulk()
 
         log = NotificationLog.objects.get()
         self.assertEqual(log.user, self.user)
@@ -61,8 +62,8 @@ class SendDueRemindersTests(TestCase):
     def test_is_idempotent_within_the_day(self):
         TaskFactory(user=self.user, due_date=self.today)
 
-        DueReminderNotification()._send()
-        DueReminderNotification()._send()
+        NotificationService(DueReminderNotification()).send_bulk()
+        NotificationService(DueReminderNotification()).send_bulk()
 
         self.assertEqual(len(mail.outbox), 1)
 
@@ -70,7 +71,7 @@ class SendDueRemindersTests(TestCase):
         NotificationUserPreferenceFactory(user=self.user, enabled=False)
         TaskFactory(user=self.user, due_date=self.today)
 
-        DueReminderNotification()._send()
+        NotificationService(DueReminderNotification()).send_bulk()
 
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(NotificationLog.objects.count(), 0)
@@ -78,7 +79,7 @@ class SendDueRemindersTests(TestCase):
     def test_no_email_when_nothing_due(self):
         TaskFactory(user=self.user, due_date=self.tomorrow)
 
-        DueReminderNotification()._send()
+        NotificationService(DueReminderNotification()).send_bulk()
 
         self.assertEqual(len(mail.outbox), 0)
 
@@ -87,8 +88,8 @@ class SendDueRemindersTests(TestCase):
         TaskFactory(user=no_email, due_date=self.today)
         TaskFactory(user=self.user, due_date=self.today)
 
-        with self.assertLogs('notifications.base', level='ERROR'):
-            DueReminderNotification()._send()
+        with self.assertLogs('notifications.service', level='ERROR'):
+            NotificationService(DueReminderNotification()).send_bulk()
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ['user@example.com'])
@@ -113,7 +114,7 @@ class SendDueRemindersQueryTests(TestCase):
         self.seed(UserFactory(email='recipient@example.com'), tasks, subtasks_each)
 
         with CaptureQueriesContext(connection) as captured:
-            DueReminderNotification()._send()
+            NotificationService(DueReminderNotification()).send_bulk()
         return len(captured)
 
     def test_query_count_does_not_grow_with_the_number_of_due_tasks(self):
@@ -127,7 +128,7 @@ class SendDueRemindersJobTests(TestCase):
     def setUp(self):
         self.today = timezone.localdate()
         _, self.event_switch = enable_notification()
-        patcher = mock.patch('notifications.base.async_task')
+        patcher = mock.patch('notifications.service.async_task')
         self.async_task = patcher.start()
         self.addCleanup(patcher.stop)
 

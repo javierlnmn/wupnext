@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
@@ -45,17 +46,6 @@ class NotificationChannelSwitchTests(TestCase):
         switch = NotificationChannelSwitchFactory()
         self.assertEqual(str(switch), f'{Channel.EMAIL}: on')
 
-    def test_is_enabled_without_a_row(self):
-        self.assertFalse(NotificationChannelSwitch.is_enabled(Channel.EMAIL))
-
-    def test_is_enabled_follows_the_row(self):
-        switch = NotificationChannelSwitchFactory()
-        self.assertTrue(NotificationChannelSwitch.is_enabled(Channel.EMAIL))
-
-        switch.enabled = False
-        switch.save()
-        self.assertFalse(NotificationChannelSwitch.is_enabled(Channel.EMAIL))
-
     def test_channel_is_unique(self):
         NotificationChannelSwitch.objects.create(channel=Channel.EMAIL)
 
@@ -78,49 +68,64 @@ class NotificationEventSwitchTests(TestCase):
                     event=EVENT, channel=Channel.EMAIL
                 )
 
-    def test_is_enabled_for_channel_without_a_row(self):
-        self.assertFalse(
-            NotificationEventSwitch.is_enabled_for_channel(EVENT, Channel.EMAIL)
+    def test_enabled_channels_without_any_row(self):
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {},
         )
 
-    def test_is_enabled_for_channel_follows_the_row(self):
-        switch = NotificationEventSwitchFactory()
-        self.assertTrue(
-            NotificationEventSwitch.is_enabled_for_channel(EVENT, Channel.EMAIL)
+    def test_enabled_channels_maps_to_the_user_default(self):
+        NotificationChannelSwitchFactory()
+        switch = NotificationEventSwitchFactory(on_by_default=True)
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {Channel.EMAIL: True},
         )
-
-        switch.enabled = False
-        switch.save()
-        self.assertFalse(
-            NotificationEventSwitch.is_enabled_for_channel(EVENT, Channel.EMAIL)
-        )
-
-    def test_is_enabled_anywhere_ignores_which_channel_is_on(self):
-        NotificationEventSwitchFactory(channel=Channel.EMAIL, enabled=False)
-        NotificationEventSwitchFactory(channel=PUSH, enabled=True)
-
-        self.assertTrue(NotificationEventSwitch.is_enabled_anywhere(EVENT))
-        self.assertFalse(
-            NotificationEventSwitch.is_enabled_for_channel(EVENT, Channel.EMAIL)
-        )
-
-    def test_is_enabled_anywhere_when_every_channel_is_off(self):
-        NotificationEventSwitchFactory(enabled=False)
-
-        self.assertFalse(NotificationEventSwitch.is_enabled_anywhere(EVENT))
-
-    def test_default_for_needs_both_flags(self):
-        switch = NotificationEventSwitchFactory(enabled=True, on_by_default=True)
-        self.assertTrue(NotificationEventSwitch.default_for(EVENT, Channel.EMAIL))
 
         switch.on_by_default = False
         switch.save()
-        self.assertFalse(NotificationEventSwitch.default_for(EVENT, Channel.EMAIL))
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {Channel.EMAIL: False},
+        )
 
-        switch.enabled = False
-        switch.on_by_default = True
-        switch.save()
-        self.assertFalse(NotificationEventSwitch.default_for(EVENT, Channel.EMAIL))
+    def test_enabled_channels_needs_the_event_switch(self):
+        NotificationChannelSwitchFactory()
+        NotificationEventSwitchFactory(enabled=False)
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {},
+        )
+
+    def test_enabled_channels_needs_the_channel_switch(self):
+        NotificationChannelSwitchFactory(enabled=False)
+        NotificationEventSwitchFactory(enabled=True)
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {},
+        )
+
+    def test_enabled_channels_drops_only_the_channel_that_is_off(self):
+        NotificationChannelSwitchFactory(channel=Channel.EMAIL, enabled=False)
+        NotificationChannelSwitchFactory(channel=PUSH, enabled=True)
+        NotificationEventSwitchFactory(channel=Channel.EMAIL)
+        NotificationEventSwitchFactory(channel=PUSH, on_by_default=False)
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {PUSH: False},
+        )
+
+    def test_enabled_channels_ignores_another_event(self):
+        NotificationChannelSwitchFactory()
+        NotificationEventSwitchFactory(event='other_event')
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {},
+        )
 
 
 class NotificationUserPreferenceTests(TestCase):
@@ -142,75 +147,103 @@ class NotificationUserPreferenceTests(TestCase):
                     user=self.user, event=EVENT, channel=Channel.EMAIL, enabled=False
                 )
 
-    def test_falls_back_to_the_site_default(self):
-        NotificationEventSwitchFactory(on_by_default=True)
 
-        self.assertTrue(
-            NotificationUserPreference.is_enabled_for_channel(
-                self.user, EVENT, Channel.EMAIL
-            )
+class BulkUserStoredPreferencesTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.other = UserFactory()
+
+    def stored(self, channels=(Channel.EMAIL,)):
+        return NotificationUserPreference.get_bulk_user_stored_preferences_for_event(
+            [self.user, self.other], EVENT, channels
         )
 
-    def test_falls_back_to_off_when_not_on_by_default(self):
-        NotificationEventSwitchFactory(on_by_default=False)
+    def test_empty_when_nobody_chose(self):
+        self.assertEqual(self.stored(), {})
 
-        self.assertFalse(
-            NotificationUserPreference.is_enabled_for_channel(
-                self.user, EVENT, Channel.EMAIL
-            )
+    def test_nests_channels_under_each_user(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+        NotificationUserPreferenceFactory(user=self.other, enabled=True)
+
+        self.assertEqual(
+            self.stored(),
+            {
+                self.user.pk: {Channel.EMAIL: False},
+                self.other.pk: {Channel.EMAIL: True},
+            },
         )
 
-    def test_an_explicit_choice_beats_the_default(self):
-        NotificationEventSwitchFactory(on_by_default=True)
+    def test_groups_several_channels_under_one_user(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+        NotificationUserPreferenceFactory(user=self.user, channel=PUSH, enabled=True)
+
+        self.assertEqual(
+            self.stored(channels=(Channel.EMAIL, PUSH)),
+            {self.user.pk: {Channel.EMAIL: False, PUSH: True}},
+        )
+
+    def test_excludes_another_event(self):
+        NotificationUserPreferenceFactory(
+            user=self.user, event='other_event', enabled=False
+        )
+
+        self.assertEqual(self.stored(), {})
+
+    def test_excludes_a_channel_not_asked_for(self):
+        NotificationUserPreferenceFactory(user=self.user, channel=PUSH, enabled=False)
+
+        self.assertEqual(self.stored(), {})
+
+    def test_reads_the_whole_batch_in_one_query(self):
+        for _ in range(5):
+            UserFactory()
+
+        users = list(get_user_model().objects.all())
+
+        with self.assertNumQueries(1):
+            NotificationUserPreference.get_bulk_user_stored_preferences_for_event(
+                users, EVENT, (Channel.EMAIL,)
+            )
+
+
+class UserStoredPreferencesTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+
+    def stored(self, channels=(Channel.EMAIL,)):
+        return NotificationUserPreference.get_user_stored_preferences_for_event(
+            self.user, EVENT, channels
+        )
+
+    def test_empty_when_the_user_never_chose(self):
+        self.assertEqual(self.stored(), {})
+
+    def test_keys_by_channel_alone(self):
         NotificationUserPreferenceFactory(user=self.user, enabled=False)
 
-        self.assertFalse(
-            NotificationUserPreference.is_enabled_for_channel(
-                self.user, EVENT, Channel.EMAIL
-            )
+        self.assertEqual(self.stored(), {Channel.EMAIL: False})
+
+    def test_includes_every_channel_asked_for(self):
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+        NotificationUserPreferenceFactory(user=self.user, channel=PUSH, enabled=True)
+
+        self.assertEqual(
+            self.stored(channels=(Channel.EMAIL, PUSH)),
+            {Channel.EMAIL: False, PUSH: True},
         )
 
-    def test_an_explicit_opt_in_beats_an_off_default(self):
-        NotificationEventSwitchFactory(on_by_default=False)
-        NotificationUserPreferenceFactory(user=self.user, enabled=True)
-
-        self.assertTrue(
-            NotificationUserPreference.is_enabled_for_channel(
-                self.user, EVENT, Channel.EMAIL
-            )
-        )
-
-    def test_another_users_choice_does_not_leak(self):
-        NotificationEventSwitchFactory(on_by_default=True)
+    def test_excludes_another_users_preference(self):
         NotificationUserPreferenceFactory(user=UserFactory(), enabled=False)
 
-        self.assertTrue(
-            NotificationUserPreference.is_enabled_for_channel(
-                self.user, EVENT, Channel.EMAIL
-            )
+        self.assertEqual(self.stored(), {})
+
+    def test_excludes_another_event(self):
+        NotificationUserPreferenceFactory(
+            user=self.user, event='other_event', enabled=False
         )
 
-    def test_is_enabled_for_any_channel_needs_only_one(self):
-        NotificationEventSwitchFactory(channel=Channel.EMAIL, on_by_default=False)
-        NotificationEventSwitchFactory(channel=PUSH, on_by_default=True)
+        self.assertEqual(self.stored(), {})
 
-        self.assertTrue(
-            NotificationUserPreference.is_enabled_for_any_channel(
-                self.user, EVENT, [Channel.EMAIL, PUSH]
-            )
-        )
-
-    def test_is_enabled_for_any_channel_when_all_are_off(self):
-        NotificationEventSwitchFactory(channel=Channel.EMAIL, on_by_default=False)
-        NotificationEventSwitchFactory(channel=PUSH, on_by_default=False)
-
-        self.assertFalse(
-            NotificationUserPreference.is_enabled_for_any_channel(
-                self.user, EVENT, [Channel.EMAIL, PUSH]
-            )
-        )
-
-    def test_is_enabled_for_any_channel_without_channels(self):
-        self.assertFalse(
-            NotificationUserPreference.is_enabled_for_any_channel(self.user, EVENT, [])
-        )
+    def test_costs_one_query(self):
+        with self.assertNumQueries(1):
+            self.stored(channels=(Channel.EMAIL, PUSH))
