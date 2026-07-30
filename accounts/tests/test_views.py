@@ -3,6 +3,10 @@ from django.urls import reverse
 
 from accounts.models import UserPreferences
 from accounts.tests.factories import UserFactory
+from notifications.models import Channel, NotificationUserPreference
+from notifications.tests.factories import enable_notification
+
+NOTIFY_EMAIL = f'notify-task_due_reminder-{Channel.EMAIL}'
 
 
 class PreferencesViewTests(TestCase):
@@ -42,3 +46,32 @@ class PreferencesViewTests(TestCase):
         body = response.json()
         self.assertFalse(body['ok'])
         self.assertIn('pomodoro_focus', body['errors'])
+
+    def test_saves_notification_preferences_alongside_pomodoro(self):
+        enable_notification()
+
+        response = self.client.post(self.url, self.payload(**{NOTIFY_EMAIL: 'on'}))
+
+        self.assertEqual(response.status_code, 200)
+        preference = NotificationUserPreference.objects.get(user=self.user)
+        self.assertEqual(preference.event, 'task_due_reminder')
+        self.assertEqual(preference.channel, Channel.EMAIL)
+        self.assertTrue(preference.enabled)
+
+    def test_an_unchecked_notification_is_stored_as_an_opt_out(self):
+        enable_notification()
+
+        response = self.client.post(self.url, self.payload())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(NotificationUserPreference.objects.get(user=self.user).enabled)
+
+    def test_invalid_pomodoro_saves_no_notification_preference(self):
+        enable_notification()
+
+        response = self.client.post(
+            self.url, self.payload(pomodoro_focus=999, **{NOTIFY_EMAIL: 'on'})
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(NotificationUserPreference.objects.exists())

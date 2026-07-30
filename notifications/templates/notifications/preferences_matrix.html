@@ -1,0 +1,53 @@
+{% if form.rows %}
+  <div class="overflow-x-auto -mx-1 px-1">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr>
+          <th class="w-full"></th>
+          {% for channel in form.channels %}
+            <th
+              scope="col"
+              class="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 text-center whitespace-nowrap"
+            >
+              {{ channel.label }}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for row in form.rows %}
+          <tr>
+            <th scope="row" class="py-2 pr-3 text-left font-normal">
+              <span class="block text-sm text-slate-600 dark:text-slate-300">{{ row.label }}</span>
+              {% if row.description %}
+                <span class="block text-[12px] text-slate-400">{{ row.description }}</span>
+              {% endif %}
+            </th>
+            {% for cell in row.cells %}
+              <td class="px-2 py-2 text-center">
+                {% if cell.available %}
+                  <label class="relative inline-flex items-center cursor-pointer align-middle">
+                    <input
+                      type="checkbox"
+                      name="{{ cell.name }}"
+                      class="sr-only peer"
+                      {% if cell.enabled %}checked{% endif %}
+                    >
+                    <span class="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-clay-500 transition-colors"></span>
+                    <span class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></span>
+                  </label>
+                {% else %}
+                  <span class="text-slate-300 dark:text-slate-600" aria-label="Not available">&mdash;</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-[12px] text-slate-400">
+    No notifications are switched on right now.
+  </p>
+{% endif %}
