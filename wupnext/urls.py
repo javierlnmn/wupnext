@@ -33,4 +33,5 @@ urlpatterns = [
     path('', include('tasks.urls')),
     path('accounts/', include('accounts.urls')),
     path('pomodoro/', include('pomodoro.urls')),
+    path('notifications/', include('notifications.urls')),
 ]

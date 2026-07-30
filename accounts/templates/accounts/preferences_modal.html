@@ -1,35 +1,67 @@
 {% load ui %}
 <div
-  x-data="{ prefsOpen: false }"
+  x-data="{ prefsOpen: false, tab: 'pomodoro' }"
   @open-preferences.window="prefsOpen = true"
   @close-preferences="prefsOpen = false"
   @keydown.escape.window="prefsOpen = false"
 >
-  {% modal openStateKey="prefsOpen" width="30rem" %}
-    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-      <h2 class="text-lg font-bold text-slate-900 dark:text-white">Preferences</h2>
-      <button
-        type="button"
-        @click="prefsOpen = false"
-        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-        aria-label="Close"
-      >
-        {% include 'common/icons/close.html' with class='w-5 h-5' %}
-      </button>
-    </div>
-
+  {% modal openStateKey="prefsOpen" width="40rem" %}
     <form
       hx-post="{% url 'accounts:preferences' %}"
       hx-swap="none"
-      hx-on::after-request="preferencesComplete(event)"
+      hx-on::after-request="preferencesSaved(event)"
+      class="flex flex-col"
+      style="height: 34rem; max-height: 90dvh"
     >
-      <div class="px-6 py-6 space-y-6">
-        {% include 'pomodoro/settings_section.html' %}
-        <div class="border-t border-slate-200 dark:border-slate-800"></div>
-        {% include 'accounts/notification_settings_section.html' %}
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Preferences</h2>
+        <button
+          type="button"
+          @click="prefsOpen = false"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          aria-label="Close"
+        >
+          {% include 'common/icons/close.html' with class='w-5 h-5' %}
+        </button>
       </div>
 
-      <div class="px-6 py-5 border-t border-slate-200 dark:border-slate-800">
+      <nav class="flex gap-6 px-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <button
+          type="button"
+          @click="tab = 'pomodoro'"
+          :class="tab === 'pomodoro' ? 'border-clay-500 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+          class="flex items-center gap-2 -mb-px py-3 border-b-2 text-sm font-semibold transition-colors"
+        >
+          {% include 'common/icons/clock.html' with class='w-4 h-4' %}
+          Pomodoro
+        </button>
+        <button
+          type="button"
+          @click="tab = 'notifications'"
+          :class="tab === 'notifications' ? 'border-clay-500 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+          class="flex items-center gap-2 -mb-px py-3 border-b-2 text-sm font-semibold transition-colors"
+        >
+          {% include 'common/icons/bell.html' with class='w-4 h-4' %}
+          Notifications
+        </button>
+      </nav>
+
+      <div class="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+        <div
+          x-show="tab === 'pomodoro'"
+          hx-get="{% url 'pomodoro:preferences' %}"
+          hx-trigger="open-preferences from:window"
+          hx-swap="innerHTML"
+        ></div>
+        <div
+          x-show="tab === 'notifications'"
+          hx-get="{% url 'notifications:preferences' %}"
+          hx-trigger="open-preferences from:window"
+          hx-swap="innerHTML"
+        ></div>
+      </div>
+
+      <div class="px-6 py-5 border-t border-slate-200 dark:border-slate-800 shrink-0">
         <button
           type="submit"
           class="w-full h-9 bg-clay-500 hover:bg-clay-600 text-white text-sm font-semibold rounded-lg transition-colors"
@@ -42,15 +74,19 @@
 </div>
 
 <script>
-  function preferencesComplete(event) {
+  function preferencesSaved(event) {
     if (!event.detail.successful) return
+
     const d = new FormData(event.target)
-    Alpine.store('pomodoro').setSettings({
-      focus: d.get('pomodoro_focus'),
-      short: d.get('pomodoro_short_break'),
-      long: d.get('pomodoro_long_break'),
-      every: d.get('pomodoro_long_every'),
-    })
+    if (d.get('focus')) {
+      Alpine.store('pomodoro').setSettings({
+        focus: d.get('focus'),
+        short: d.get('short_break'),
+        long: d.get('long_break'),
+        every: d.get('long_every'),
+      })
+    }
+
     event.target.dispatchEvent(new CustomEvent('close-preferences', { bubbles: true }))
   }
 </script>

@@ -1,5 +1,49 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+
+class PomodoroUserPreference(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pomodoro_preference',
+    )
+    focus = models.PositiveSmallIntegerField(
+        default=25,
+        validators=[MinValueValidator(1), MaxValueValidator(180)],
+    )
+    short_break = models.PositiveSmallIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(180)],
+    )
+    long_break = models.PositiveSmallIntegerField(
+        default=15,
+        validators=[MinValueValidator(1), MaxValueValidator(180)],
+    )
+    long_every = models.PositiveSmallIntegerField(
+        default=4,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+
+    class Meta:
+        verbose_name = 'user preference'
+        verbose_name_plural = 'user preferences'
+
+    def __str__(self):
+        return f'Pomodoro preferences for {self.user}'
+
+    @classmethod
+    def for_user(cls, user):
+        return cls.objects.get_or_create(user=user)[0]
+
+    def settings_dict(self):
+        return {
+            'focus': self.focus,
+            'short': self.short_break,
+            'long': self.long_break,
+            'every': self.long_every,
+        }
 
 
 class Phase(models.TextChoices):

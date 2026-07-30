@@ -1,0 +1,14 @@
+<label class="flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+  <span>{{ label }}</span>
+  <span class="flex items-center gap-1.5">
+    <input
+      type="number"
+      name="{{ field.name }}"
+      min="1"
+      max="{{ max }}"
+      value="{{ field.value }}"
+      class="w-16 h-8 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-sm tabular-nums outline-none focus:border-clay-500/50 no-spinner"
+    >
+    <span class="text-xs text-slate-400">{{ unit }}</span>
+  </span>
+</label>

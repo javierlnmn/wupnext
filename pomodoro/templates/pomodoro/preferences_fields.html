@@ -1,0 +1,10 @@
+<p class="text-[12px] text-slate-500 dark:text-slate-400 mb-4">
+  Focus and break lengths, in minutes.
+</p>
+
+<div class="space-y-3">
+  {% include 'pomodoro/partials/duration_field.html' with field=form.focus label='Focus' max=180 unit='min' %}
+  {% include 'pomodoro/partials/duration_field.html' with field=form.short_break label='Short break' max=180 unit='min' %}
+  {% include 'pomodoro/partials/duration_field.html' with field=form.long_break label='Long break' max=180 unit='min' %}
+  {% include 'pomodoro/partials/duration_field.html' with field=form.long_every label='Long break every' max=12 unit='🍅' %}
+</div>

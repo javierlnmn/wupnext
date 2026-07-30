@@ -2,10 +2,11 @@ import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views import View
 
-from .forms import PomodoroStateForm
-from .models import PomodoroState
+from .forms import PomodoroPreferencesForm, PomodoroStateForm
+from .models import PomodoroState, PomodoroUserPreference
 
 
 class PomodoroStateView(LoginRequiredMixin, View):
@@ -24,3 +25,13 @@ class PomodoroStateView(LoginRequiredMixin, View):
             form.save()
             return JsonResponse(state.state_dict())
         return JsonResponse({'ok': False, 'errors': form.errors}, status=400)
+
+
+class PomodoroPreferencesView(LoginRequiredMixin, View):
+    def get(self, request):
+        preference = PomodoroUserPreference.for_user(request.user)
+        return render(
+            request,
+            'pomodoro/preferences_fields.html',
+            {'form': PomodoroPreferencesForm(instance=preference)},
+        )

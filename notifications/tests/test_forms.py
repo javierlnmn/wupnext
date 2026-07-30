@@ -1,6 +1,4 @@
-from django.template import Context, Template
-from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
+from django.test import TestCase
 
 from accounts.tests.factories import UserFactory
 from notifications.forms import NotificationPreferencesForm
@@ -75,7 +73,7 @@ class MatrixShapeTests(TestCase):
 
         form = self.form()
 
-        self.assertEqual(list(form.fields), [EMAIL_FIELD])
+        self.assertEqual(list(form.fields), ['sentinel', EMAIL_FIELD])
         self.assertEqual(form.cells, {EMAIL_FIELD: (EVENT, Channel.EMAIL)})
 
 
@@ -113,7 +111,7 @@ class SaveTests(TestCase):
         self.channel_switch, self.event_switch = enable_notification()
 
     def save(self, data):
-        form = NotificationPreferencesForm(data, user=self.user)
+        form = NotificationPreferencesForm({'sentinel': '1', **data}, user=self.user)
         self.assertTrue(form.is_valid())
         form.save()
 
@@ -147,66 +145,19 @@ class SaveTests(TestCase):
         )
 
 
-class MatrixTagTests(TestCase):
-    def render(self, user):
-        request = RequestFactory().get('/')
-        request.user = user
-        template = Template(
-            '{% load notification_preferences %}{% notification_preferences_matrix %}'
-        )
-        return template.render(Context({'request': request}))
-
-    def test_renders_a_toggle_per_available_cell(self):
+class SentinelTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
         enable_notification()
-        user = UserFactory()
+        NotificationUserPreferenceFactory(user=self.user, enabled=True)
 
-        html = self.render(user)
+    def test_a_post_without_the_sentinel_is_invalid(self):
+        form = NotificationPreferencesForm({}, user=self.user)
 
-        self.assertIn(f'name="{EMAIL_FIELD}"', html)
-        self.assertIn('checked', html)
-        self.assertIn('Email', html)
+        self.assertFalse(form.is_valid())
+        self.assertIn('sentinel', form.errors)
 
-    def test_says_so_when_nothing_is_switched_on(self):
-        html = self.render(UserFactory())
+    def test_a_post_without_the_sentinel_changes_nothing(self):
+        NotificationPreferencesForm({}, user=self.user).is_valid()
 
-        self.assertIn('No notifications are switched on', html)
-
-    def test_renders_nothing_for_an_anonymous_visitor(self):
-        from django.contrib.auth.models import AnonymousUser
-
-        enable_notification()
-
-        html = self.render(AnonymousUser())
-
-        self.assertNotIn(f'name="{EMAIL_FIELD}"', html)
-
-
-@override_settings(
-    STORAGES={
-        'staticfiles': {
-            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-        },
-    },
-)
-class BoardIntegrationTests(TestCase):
-    def get_board(self):
-        self.client.force_login(UserFactory())
-        return self.client.get(reverse('tasks:board')).content.decode()
-
-    def test_the_matrix_reaches_the_preferences_form_on_the_board(self):
-        enable_notification()
-
-        html = self.get_board()
-
-        self.assertIn(f'name="{EMAIL_FIELD}"', html)
-        self.assertIn('Deadline reminders', html)
-
-    def test_the_checkbox_sits_inside_the_preferences_form(self):
-        enable_notification()
-
-        html = self.get_board()
-
-        form_at = html.index(f'hx-post="{reverse("accounts:preferences")}"')
-        checkbox_at = html.index(f'name="{EMAIL_FIELD}"')
-
-        self.assertGreater(checkbox_at, form_at)
+        self.assertTrue(NotificationUserPreference.objects.get(user=self.user).enabled)
