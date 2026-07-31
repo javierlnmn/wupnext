@@ -1,4 +1,3 @@
-from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
@@ -6,23 +5,18 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.tests.factories import UserFactory
 from notifications.email_previews import (
-    PREVIEW_USERNAME,
     PREVIEWS,
     BaseEmailPreview,
     get_preview,
-)
-from notifications.email_previews.task_due_reminder_preview import (
-    TaskDueReminderPreview,
+    register,
 )
 from notifications.exceptions import MissingPreview
 from notifications.models import NotificationLog
 from notifications.tests.factories import NotificationLogFactory
-from tasks.models import Group, Task
-from tasks.tests.factories import TaskFactory
 
 EVENT = 'task_due_reminder'
+STUB_EVENT = 'stub_event'
 LOCMEM = 'django.core.mail.backends.locmem.EmailBackend'
 
 
@@ -42,12 +36,30 @@ class StubPreview(BaseEmailPreview):
         }
 
 
+class RegistryStub(StubPreview):
+    event = STUB_EVENT
+
+
 class GetPreviewTests(TestCase):
+    def setUp(self):
+        register(RegistryStub)
+        self.addCleanup(PREVIEWS.pop, STUB_EVENT, None)
+
     def test_resolves_the_registered_preview(self):
-        self.assertIsInstance(get_preview(EVENT), TaskDueReminderPreview)
+        self.assertIsInstance(get_preview(STUB_EVENT), RegistryStub)
 
     def test_returns_a_fresh_instance_each_call(self):
-        self.assertIsNot(get_preview(EVENT), get_preview(EVENT))
+        self.assertIsNot(get_preview(STUB_EVENT), get_preview(STUB_EVENT))
+
+    def test_register_returns_the_class_untouched(self):
+        self.assertIs(register(RegistryStub), RegistryStub)
+
+    def test_a_preview_without_an_event_is_rejected(self):
+        class Eventless(RegistryStub):
+            event = None
+
+        with self.assertRaises(ValueError):
+            register(Eventless)
 
     def test_every_registry_key_matches_its_preview_event(self):
         for event in PREVIEWS:
@@ -63,7 +75,7 @@ class GetPreviewTests(TestCase):
 
         message = str(caught.exception)
         self.assertIn('nope', message)
-        self.assertIn(EVENT, message)
+        self.assertIn(STUB_EVENT, message)
 
 
 class PreviewRenderTests(TestCase):
@@ -127,36 +139,3 @@ class PreviewSendTests(TestCase):
         StubPreview().send_preview('me@example.com')
 
         self.assertEqual(NotificationLog.objects.count(), 0)
-
-
-class TaskDueReminderPreviewTests(TestCase):
-    def test_renders_the_seeded_overdue_and_due_today_sections(self):
-        _, body, _ = TaskDueReminderPreview().render()
-
-        self.assertIn(f'Hi {PREVIEW_USERNAME}', body)
-        self.assertIn('OVERDUE (1)', body)
-        self.assertIn('DUE TODAY (1)', body)
-
-    def test_renders_subtask_progress_from_saved_rows(self):
-        _, body, _ = TaskDueReminderPreview().render()
-
-        self.assertIn('1/2 subtasks done', body)
-
-    def test_ignores_existing_users_and_their_tasks(self):
-        today = timezone.localdate()
-        existing = UserFactory(email='existing@example.com')
-        TaskFactory(
-            user=existing, name='Real overdue', due_date=today - timedelta(days=1)
-        )
-        TaskFactory(user=existing, name='Real due today', due_date=today)
-
-        _, body, _ = TaskDueReminderPreview().render()
-
-        self.assertNotIn('Real overdue', body)
-        self.assertNotIn('Real due today', body)
-
-    def test_rolls_back_the_seeded_rows(self):
-        TaskDueReminderPreview().render()
-
-        self.assertEqual(Task.objects.count(), 0)
-        self.assertEqual(Group.objects.count(), 0)

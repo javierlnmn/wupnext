@@ -8,3 +8,4 @@ class NotificationsConfig(AppConfig):
 
     def ready(self):
         autodiscover_modules('notifications')
+        autodiscover_modules('email_previews')

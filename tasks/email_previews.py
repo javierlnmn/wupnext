@@ -3,12 +3,18 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from tasks.models import Group, Task
-from tasks.notifications.due_reminders import DueReminderNotification
+from notifications.email_previews import (
+    PREVIEW_EMAIL,
+    PREVIEW_USERNAME,
+    BaseEmailPreview,
+    register,
+)
 
-from .base import PREVIEW_EMAIL, PREVIEW_USERNAME, BaseEmailPreview
+from .models import Group, Task
+from .notifications.due_reminders import DueReminderNotification
 
 
+@register
 class TaskDueReminderPreview(BaseEmailPreview):
     event = DueReminderNotification.event
     user = None
