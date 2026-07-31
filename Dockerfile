@@ -9,9 +9,9 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        nodejs \
-        npm \
+    build-essential \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir "poetry>=2.0,<3.0"
@@ -47,4 +47,4 @@ RUN mkdir -p /app/db /app/media
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py schedule_due_reminders && { python manage.py createsuperuser --noinput || true; } && exec gunicorn wupnext.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-2}"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py sync_notification_schedules && { python manage.py createsuperuser --noinput || true; } && exec gunicorn wupnext.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-2}"]
