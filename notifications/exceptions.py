@@ -16,3 +16,7 @@ class DuplicateNotification(NotificationError):
 
 class UnknownChannel(NotificationError):
     pass
+
+
+class NotBulkNotification(NotificationError):
+    pass

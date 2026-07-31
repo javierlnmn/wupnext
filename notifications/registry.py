@@ -17,3 +17,7 @@ def register(notification_class):
 
     NOTIFICATIONS[event] = notification_class
     return notification_class
+
+
+def get_notification_path(notification_class):
+    return f'{notification_class.__module__}.{notification_class.__qualname__}'

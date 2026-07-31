@@ -8,7 +8,11 @@ from django.utils.module_loading import import_string
 
 from accounts.tests.factories import UserFactory
 from notifications.base import BaseBulkNotification, BaseNotification
-from notifications.exceptions import MissingRecipient, UnknownChannel
+from notifications.exceptions import (
+    MissingRecipient,
+    NotBulkNotification,
+    UnknownChannel,
+)
 from notifications.jobs import send_notification_to_user
 from notifications.models import Channel, NotificationLog
 from notifications.service import NotificationService
@@ -372,7 +376,7 @@ class EnqueueTests(TestCase):
     def test_enqueues_one_job_per_recipient(self):
         other = UserFactory()
 
-        NotificationService(BulkHost()).enqueue()
+        NotificationService(BulkHost()).enqueue_bulk()
 
         self.assertCountEqual(
             [call.args[2] for call in self.async_task.call_args_list],
@@ -380,7 +384,7 @@ class EnqueueTests(TestCase):
         )
 
     def test_enqueues_a_resolvable_job_and_notification(self):
-        NotificationService(BulkHost()).enqueue()
+        NotificationService(BulkHost()).enqueue_bulk()
 
         job, path, _ = self.async_task.call_args.args
         self.assertIs(import_string(job), send_notification_to_user)
@@ -390,7 +394,7 @@ class EnqueueTests(TestCase):
         self.event_switch.enabled = False
         self.event_switch.save()
 
-        NotificationService(BulkHost()).enqueue()
+        NotificationService(BulkHost()).enqueue_bulk()
 
         self.async_task.assert_not_called()
 
@@ -398,14 +402,14 @@ class EnqueueTests(TestCase):
         self.channel_switch.enabled = False
         self.channel_switch.save()
 
-        NotificationService(BulkHost()).enqueue()
+        NotificationService(BulkHost()).enqueue_bulk()
 
         self.async_task.assert_not_called()
 
     def test_enqueues_nothing_for_a_user_who_opted_out(self):
         NotificationUserPreferenceFactory(user=self.user, enabled=False)
 
-        NotificationService(BulkHost()).enqueue()
+        NotificationService(BulkHost()).enqueue_bulk()
 
         self.async_task.assert_not_called()
 
@@ -414,6 +418,35 @@ class EnqueueTests(TestCase):
             UserFactory()
 
         with self.assertNumQueries(3):
-            NotificationService(BulkHost()).enqueue()
+            NotificationService(BulkHost()).enqueue_bulk()
 
         self.assertEqual(self.async_task.call_count, 9)
+
+
+class BulkOnlyTests(TestCase):
+    """send_bulk and enqueue_bulk need a notification that declares recipients."""
+
+    def setUp(self):
+        enable_notification()
+
+    def test_send_bulk_rejects_a_single_notification(self):
+        with self.assertRaises(NotBulkNotification):
+            NotificationService(SingleHost()).send_bulk()
+
+    def test_enqueue_bulk_rejects_a_single_notification(self):
+        with self.assertRaises(NotBulkNotification):
+            NotificationService(SingleHost()).enqueue_bulk()
+
+    def test_the_error_names_the_notification(self):
+        with self.assertRaises(NotBulkNotification) as caught:
+            NotificationService(SingleHost()).send_bulk()
+
+        self.assertIn('SingleHost', str(caught.exception))
+
+    def test_send_still_works_for_a_single_notification(self):
+        user = UserFactory()
+
+        with mock.patch.object(NotificationService, 'notify') as notify:
+            NotificationService(SingleHost()).send(user)
+
+        notify.assert_called_once()

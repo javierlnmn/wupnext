@@ -9,13 +9,14 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
+from notifications.jobs import enqueue_bulk_notification
 from notifications.models import NotificationLog
+from notifications.registry import get_notification_path
 from notifications.service import NotificationService
 from notifications.tests.factories import (
     NotificationUserPreferenceFactory,
     enable_notification,
 )
-from tasks.jobs import send_due_reminders
 from tasks.notifications.due_reminders import DueReminderNotification
 from tasks.tests.factories import GroupFactory, TaskFactory
 
@@ -140,7 +141,7 @@ class SendDueRemindersJobTests(TestCase):
         quiet = UserFactory(email='quiet@example.com')
         TaskFactory(user=quiet, due_date=self.today + timedelta(days=1))
 
-        send_due_reminders()
+        enqueue_bulk_notification(get_notification_path(DueReminderNotification))
 
         self.assertCountEqual(
             [call.args[2] for call in self.async_task.call_args_list],
@@ -151,7 +152,7 @@ class SendDueRemindersJobTests(TestCase):
         user = UserFactory(email='user@example.com')
         TaskFactory(user=user, due_date=self.today)
 
-        send_due_reminders()
+        enqueue_bulk_notification(get_notification_path(DueReminderNotification))
 
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(NotificationLog.objects.count(), 0)
@@ -162,6 +163,6 @@ class SendDueRemindersJobTests(TestCase):
         user = UserFactory(email='user@example.com')
         TaskFactory(user=user, due_date=self.today)
 
-        send_due_reminders()
+        enqueue_bulk_notification(get_notification_path(DueReminderNotification))
 
         self.async_task.assert_not_called()

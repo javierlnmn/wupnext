@@ -2,12 +2,15 @@ import logging
 
 from django_q.tasks import async_task
 
+from .base import BaseBulkNotification
 from .channels.registry import get_channel
+from .exceptions import NotBulkNotification
 from .models import (
     NotificationEventSwitch,
     NotificationLog,
     NotificationUserPreference,
 )
+from .registry import get_notification_path
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +78,16 @@ class NotificationService:
         return deliveries
 
     def _get_notification_deliveries(self):
+        if not isinstance(self.notification, BaseBulkNotification):
+            raise NotBulkNotification(
+                f'{type(self.notification).__name__} declares no recipients, '
+                'so it can only be sent to one user at a time.'
+            )
+
         return self._get_delivery_channels_by_user(self.notification.recipients())
 
     def _get_notification_class_path(self):
-        notification_class = type(self.notification)
-        return f'{notification_class.__module__}.{notification_class.__qualname__}'
+        return get_notification_path(type(self.notification))
 
     def _deliver(self, user, channels):
         context = self.notification.context(user)
@@ -111,7 +119,7 @@ class NotificationService:
             except Exception:
                 logger.exception('Failed to send %s to %s', self.event, user)
 
-    def enqueue(self):
+    def enqueue_bulk(self):
         notification_class_path = self._get_notification_class_path()
 
         for user in self._get_notification_deliveries():

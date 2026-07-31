@@ -10,3 +10,7 @@ def send_notification_to_user(notification_class_path, user_id):
         return
 
     NotificationService(import_string(notification_class_path)()).send(user)
+
+
+def enqueue_bulk_notification(notification_class_path):
+    NotificationService(import_string(notification_class_path)()).enqueue_bulk()

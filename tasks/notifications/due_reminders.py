@@ -14,6 +14,7 @@ class DueReminderNotification(BaseBulkNotification):
     label = 'Deadline reminders'
     description = 'Daily digest of tasks that are due or overdue.'
     channels = (Channel.EMAIL,)
+    schedule = '0 7 * * *'
 
     def is_applicable_for(self, user, context):
         return bool(context['overdue'] or context['due_today'])

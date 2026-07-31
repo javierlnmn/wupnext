@@ -18,5 +18,7 @@ class BaseNotification(ABC):
 
 
 class BaseBulkNotification(BaseNotification):
+    schedule = ''
+
     @abstractmethod
     def recipients(self): ...
