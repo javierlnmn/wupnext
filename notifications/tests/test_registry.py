@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from notifications.exceptions import DuplicateNotification
 from notifications.registry import NOTIFICATIONS, register
-from tasks.notifications.due_reminders import DueReminderNotification
+from tasks.notifications.notifications.due_reminders import DueReminderNotification
 
 
 class RegistryTests(TestCase):

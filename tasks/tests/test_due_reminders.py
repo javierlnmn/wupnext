@@ -17,7 +17,7 @@ from notifications.tests.factories import (
     NotificationUserPreferenceFactory,
     enable_notification,
 )
-from tasks.notifications.due_reminders import DueReminderNotification
+from tasks.notifications.notifications.due_reminders import DueReminderNotification
 from tasks.tests.factories import GroupFactory, TaskFactory
 
 

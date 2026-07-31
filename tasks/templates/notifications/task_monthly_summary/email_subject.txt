@@ -1,0 +1,1 @@
+Your WupNext month: {{ period_start|date:"F Y" }}

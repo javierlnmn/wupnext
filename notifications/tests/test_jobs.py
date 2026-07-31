@@ -6,10 +6,12 @@ from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from notifications.jobs import send_notification_to_user
+from notifications.registry import get_notification_path
 from notifications.tests.factories import enable_notification
+from tasks.notifications.notifications.due_reminders import DueReminderNotification
 from tasks.tests.factories import TaskFactory
 
-NOTIFICATION = 'tasks.notifications.due_reminders.DueReminderNotification'
+NOTIFICATION = get_notification_path(DueReminderNotification)
 
 
 class SendNotificationToUserTests(TestCase):

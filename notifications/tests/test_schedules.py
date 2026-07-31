@@ -12,12 +12,12 @@ from notifications.management.commands.sync_notification_schedules import (
     ENQUEUE_JOB,
     NAME_PREFIX,
 )
-from notifications.registry import NOTIFICATIONS
-from tasks.notifications.due_reminders import DueReminderNotification
+from notifications.registry import NOTIFICATIONS, get_notification_path
+from tasks.notifications.notifications.due_reminders import DueReminderNotification
 
 EVENT = 'task_due_reminder'
 SCHEDULE_NAME = f'{NAME_PREFIX}{EVENT}'
-PATH = 'tasks.notifications.due_reminders.DueReminderNotification'
+PATH = get_notification_path(DueReminderNotification)
 
 
 class SyncNotificationSchedulesTests(TestCase):

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>WupNext</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .page { background: #12100f !important; }
+    .card { background: #1b1817 !important; border-color: #2c2724 !important; }
+    .t-strong { color: #f2efec !important; }
+    .t-body { color: #c3bcb7 !important; }
+    .t-muted { color: #8e8681 !important; }
+    .rule { border-color: #2c2724 !important; }
+    .list { border-color: #2c2724 !important; }
+    .row { border-color: #2c2724 !important; }
+    .stat { background: #221e1c !important; border-color: #2c2724 !important; }
+  }
+  @media only screen and (max-width: 620px) {
+    .pad { padding-left: 20px !important; padding-right: 20px !important; }
+  }
+</style>
+</head>
+<body class="page" style="margin: 0; padding: 0; background: #f6f4f2; -webkit-font-smoothing: antialiased;">
+
+<div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+  {% if completed %}{{ completed|length }} done{% endif %}{% if overdue %}{% if completed %}, {% endif %}{{ overdue|length }} overdue{% endif %}{% if pending %}{% if completed or overdue %}, {% endif %}{{ pending|length }} still open{% endif %}.
+</div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="page" style="background: #f6f4f2;">
+  <tr>
+    <td align="center" style="padding: 32px 12px 40px;">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="card" style="width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #ece7e2; border-radius: 16px; border-collapse: separate;">
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">
+                  <span class="t-strong" style="color: #0f172a;">wup</span><span style="color: #d1793f;">next.</span>
+                </td>
+                <td align="right" class="t-muted" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #94a3b8;">
+                  {{ period_start|date:"F Y" }}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-body" style="padding: 20px 32px 20px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.55; color: #475569;">
+            Hi {{ user.first_name|default:user.username }}, here's how {{ period_start|date:"F Y" }} went.
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad" style="padding: 0 32px 24px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="stat" style="background: #faf8f6; border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              <tr>
+                <td align="center" style="padding: 16px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                  <div class="t-strong" style="font-size: 22px; font-weight: 800; color: #15803d;">{{ completed|length }}</div>
+                  <div class="t-muted" style="padding-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #94a3b8;">Completed</div>
+                </td>
+                <td align="center" style="padding: 16px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                  <div class="t-strong" style="font-size: 22px; font-weight: 800; color: #0f172a;">{{ completed_weight }}</div>
+                  <div class="t-muted" style="padding-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #94a3b8;">Weight</div>
+                </td>
+                <td align="center" style="padding: 16px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                  <div class="t-strong" style="font-size: 22px; font-weight: 800; color: #be123c;">{{ overdue|length }}</div>
+                  <div class="t-muted" style="padding-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #94a3b8;">Overdue</div>
+                </td>
+                <td align="center" style="padding: 16px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                  <div class="t-strong" style="font-size: 22px; font-weight: 800; color: #9c4f31;">{{ pending|length }}</div>
+                  <div class="t-muted" style="padding-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #94a3b8;">Open</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        {% if completed %}
+        <tr>
+          <td class="pad" style="padding: 0 32px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #15803d;">
+            Completed &middot; {{ completed|length }}
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="list" style="border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              {% for entry in completed %}{% include 'notifications/task_monthly_summary/_completed_row.html' with entry=entry first=forloop.first %}{% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if overdue %}
+        <tr>
+          <td class="pad" style="padding: {% if completed %}16px{% else %}0{% endif %} 32px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #be123c;">
+            Overdue &middot; {{ overdue|length }}
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="list" style="border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              {% for task in overdue %}{% include 'notifications/task_monthly_summary/_summary_row.html' with task=task first=forloop.first overdue=True %}{% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if pending %}
+        <tr>
+          <td class="pad" style="padding: {% if completed or overdue %}16px{% else %}0{% endif %} 32px 8px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #9c4f31;">
+            Still open &middot; {{ pending|length }}
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="list" style="border: 1px solid #ece7e2; border-radius: 12px; border-collapse: separate;">
+              {% for task in pending %}{% include 'notifications/task_monthly_summary/_summary_row.html' with task=task first=forloop.first overdue=False %}{% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if site_url %}
+        <tr>
+          <td class="pad" align="center" style="padding: 28px 32px 4px;">
+            <a href="{{ site_url }}" style="display: inline-block; background: #d1793f; color: #ffffff; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; text-decoration: none; padding: 13px 28px; border-radius: 12px;">
+              Open your board
+            </a>
+          </td>
+        </tr>
+        {% endif %}
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px;">
+            <div class="rule" style="border-top: 1px solid #f1ece7; font-size: 0; line-height: 0;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-muted" style="padding: 0 32px 28px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
+            You're getting this because monthly summaries are on for your account.{% if site_url %} <a href="{{ site_url }}" style="color: #b8623f; text-decoration: underline;">Manage your preferences</a>.{% endif %}
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

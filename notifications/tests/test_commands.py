@@ -12,6 +12,7 @@ from notifications.models import (
     NotificationEventSwitch,
     NotificationLog,
 )
+from notifications.registry import NOTIFICATIONS
 from notifications.tests.factories import NotificationEventSwitchFactory
 from tasks.models import Group, Task
 
@@ -120,20 +121,48 @@ class SyncNotificationSwitchesTests(TestCase):
         )
         self.assertIn(EVENT, output)
 
+    def test_creates_a_cell_for_every_channel_a_notification_declares(self):
+        self.run_command()
+
+        expected = {
+            (event, channel)
+            for event, notification in NOTIFICATIONS.items()
+            for channel in notification.channels
+        }
+
+        self.assertEqual(
+            set(NotificationEventSwitch.objects.values_list('event', 'channel')),
+            expected,
+        )
+
+    def test_creates_a_switch_for_every_known_channel(self):
+        self.run_command()
+
+        self.assertEqual(
+            set(NotificationChannelSwitch.objects.values_list('channel', flat=True)),
+            set(Channel.values),
+        )
+
     def test_new_switches_are_disabled(self):
         self.run_command()
 
-        self.assertFalse(NotificationChannelSwitch.objects.get().enabled)
-        switch = NotificationEventSwitch.objects.get()
-        self.assertFalse(switch.enabled)
-        self.assertFalse(switch.on_by_default)
+        self.assertFalse(
+            NotificationChannelSwitch.objects.filter(enabled=True).exists()
+        )
+        self.assertFalse(NotificationEventSwitch.objects.filter(enabled=True).exists())
+        self.assertFalse(
+            NotificationEventSwitch.objects.filter(on_by_default=True).exists()
+        )
 
     def test_running_twice_creates_nothing_new(self):
         self.run_command()
+        channels = NotificationChannelSwitch.objects.count()
+        events = NotificationEventSwitch.objects.count()
+
         output = self.run_command()
 
-        self.assertEqual(NotificationChannelSwitch.objects.count(), 1)
-        self.assertEqual(NotificationEventSwitch.objects.count(), 1)
+        self.assertEqual(NotificationChannelSwitch.objects.count(), channels)
+        self.assertEqual(NotificationEventSwitch.objects.count(), events)
         self.assertIn('Already in sync', output)
 
     def test_leaves_an_enabled_switch_alone(self):
@@ -142,7 +171,7 @@ class SyncNotificationSwitchesTests(TestCase):
 
         self.run_command()
 
-        self.assertTrue(NotificationEventSwitch.objects.get().enabled)
+        self.assertFalse(NotificationEventSwitch.objects.filter(enabled=False).exists())
 
     def test_reports_a_switch_no_longer_registered(self):
         NotificationEventSwitchFactory(event='retired_event')

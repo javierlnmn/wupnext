@@ -1,0 +1,19 @@
+Hi {{ user.first_name|default:user.username }},
+
+Here's how {{ period_start|date:"F Y" }} went.
+{% if completed %}
+COMPLETED ({{ completed|length }}) - {{ completed_weight }} weight
+{% for entry in completed %}  - {{ entry.task.name }}{% if entry.task.group %} [{{ entry.task.group.name }}]{% endif %} (weight {{ entry.task.weight }})
+    done {{ entry.finished|date:"M j" }}{% if entry.target %}, target {{ entry.target|date:"M j" }} - {% if entry.days == 0 %}on time{% elif entry.on_time %}{{ entry.days }} day{{ entry.days|pluralize }} early{% else %}{{ entry.days }} day{{ entry.days|pluralize }} late{% endif %}{% else %}, no target{% endif %}
+{% endfor %}{% endif %}{% if overdue %}
+OVERDUE ({{ overdue|length }})
+{% for task in overdue %}  - {{ task.name }}{% if task.group %} [{{ task.group.name }}]{% endif %} (weight {{ task.weight }}, due {{ task.due_date|date:"M j" }})
+{% endfor %}{% endif %}{% if pending %}
+STILL OPEN ({{ pending|length }})
+{% for task in pending %}  - {{ task.name }}{% if task.group %} [{{ task.group.name }}]{% endif %} (weight {{ task.weight }}{% if task.due_date %}, due {{ task.due_date|date:"M j" }}{% else %}, no deadline{% endif %})
+{% endfor %}{% endif %}{% if site_url %}
+Open your board: {{ site_url }}
+{% endif %}
+You're getting this because monthly summaries are on for your account.
+
+WupNext

@@ -5,7 +5,7 @@ from notifications.base import BaseBulkNotification
 from notifications.models import Channel
 from notifications.registry import register
 
-from ..models import Task
+from ...models import Task
 
 
 @register

@@ -10,8 +10,8 @@ from notifications.email_previews import (
     register,
 )
 
-from .models import Group, Task
-from .notifications.due_reminders import DueReminderNotification
+from ...models import Group, Task
+from ..notifications.due_reminders import DueReminderNotification
 
 
 @register

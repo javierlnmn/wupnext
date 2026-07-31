@@ -1,0 +1,19 @@
+<tr>
+  <td class="row" style="padding: 13px 15px;{% if not first %} border-top: 1px solid #f1ece7;{% endif %}">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td colspan="2" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1.4;">
+          <span class="t-strong" style="color: #1e293b;">{{ entry.task.name }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="t-muted" style="padding-top: 6px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.2; color: #94a3b8;">
+          done {{ entry.finished|date:"M j" }}{% if entry.target %} &middot; target {{ entry.target|date:"M j" }}{% endif %}{% if entry.task.weight %} &middot; weight {{ entry.task.weight }}{% endif %}
+        </td>
+        <td align="right" style="padding-top: 6px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1;">
+          {% if entry.task.group %}<span style="display: inline-block; font-weight: 600; color: {{ entry.task.group.color }}; background-color: {{ entry.task.group.color }}1a; border-radius: 20px; padding: 4px 9px; margin-right: 4px;">{{ entry.task.group.name }}</span>{% endif %}{% if not entry.target %}<span style="display: inline-block; font-weight: 600; color: #64748b; background: #f1f5f9; border-radius: 20px; padding: 4px 9px;">No target</span>{% elif entry.days == 0 %}<span style="display: inline-block; font-weight: 600; color: #15803d; background: #dcfce7; border-radius: 20px; padding: 4px 9px;">On time</span>{% elif entry.on_time %}<span style="display: inline-block; font-weight: 600; color: #15803d; background: #dcfce7; border-radius: 20px; padding: 4px 9px;">{{ entry.days }}d early</span>{% else %}<span style="display: inline-block; font-weight: 600; color: #be123c; background: #ffe4e6; border-radius: 20px; padding: 4px 9px;">{{ entry.days }}d late</span>{% endif %}
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
