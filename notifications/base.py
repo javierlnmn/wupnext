@@ -6,6 +6,7 @@ class BaseNotification(ABC):
     label = ''
     description = ''
     channels = ()
+    optional = True
 
     @abstractmethod
     def context(self, user): ...

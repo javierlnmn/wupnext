@@ -17,6 +17,7 @@ from notifications.tests.factories import NotificationEventSwitchFactory
 from tasks.models import Group, Task
 
 EVENT = 'task_due_reminder'
+MANDATORY_EVENT = 'account_password_reset'
 LOCMEM = 'django.core.mail.backends.locmem.EmailBackend'
 
 
@@ -121,12 +122,13 @@ class SyncNotificationSwitchesTests(TestCase):
         )
         self.assertIn(EVENT, output)
 
-    def test_creates_a_cell_for_every_channel_a_notification_declares(self):
+    def test_creates_a_cell_for_every_channel_an_optional_notification_declares(self):
         self.run_command()
 
         expected = {
             (event, channel)
             for event, notification in NOTIFICATIONS.items()
+            if notification.optional
             for channel in notification.channels
         }
 
@@ -172,6 +174,21 @@ class SyncNotificationSwitchesTests(TestCase):
         self.run_command()
 
         self.assertFalse(NotificationEventSwitch.objects.filter(enabled=False).exists())
+
+    def test_creates_no_switch_for_a_notification_that_is_not_optional(self):
+        self.run_command()
+
+        self.assertFalse(
+            NotificationEventSwitch.objects.filter(event=MANDATORY_EVENT).exists()
+        )
+
+    def test_reports_a_switch_left_by_a_notification_that_is_not_optional(self):
+        NotificationEventSwitchFactory(event=MANDATORY_EVENT)
+
+        output = self.run_command()
+
+        self.assertIn(MANDATORY_EVENT, output)
+        self.assertIn('No longer registered', output)
 
     def test_reports_a_switch_no_longer_registered(self):
         NotificationEventSwitchFactory(event='retired_event')

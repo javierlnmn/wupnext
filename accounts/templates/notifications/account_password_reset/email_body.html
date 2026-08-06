@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>WupNext</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .page { background: #12100f !important; }
+    .card { background: #1b1817 !important; border-color: #2c2724 !important; }
+    .t-strong { color: #f2efec !important; }
+    .t-body { color: #c3bcb7 !important; }
+    .t-muted { color: #8e8681 !important; }
+    .rule { border-color: #2c2724 !important; }
+    .well { background: #211d1b !important; border-color: #2c2724 !important; }
+  }
+  @media only screen and (max-width: 620px) {
+    .pad { padding-left: 20px !important; padding-right: 20px !important; }
+  }
+</style>
+</head>
+<body class="page" style="margin: 0; padding: 0; background: #f6f4f2; -webkit-font-smoothing: antialiased;">
+
+<div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+  Choose a new password. The link expires in {{ valid_hours }} hours.
+</div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="page" style="background: #f6f4f2;">
+  <tr>
+    <td align="center" style="padding: 32px 12px 40px;">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="card" style="width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #ece7e2; border-radius: 16px; border-collapse: separate;">
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">
+                  <span class="t-strong" style="color: #0f172a;">wup</span><span style="color: #d1793f;">next.</span>
+                </td>
+                <td align="right" class="t-muted" style="font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #94a3b8;">
+                  Password reset
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-strong" style="padding: 24px 32px 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #0f172a;">
+            Choose a new password
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-body" style="padding: 12px 32px 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.55; color: #475569;">
+            Hi {{ user.first_name|default:user.username }}, someone asked to reset the password for
+            <span class="t-strong" style="color: #0f172a; font-weight: 600;">{{ user.username }}</span>.
+          </td>
+        </tr>
+
+        {% if site_url %}
+        <tr>
+          <td class="pad" align="center" style="padding: 28px 32px 4px;">
+            <a href="{{ site_url }}{{ reset_path }}" style="display: inline-block; background: #d1793f; color: #ffffff; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; text-decoration: none; padding: 13px 28px; border-radius: 12px;">
+              Set a new password
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-muted" align="center" style="padding: 14px 32px 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
+            The link works once and expires in {{ valid_hours }} hours.
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad" style="padding: 20px 32px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="well" style="background: #faf8f6; border: 1px solid #f1ece7; border-radius: 12px; border-collapse: separate;">
+              <tr>
+                <td class="t-muted" style="padding: 12px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #94a3b8; word-break: break-all;">
+                  {{ site_url }}{{ reset_path }}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        <tr>
+          <td class="pad" style="padding: 28px 32px;">
+            <div class="rule" style="border-top: 1px solid #f1ece7; font-size: 0; line-height: 0;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="pad t-muted" style="padding: 0 32px 28px; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
+            If you didn't ask for this, ignore this email &mdash; your password stays as it is. This one isn't a preference you can turn off, since it's the only way back into a locked account.
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

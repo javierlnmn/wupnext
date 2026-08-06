@@ -84,7 +84,12 @@ class NotificationService:
                 'so it can only be sent to one user at a time.'
             )
 
-        return self._get_delivery_channels_by_user(self.notification.recipients())
+        recipients = self.notification.recipients()
+
+        if not self.notification.optional:
+            return {user: list(self.channels) for user in recipients}
+
+        return self._get_delivery_channels_by_user(recipients)
 
     def _get_notification_class_path(self):
         return get_notification_path(type(self.notification))
@@ -104,7 +109,11 @@ class NotificationService:
         )
 
     def send(self, user):
-        channels = self._get_delivery_channels_for_user(user)
+        channels = (
+            self._get_delivery_channels_for_user(user)
+            if self.notification.optional
+            else list(self.channels)
+        )
 
         if not channels:
             # TODO: Log skip

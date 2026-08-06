@@ -56,6 +56,9 @@ class NotificationPreferencesForm(forms.Form):
         rows = []
 
         for event, notification in NOTIFICATIONS.items():
+            if not notification.optional:
+                continue
+
             cells = [
                 self._build_cell(event, key, site_defaults, stored)
                 for key in channel_keys

@@ -1,0 +1,11 @@
+Hi {{ user.first_name|default:user.username }},
+
+Someone asked to reset the password for your WupNext account ({{ user.username }}).
+{% if site_url %}
+Choose a new password: {{ site_url }}{{ reset_path }}
+{% endif %}
+This link works once and expires in {{ valid_hours }} hours.
+
+If you didn't ask for this, ignore this email. Your password stays as it is.
+
+WupNext

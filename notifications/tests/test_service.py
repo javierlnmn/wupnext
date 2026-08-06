@@ -423,6 +423,94 @@ class EnqueueTests(TestCase):
         self.assertEqual(self.async_task.call_count, 9)
 
 
+class MandatoryHost(SingleHost):
+    optional = False
+
+
+class MandatoryBulkHost(BaseBulkNotification, MandatoryHost):
+    def recipients(self):
+        return get_user_model().objects.filter(is_active=True)
+
+
+class MandatoryTests(TestCase):
+    """A notification that isn't optional ignores every layer of consent."""
+
+    def setUp(self):
+        self.user = UserFactory()
+        patcher = mock.patch.object(NotificationService, 'notify')
+        self.notify = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_sends_with_no_switch_rows_at_all(self):
+        NotificationService(MandatoryHost()).send(self.user)
+
+        self.assertEqual(self.notify.call_args.kwargs['channels'], [Channel.EMAIL])
+
+    def test_sends_although_the_event_is_switched_off_on_site(self):
+        _, event_switch = enable_notification()
+        event_switch.enabled = False
+        event_switch.save()
+
+        NotificationService(MandatoryHost()).send(self.user)
+
+        self.notify.assert_called_once()
+
+    def test_sends_although_the_channel_is_switched_off_on_site(self):
+        channel_switch, _ = enable_notification()
+        channel_switch.enabled = False
+        channel_switch.save()
+
+        NotificationService(MandatoryHost()).send(self.user)
+
+        self.notify.assert_called_once()
+
+    def test_sends_although_the_user_opted_out(self):
+        enable_notification()
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+
+        NotificationService(MandatoryHost()).send(self.user)
+
+        self.notify.assert_called_once()
+
+    def test_sends_nothing_when_it_declares_no_channel(self):
+        host = MandatoryHost()
+        host.channels = ()
+
+        NotificationService(host).send(self.user)
+
+        self.notify.assert_not_called()
+
+    def test_still_skips_a_user_it_does_not_apply_to(self):
+        class NothingToSay(MandatoryHost):
+            def is_applicable_for(self, user, context):
+                return False
+
+        NotificationService(NothingToSay()).send(self.user)
+
+        self.notify.assert_not_called()
+
+    def test_reads_no_switch_or_preference_row_to_decide(self):
+        with self.assertNumQueries(0):
+            NotificationService(MandatoryHost()).send(self.user)
+
+    def test_reaches_every_recipient_in_bulk(self):
+        other = UserFactory()
+
+        NotificationService(MandatoryBulkHost()).send_bulk()
+
+        self.assertCountEqual(
+            [call.args[0] for call in self.notify.call_args_list], [self.user, other]
+        )
+
+    def test_reaches_a_recipient_in_bulk_who_opted_out(self):
+        enable_notification()
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+
+        NotificationService(MandatoryBulkHost()).send_bulk()
+
+        self.notify.assert_called_once()
+
+
 class BulkOnlyTests(TestCase):
     """send_bulk and enqueue_bulk need a notification that declares recipients."""
 

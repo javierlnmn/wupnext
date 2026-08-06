@@ -11,6 +11,7 @@ from notifications.tests.factories import (
 )
 
 EVENT = 'task_due_reminder'
+MANDATORY_EVENT = 'account_password_reset'
 PUSH = 'push'
 EMAIL_FIELD = f'notify-{EVENT}-{Channel.EMAIL}'
 PUSH_FIELD = f'notify-{EVENT}-{PUSH}'
@@ -75,6 +76,38 @@ class MatrixShapeTests(TestCase):
 
         self.assertEqual(list(form.fields), ['sentinel', EMAIL_FIELD])
         self.assertEqual(form.cells, {EMAIL_FIELD: (EVENT, Channel.EMAIL)})
+
+
+class MandatoryRowTests(TestCase):
+    """A notification that isn't optional is never offered as a toggle."""
+
+    def setUp(self):
+        self.user = UserFactory()
+        enable_notification(event=MANDATORY_EVENT)
+
+    def test_gets_no_row_even_with_an_enabled_switch(self):
+        rows = NotificationPreferencesForm(user=self.user).rows
+
+        self.assertEqual(rows, [])
+
+    def test_gets_no_field_even_with_an_enabled_switch(self):
+        form = NotificationPreferencesForm(user=self.user)
+
+        self.assertEqual(list(form.fields), ['sentinel'])
+        self.assertEqual(form.cells, {})
+
+    def test_a_posted_toggle_stores_nothing(self):
+        field = f'notify-{MANDATORY_EVENT}-{Channel.EMAIL}'
+        form = NotificationPreferencesForm(
+            {'sentinel': '1', field: 'on'}, user=self.user
+        )
+
+        self.assertTrue(form.is_valid())
+        form.save()
+
+        self.assertFalse(
+            NotificationUserPreference.objects.filter(event=MANDATORY_EVENT).exists()
+        )
 
 
 class MatrixValueTests(TestCase):

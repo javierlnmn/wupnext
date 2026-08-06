@@ -10,15 +10,17 @@ from notifications.registry import NOTIFICATIONS
 
 class Command(BaseCommand):
     help = (
-        'Create a switch row for every registered notification and channel, so '
-        'they can be turned on in the admin. New rows arrive disabled. Rows left '
-        'behind by a removed notification are reported, never deleted.'
+        'Create a switch row for every registered optional notification and '
+        'channel, so they can be turned on in the admin. New rows arrive '
+        'disabled. Rows left behind by a removed notification, or by one that '
+        'stopped being optional, are reported, never deleted.'
     )
 
     def handle(self, *args, **options):
         expected = {
             (event, channel)
             for event, notification in NOTIFICATIONS.items()
+            if notification.optional
             for channel in notification.channels
         }
 
