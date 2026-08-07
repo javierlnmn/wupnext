@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.core import mail
 from django.core.management import CommandError, call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from notifications.models import (
     Channel,
@@ -58,6 +58,7 @@ class PreviewEmailTests(PreviewCommandTestCase):
         self.assertEqual(Group.objects.count(), 0)
 
 
+@override_settings(ANYMAIL={'RESEND_API_KEY': 're_test'})
 class PreviewEmailSendTests(PreviewCommandTestCase):
     def setUp(self):
         patcher = patch(
@@ -100,6 +101,22 @@ class PreviewEmailSendTests(PreviewCommandTestCase):
             self.run_command(EVENT, '--send', 'not-an-email')
 
         self.assertEqual(len(mail.outbox), 0)
+        self.get_connection.assert_not_called()
+
+    @override_settings(ANYMAIL={'RESEND_API_KEY': ''})
+    def test_rejects_a_send_without_a_resend_api_key(self):
+        with self.assertRaises(CommandError) as caught:
+            self.run_command(EVENT, '--send', 'me@example.com')
+
+        self.assertIn('RESEND_API_KEY', str(caught.exception))
+        self.assertEqual(len(mail.outbox), 0)
+        self.get_connection.assert_not_called()
+
+    @override_settings(ANYMAIL={'RESEND_API_KEY': ''})
+    def test_still_renders_without_a_resend_api_key(self):
+        output = self.run_command(EVENT)
+
+        self.assertIn('WupNext', output)
         self.get_connection.assert_not_called()
 
 

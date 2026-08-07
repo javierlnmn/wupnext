@@ -1,8 +1,9 @@
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
@@ -24,6 +25,9 @@ from notifications.tests.factories import (
 EVENT = 'task_due_reminder'
 EMAIL = [Channel.EMAIL]
 PUSH = 'push'
+LIVE_WITHOUT_KEY = override_settings(
+    EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
+)
 
 
 def reminder_context():
@@ -283,6 +287,12 @@ class SendTests(TestCase):
 
         self.notify.assert_not_called()
 
+    @LIVE_WITHOUT_KEY
+    def test_skips_a_channel_that_cannot_send(self):
+        NotificationService(SingleHost()).send(self.user)
+
+        self.notify.assert_not_called()
+
     def test_skips_a_user_the_notification_does_not_apply_to(self):
         class NothingToSay(SingleHost):
             def is_applicable_for(self, user, context):
@@ -319,6 +329,12 @@ class SendBulkTests(TestCase):
         self.event_switch.enabled = False
         self.event_switch.save()
 
+        NotificationService(BulkHost()).send_bulk()
+
+        self.notify.assert_not_called()
+
+    @LIVE_WITHOUT_KEY
+    def test_sends_nothing_when_the_channel_cannot_send(self):
         NotificationService(BulkHost()).send_bulk()
 
         self.notify.assert_not_called()
@@ -419,6 +435,12 @@ class EnqueueTests(TestCase):
         self.channel_switch.enabled = False
         self.channel_switch.save()
 
+        NotificationService(BulkHost()).enqueue_bulk()
+
+        self.async_task.assert_not_called()
+
+    @LIVE_WITHOUT_KEY
+    def test_enqueues_nothing_when_the_channel_cannot_send(self):
         NotificationService(BulkHost()).enqueue_bulk()
 
         self.async_task.assert_not_called()

@@ -1,15 +1,26 @@
+from django.conf import settings
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from accounts.tests.factories import UserFactory
 from notifications.channels.base import BaseNotificationChannel
-from notifications.channels.email import EmailChannel
-from notifications.channels.registry import CHANNELS, get_channel
+from notifications.channels.email import EmailChannel, has_resend_api_key
+from notifications.channels.registry import (
+    CHANNELS,
+    get_channel,
+    get_unavailable_channel_keys,
+)
 from notifications.exceptions import MissingRecipient, UnknownChannel
 from notifications.models import Channel
 
 EVENT = 'task_due_reminder'
+LIVE_WITHOUT_KEY = override_settings(
+    EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
+)
+LIVE_WITH_KEY = override_settings(
+    EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': 're_test'}
+)
 
 
 class BaseChannelTests(TestCase):
@@ -19,6 +30,40 @@ class BaseChannelTests(TestCase):
 
         with self.assertRaises(TypeError):
             Hookless()
+
+
+class ChannelAvailabilityTests(TestCase):
+    def test_a_channel_is_available_unless_it_says_otherwise(self):
+        class Plain(BaseNotificationChannel):
+            key = 'plain'
+
+            def deliver(self, *, user, event, context): ...
+
+        self.assertTrue(Plain().is_available())
+
+    @override_settings(ANYMAIL={'RESEND_API_KEY': ''})
+    def test_email_is_available_when_the_backend_needs_no_key(self):
+        # The test runner uses the locmem backend, which sends without a key.
+        self.assertTrue(EmailChannel().is_available())
+
+    @LIVE_WITHOUT_KEY
+    def test_email_is_unavailable_when_the_live_backend_has_no_key(self):
+        self.assertFalse(EmailChannel().is_available())
+
+    @LIVE_WITH_KEY
+    def test_email_is_available_when_the_live_backend_has_a_key(self):
+        self.assertTrue(EmailChannel().is_available())
+
+    @override_settings(ANYMAIL={})
+    def test_an_absent_key_setting_counts_as_no_key(self):
+        self.assertFalse(has_resend_api_key())
+
+    def test_nothing_is_unavailable_under_the_test_backend(self):
+        self.assertEqual(get_unavailable_channel_keys(), [])
+
+    @LIVE_WITHOUT_KEY
+    def test_email_is_listed_as_unavailable_without_a_key(self):
+        self.assertEqual(get_unavailable_channel_keys(), [Channel.EMAIL])
 
 
 class ChannelRegistryTests(TestCase):

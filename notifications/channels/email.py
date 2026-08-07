@@ -8,8 +8,18 @@ from ..models import Channel
 from .base import BaseNotificationChannel
 
 
+def has_resend_api_key():
+    return bool(settings.ANYMAIL.get('RESEND_API_KEY'))
+
+
 class EmailChannel(BaseNotificationChannel):
     key = Channel.EMAIL
+
+    def is_available(self):
+        if settings.EMAIL_BACKEND != settings.LIVE_EMAIL_BACKEND:
+            return True
+
+        return has_resend_api_key()
 
     def render(self, event, context):
         ctx = {'site_url': settings.SITE_URL, **context}

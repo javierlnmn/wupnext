@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
 from django.template import TemplateDoesNotExist
 
+from notifications.channels.email import has_resend_api_key
 from notifications.email_previews import PREVIEWS, get_preview
 from notifications.exceptions import MissingPreview
 
@@ -40,6 +41,12 @@ class Command(BaseCommand):
                 raise CommandError(
                     f"'{recipient}' is not a valid email address."
                 ) from exc
+
+            if not has_resend_api_key():
+                raise CommandError(
+                    'RESEND_API_KEY is not set, and previews always send through '
+                    f'{settings.LIVE_EMAIL_BACKEND}. Drop --send to only render.'
+                )
 
         try:
             preview = get_preview(event)

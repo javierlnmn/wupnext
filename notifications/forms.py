@@ -1,5 +1,6 @@
 from django import forms
 
+from .channels.registry import get_unavailable_channel_keys
 from .models import (
     Channel,
     NotificationChannelSwitch,
@@ -27,9 +28,13 @@ class NotificationPreferencesForm(forms.Form):
         self.rows = self._get_rows()
 
     def _get_channels(self):
-        enabled = NotificationChannelSwitch.objects.filter(
-            enabled=True, channel__in=Channel.values
-        ).values_list('channel', flat=True)
+        enabled = (
+            NotificationChannelSwitch.objects.filter(
+                enabled=True, channel__in=Channel.values
+            )
+            .exclude(channel__in=get_unavailable_channel_keys())
+            .values_list('channel', flat=True)
+        )
 
         return [{'key': key, 'label': Channel(key).label} for key in enabled]
 

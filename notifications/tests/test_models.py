@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from accounts.tests.factories import UserFactory
 from notifications.models import (
@@ -125,6 +126,30 @@ class NotificationEventSwitchTests(TestCase):
         NotificationChannelSwitchFactory(channel=Channel.EMAIL, enabled=False)
         NotificationChannelSwitchFactory(channel=PUSH, enabled=True)
         NotificationEventSwitchFactory(channel=Channel.EMAIL)
+        NotificationEventSwitchFactory(channel=PUSH, on_by_default=False)
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {PUSH: False},
+        )
+
+    @override_settings(
+        EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
+    )
+    def test_enabled_channels_drops_a_channel_that_cannot_send(self):
+        NotificationChannelSwitchFactory()
+        NotificationEventSwitchFactory()
+
+        self.assertEqual(
+            NotificationEventSwitch.get_enabled_channels_defaults_for_event(EVENT),
+            {},
+        )
+
+    @override_settings(
+        EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
+    )
+    def test_enabled_channels_keeps_a_channel_the_code_does_not_implement(self):
+        NotificationChannelSwitchFactory(channel=PUSH, enabled=True)
         NotificationEventSwitchFactory(channel=PUSH, on_by_default=False)
 
         self.assertEqual(

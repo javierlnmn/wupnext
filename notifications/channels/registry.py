@@ -26,6 +26,10 @@ def get_channels():
 CHANNELS = get_channels()
 
 
+def get_unavailable_channel_keys():
+    return [key for key, channel in CHANNELS.items() if not channel.is_available()]
+
+
 def get_channel(key):
     channel = CHANNELS.get(key)
 

@@ -41,6 +41,8 @@ class NotificationEventSwitch(models.Model):
 
     @classmethod
     def get_enabled_channels_defaults_for_event(cls, event):
+        from .channels.registry import get_unavailable_channel_keys
+
         return dict(
             cls.objects.filter(
                 event=event,
@@ -48,7 +50,9 @@ class NotificationEventSwitch(models.Model):
                 channel__in=NotificationChannelSwitch.objects.filter(
                     enabled=True
                 ).values('channel'),
-            ).values_list('channel', 'on_by_default')
+            )
+            .exclude(channel__in=get_unavailable_channel_keys())
+            .values_list('channel', 'on_by_default')
         )
 
 

@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 
 from accounts.tests.factories import UserFactory
 from notifications.forms import NotificationPreferencesForm
@@ -46,6 +47,18 @@ class MatrixShapeTests(TestCase):
         NotificationChannelSwitchFactory(channel=PUSH)
 
         self.assertEqual(self.form().channels, [])
+
+    @override_settings(
+        EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
+    )
+    def test_a_channel_that_cannot_send_is_not_a_column(self):
+        enable_notification()
+
+        form = self.form()
+
+        self.assertEqual(form.channels, [])
+        self.assertEqual(form.rows, [])
+        self.assertEqual(list(form.fields), ['sentinel'])
 
     def test_a_row_per_event_with_a_cell_the_site_allows(self):
         enable_notification()
