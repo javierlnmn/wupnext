@@ -218,6 +218,39 @@ Q_CLUSTER = {
 }
 
 
+# Logging
+# Merged over Django's own DEFAULT_LOGGING; disable_existing_loggers would
+# silence django_q and anymail along with it.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'notifications': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
 # Accounts redirect urls
 LOGIN_REDIRECT_URL = 'tasks:board'
 LOGIN_URL = 'accounts:login'

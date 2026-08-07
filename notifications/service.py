@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 FANOUT_JOB = 'notifications.jobs.send_notification_to_user'
 
+SKIP_DISABLED_ON_SITE = 'no channel is enabled on site for this event'
+SKIP_NO_CHANNEL_DECLARED = 'the notification declares no channel'
+SKIP_USER_OPTED_OUT = 'the user opted out of every enabled channel'
+SKIP_NOT_APPLICABLE = 'the notification had nothing to say for this user'
+SKIP_ALREADY_SENT = 'it already went out under the same dedup key'
+
 
 class NotificationService:
     def __init__(self, notification):
@@ -43,22 +49,44 @@ class NotificationService:
             if user_stored_preferences.get(channel, on_by_default)
         ]
 
+    def _log_skip(self, user, reason, channel=None):
+        # user.pk, never the user: __str__ puts their name in the log file.
+        logger.info(
+            'Skipped %s for user %s%s: %s',
+            self.event,
+            user.pk,
+            f' on {channel}' if channel else '',
+            reason,
+        )
+
     def _get_delivery_channels_for_user(self, user):
         channel_defaults = self._get_enabled_channels_defaults()
 
         if not channel_defaults:
+            self._log_skip(user, SKIP_DISABLED_ON_SITE)
             return []
 
         stored = NotificationUserPreference.get_user_stored_preferences_for_event(
             user, self.event, channel_defaults
         )
+        channels = self._get_enabled_channels_for_user_preferences(
+            channel_defaults, stored
+        )
 
-        return self._get_enabled_channels_for_user_preferences(channel_defaults, stored)
+        if not channels:
+            self._log_skip(user, SKIP_USER_OPTED_OUT)
+
+        return channels
 
     def _get_delivery_channels_by_user(self, users):
         channel_defaults = self._get_enabled_channels_defaults()
 
         if not channel_defaults:
+            logger.info(
+                'Skipped %s for every recipient: %s',
+                self.event,
+                SKIP_DISABLED_ON_SITE,
+            )
             return {}
 
         users = list(users)
@@ -72,8 +100,11 @@ class NotificationService:
                 channel_defaults, stored.get(user.pk, {})
             )
 
-            if enabled_channels:
-                deliveries[user] = enabled_channels
+            if not enabled_channels:
+                self._log_skip(user, SKIP_USER_OPTED_OUT)
+                continue
+
+            deliveries[user] = enabled_channels
 
         return deliveries
 
@@ -98,7 +129,7 @@ class NotificationService:
         context = self.notification.context(user)
 
         if not self.notification.is_applicable_for(user, context):
-            # TODO: Log skip
+            self._log_skip(user, SKIP_NOT_APPLICABLE)
             return
 
         self.notify(
@@ -116,7 +147,9 @@ class NotificationService:
         )
 
         if not channels:
-            # TODO: Log skip
+            if not self.notification.optional:
+                self._log_skip(user, SKIP_NO_CHANNEL_DECLARED)
+
             return
 
         self._deliver(user, channels)
@@ -126,7 +159,7 @@ class NotificationService:
             try:
                 self._deliver(user, channels)
             except Exception:
-                logger.exception('Failed to send %s to %s', self.event, user)
+                logger.exception('Failed to send %s to user %s', self.event, user.pk)
 
     def enqueue_bulk(self):
         notification_class_path = self._get_notification_class_path()
@@ -142,6 +175,7 @@ class NotificationService:
             log, to_be_sent = self._check_dedup_logs(user, channel_key, dedup_key)
 
             if not to_be_sent:
+                self._log_skip(user, SKIP_ALREADY_SENT, channel=channel_key)
                 continue
 
             try:

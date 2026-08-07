@@ -16,7 +16,14 @@ from notifications.exceptions import (
 )
 from notifications.jobs import send_notification_to_user
 from notifications.models import Channel, NotificationLog
-from notifications.service import NotificationService
+from notifications.service import (
+    SKIP_ALREADY_SENT,
+    SKIP_DISABLED_ON_SITE,
+    SKIP_NO_CHANNEL_DECLARED,
+    SKIP_NOT_APPLICABLE,
+    SKIP_USER_OPTED_OUT,
+    NotificationService,
+)
 from notifications.tests.factories import (
     NotificationUserPreferenceFactory,
     enable_notification,
@@ -548,6 +555,101 @@ class MandatoryTests(TestCase):
         NotificationService(MandatoryBulkHost()).send_bulk()
 
         self.notify.assert_called_once()
+
+
+class SkipLoggingTests(TestCase):
+    """Every path that drops a user says why, so a missing email is traceable."""
+
+    def setUp(self):
+        self.user = UserFactory()
+
+    def skips(self, run):
+        with self.assertLogs('notifications.service', level='INFO') as caught:
+            run()
+
+        return '\n'.join(caught.output)
+
+    def test_names_the_site_switch_when_nothing_is_enabled(self):
+        output = self.skips(lambda: NotificationService(SingleHost()).send(self.user))
+
+        self.assertIn(SKIP_DISABLED_ON_SITE, output)
+
+    def test_names_the_user_when_they_opted_out(self):
+        enable_notification()
+        NotificationUserPreferenceFactory(user=self.user, enabled=False)
+
+        output = self.skips(lambda: NotificationService(SingleHost()).send(self.user))
+
+        self.assertIn(SKIP_USER_OPTED_OUT, output)
+
+    def test_names_the_missing_channel_on_a_mandatory_notification(self):
+        host = MandatoryHost()
+        host.channels = ()
+
+        output = self.skips(lambda: NotificationService(host).send(self.user))
+
+        self.assertIn(SKIP_NO_CHANNEL_DECLARED, output)
+
+    def test_gives_one_line_per_skip_and_not_two(self):
+        # send() stays quiet on the optional path precisely so the reason the
+        # resolver already logged does not arrive a second time.
+        output = self.skips(lambda: NotificationService(SingleHost()).send(self.user))
+
+        self.assertEqual(output.count('Skipped'), 1)
+        self.assertIn(SKIP_DISABLED_ON_SITE, output)
+
+    def test_names_applicability_when_there_is_nothing_to_say(self):
+        class NothingToSay(MandatoryHost):
+            def is_applicable_for(self, user, context):
+                return False
+
+        output = self.skips(lambda: NotificationService(NothingToSay()).send(self.user))
+
+        self.assertIn(SKIP_NOT_APPLICABLE, output)
+
+    def test_names_dedup_and_the_channel_on_a_repeat_send(self):
+        service = NotificationService(SingleHost())
+        service.notify(self.user, channels=EMAIL, dedup_key='day-1')
+
+        output = self.skips(
+            lambda: service.notify(self.user, channels=EMAIL, dedup_key='day-1')
+        )
+
+        self.assertIn(SKIP_ALREADY_SENT, output)
+        self.assertIn(Channel.EMAIL, output)
+
+    def test_logs_the_id_rather_than_the_person(self):
+        output = self.skips(lambda: NotificationService(SingleHost()).send(self.user))
+
+        self.assertIn(str(self.user.pk), output)
+        self.assertNotIn(self.user.username, output)
+
+    def test_a_bulk_batch_reports_the_site_switch_once(self):
+        UserFactory()
+
+        with self.assertLogs('notifications.service', level='INFO') as caught:
+            NotificationService(BulkHost()).send_bulk()
+
+        self.assertEqual(len(caught.output), 1)
+        self.assertIn('every recipient', caught.output[0])
+
+    def test_a_bulk_batch_names_each_user_who_opted_out(self):
+        enable_notification()
+        other = UserFactory()
+        for user in (self.user, other):
+            NotificationUserPreferenceFactory(user=user, enabled=False)
+
+        output = self.skips(lambda: NotificationService(BulkHost()).send_bulk())
+
+        self.assertEqual(output.count(SKIP_USER_OPTED_OUT), 2)
+        for user in (self.user, other):
+            self.assertIn(str(user.pk), output)
+
+    def test_a_delivered_notification_logs_no_skip(self):
+        enable_notification()
+
+        with self.assertNoLogs('notifications.service', level='INFO'):
+            NotificationService(SingleHost()).send(self.user)
 
 
 class BulkOnlyTests(TestCase):
