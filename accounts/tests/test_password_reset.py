@@ -38,7 +38,7 @@ class NotificationTests(TestCase):
         notification = PasswordResetNotification()
         context = notification.context(self.user)
 
-        self.assertEqual(notification.dedup_key(self.user, context), '')
+        self.assertIsNone(notification.dedup_key(self.user, context))
 
     def test_builds_a_path_the_confirm_view_accepts(self):
         context = PasswordResetNotification().context(self.user)
@@ -171,7 +171,14 @@ class ConsentBypassTests(TestCase):
         self.request_reset()
 
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(NotificationLog.objects.count(), 0)
+
+    def test_every_send_is_recorded(self):
+        self.request_reset()
+        self.request_reset()
+
+        logs = NotificationLog.objects.filter(user=self.user, event=EVENT)
+        self.assertEqual(logs.count(), 2)
+        self.assertEqual([log.dedup_key for log in logs], [None, None])
 
 
 @override_settings(SITE_URL=SITE_URL, STORAGES=PLAIN_STATIC)

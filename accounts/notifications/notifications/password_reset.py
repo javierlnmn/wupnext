@@ -21,9 +21,6 @@ class PasswordResetNotification(BaseNotification):
     def is_applicable_for(self, user, context):
         return True
 
-    def dedup_key(self, user, context):
-        return ''  # Bypass dedup log. TODO: Turn dedup into actual log
-
     def _get_reset_path(self, user):
         return reverse(
             'accounts:password_reset_confirm',

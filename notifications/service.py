@@ -134,27 +134,26 @@ class NotificationService:
         for user in self._get_notification_deliveries():
             async_task(FANOUT_JOB, notification_class_path, user.pk)
 
-    def notify(self, user, *, channels, context=None, dedup_key=''):
+    def notify(self, user, *, channels, context=None, dedup_key=None):
         context = context or {}
         resolved = {key: get_channel(key) for key in channels}
 
         for channel_key, channel in resolved.items():
-            log = None
+            log, to_be_sent = self._check_dedup_logs(user, channel_key, dedup_key)
 
-            if dedup_key:
-                log, created = NotificationLog.objects.get_or_create(
-                    user=user,
-                    event=self.event,
-                    channel=channel_key,
-                    dedup_key=dedup_key,
-                )
-
-                if not created:
-                    continue
+            if not to_be_sent:
+                continue
 
             try:
                 channel.deliver(user=user, event=self.event, context=context)
             except Exception:
-                if log is not None:
-                    log.delete()
+                log.delete()
                 raise
+
+    def _check_dedup_logs(self, user, channel_key, dedup_key):
+        row = {'user': user, 'event': self.event, 'channel': channel_key}
+
+        if not dedup_key:
+            return NotificationLog.objects.create(**row, dedup_key=None), True
+
+        return NotificationLog.objects.get_or_create(**row, dedup_key=dedup_key)

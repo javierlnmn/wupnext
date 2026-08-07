@@ -14,8 +14,8 @@ class BaseNotification(ABC):
     @abstractmethod
     def is_applicable_for(self, user, context): ...
 
-    @abstractmethod
-    def dedup_key(self, user, context): ...
+    def dedup_key(self, user, context):
+        return None
 
 
 class BaseBulkNotification(BaseNotification):

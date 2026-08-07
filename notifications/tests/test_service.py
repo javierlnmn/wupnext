@@ -108,11 +108,28 @@ class NotifyTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(NotificationLog.objects.count(), 2)
 
-    def test_without_dedup_key_never_logs(self):
+    def test_without_dedup_key_logs_every_send(self):
         self.notify()
         self.notify()
 
         self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(NotificationLog.objects.count(), 2)
+
+    def test_a_keyless_log_records_what_went_out(self):
+        self.notify()
+
+        log = NotificationLog.objects.get()
+        self.assertEqual(log.user, self.user)
+        self.assertEqual(log.event, EVENT)
+        self.assertEqual(log.channel, Channel.EMAIL)
+        self.assertIsNone(log.dedup_key)
+
+    def test_a_keyless_log_rolls_back_when_delivery_fails(self):
+        self.user = UserFactory(email='')
+
+        with self.assertRaises(MissingRecipient):
+            self.notify()
+
         self.assertEqual(NotificationLog.objects.count(), 0)
 
     def test_missing_recipient_raises_and_rolls_back_log(self):

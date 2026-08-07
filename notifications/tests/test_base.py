@@ -14,8 +14,20 @@ class NotificationContractTests(TestCase):
     def test_a_notification_declares_every_hook_itself(self):
         self.assertEqual(
             BaseNotification.__abstractmethods__,
-            frozenset({'context', 'is_applicable_for', 'dedup_key'}),
+            frozenset({'context', 'is_applicable_for'}),
         )
+
+    def test_a_notification_does_not_have_to_deduplicate(self):
+        class Plain(BaseNotification):
+            event = 'task_due_reminder'
+
+            def context(self, user):
+                return {}
+
+            def is_applicable_for(self, user, context):
+                return True
+
+        self.assertIsNone(Plain().dedup_key(user=None, context={}))
 
     def test_a_bulk_notification_also_declares_its_recipients(self):
         self.assertIn('recipients', BaseBulkNotification.__abstractmethods__)

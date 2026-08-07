@@ -7,6 +7,7 @@ from notifications.models import (
     Channel,
     NotificationChannelSwitch,
     NotificationEventSwitch,
+    NotificationLog,
     NotificationUserPreference,
 )
 from notifications.tests.factories import (
@@ -39,6 +40,19 @@ class NotificationLogTests(TestCase):
     def test_same_key_different_user_is_allowed(self):
         NotificationLogFactory(user=UserFactory(), dedup_key='2026-07-23')
         NotificationLogFactory(user=UserFactory(), dedup_key='2026-07-23')
+
+    def test_keyless_rows_never_collide(self):
+        user = UserFactory()
+
+        NotificationLogFactory(user=user, dedup_key=None)
+        NotificationLogFactory(user=user, dedup_key=None)
+
+        self.assertEqual(NotificationLog.objects.count(), 2)
+
+    def test_str_leaves_out_a_key_that_is_not_there(self):
+        log = NotificationLogFactory(dedup_key=None)
+
+        self.assertEqual(str(log), f'task_due_reminder → {Channel.EMAIL}')
 
 
 class NotificationChannelSwitchTests(TestCase):

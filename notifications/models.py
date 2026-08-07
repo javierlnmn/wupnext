@@ -105,7 +105,7 @@ class NotificationLog(models.Model):
     )
     event = models.CharField(max_length=64)
     channel = models.CharField(max_length=32, choices=Channel.choices)
-    dedup_key = models.CharField(max_length=128)
+    dedup_key = models.CharField(max_length=128, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -118,4 +118,5 @@ class NotificationLog(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.event} → {self.channel} ({self.dedup_key})'
+        scope = f' ({self.dedup_key})' if self.dedup_key else ''
+        return f'{self.event} → {self.channel}{scope}'
