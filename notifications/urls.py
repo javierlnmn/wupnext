@@ -8,4 +8,9 @@ urlpatterns = [
     path(
         'preferences/', views.NotificationPreferencesView.as_view(), name='preferences'
     ),
+    path(
+        'unsubscribe/<str:token>/',
+        views.UnsubscribeView.as_view(),
+        name='unsubscribe',
+    ),
 ]

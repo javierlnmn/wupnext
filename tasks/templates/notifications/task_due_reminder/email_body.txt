@@ -11,5 +11,6 @@ DUE TODAY ({{ due_today|length }})
 Open your board: {{ site_url }}
 {% endif %}
 You're getting this because deadline reminders are on for your account.
-
+{% if unsubscribe_url %}Unsubscribe: {{ unsubscribe_url }}
+{% endif %}
 WupNext

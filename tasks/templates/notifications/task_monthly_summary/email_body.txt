@@ -15,5 +15,6 @@ STILL OPEN ({{ pending|length }})
 Open your board: {{ site_url }}
 {% endif %}
 You're getting this because monthly summaries are on for your account.
-
+{% if unsubscribe_url %}Unsubscribe: {{ unsubscribe_url }}
+{% endif %}
 WupNext
