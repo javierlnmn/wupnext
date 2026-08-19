@@ -37,7 +37,7 @@
       {% include 'tasks/partials/tasks/weight_badge.html' with weight=task.weight %}
       <button
         type="button"
-        onclick="addSubtask({{ task.id }})"
+        onclick="openNewSubtaskForm({{ task.id }})"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
         aria-label="Add subtask"
       >
@@ -45,7 +45,7 @@
       </button>
       <button
         type="button"
-        onclick="editTask({{ task.id }}, '{{ task.name|escapejs }}', {{ task.weight }}, {{ task.group_id|default:'null' }}, '{{ task.due_date|date:"Y-m-d" }}')"
+        onclick="openEditTaskForm({{ task.id }}, '{{ task.name|escapejs }}', {{ task.weight }}, {{ task.group_id|default:'null' }}, '{{ task.due_date|date:"Y-m-d" }}')"
         class="shrink-0 text-slate-300 dark:text-slate-600 hover:text-clay-500 dark:hover:text-clay-400 transition-colors"
         aria-label="Edit task"
       >

@@ -13,7 +13,7 @@
     <span class="px-1 text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ group.pending_count }}</span>
     <button
       type="button"
-      onclick="window.dispatchEvent(new CustomEvent('edit-group', { detail: { id: {{ group.id }}, name: '{{ group.name|escapejs }}', color: '{{ group.color }}' } }))"
+      onclick="openEditGroupForm({{ group.id }}, '{{ group.name|escapejs }}', '{{ group.color }}')"
       class="w-10 h-10 grid place-items-center shrink-0 rounded-lg text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
       aria-label="Edit group"
     >

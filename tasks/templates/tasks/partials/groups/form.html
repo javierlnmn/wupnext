@@ -1,8 +1,7 @@
 {% load ui %}
 <div
   x-data="groupForm()"
-  @new-group.window="openNew()"
-  @edit-group.window="openEdit($event.detail)"
+  @open-group.window="openGroup($event.detail)"
   @group-saved="groupOpen = false"
   @keydown.escape.window="groupOpen = false"
 >
@@ -75,20 +74,22 @@
       gId: null,
       gName: '',
       gColor: '{{ default_task_group_color }}',
-      openNew() {
+      openGroup(detail) {
+        this.gId = detail.id ?? null
+        this.gName = detail.name ?? ''
+        this.gColor = detail.color ?? '{{ default_task_group_color }}'
         this.groupOpen = true
-        this.gId = null
-        this.gName = ''
-        this.gColor = '{{ default_task_group_color }}'
-      },
-      openEdit(detail) {
-        this.groupOpen = true
-        this.gId = detail.id
-        this.gName = detail.name
-        this.gColor = detail.color
       },
     }))
   })
+
+  function openNewGroupForm() {
+    window.dispatchEvent(new CustomEvent('open-group', { detail: {} }))
+  }
+
+  function openEditGroupForm(id, name, color) {
+    window.dispatchEvent(new CustomEvent('open-group', { detail: { id, name, color } }))
+  }
 
   function groupFormComplete(event) {
     if (event.detail.successful) {

@@ -3,12 +3,12 @@
   x-data="taskForm()"
   @keydown.escape.window="open = false"
   @task-saved="open = false; reset()"
-  @edit-task.window="openEdit($event.detail)"
-  @add-subtask.window="openSubtask($event.detail.parentId)"
+  @open-task.window="openTask($event.detail)"
+  @open-subtask.window="openSubtask($event.detail)"
 >
   <button
     type="button"
-    @click="openNew({% if active_task_group %}{{ active_task_group.id }}{% else %}null{% endif %})"
+    @click="openNewTaskForm({% if active_task_group %}{{ active_task_group.id }}{% else %}null{% endif %})"
     class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-clay-500 hover:bg-clay-600 text-white transition-all flex items-center justify-center"
     aria-label="Add task"
   >
@@ -17,7 +17,7 @@
 
   {% drawer openStateKey="open" %}
     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-      <h2 class="text-lg font-bold text-slate-900 dark:text-white" x-text="taskId ? 'Edit task' : (parentId ? 'New subtask' : 'New task')"></h2>
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white" x-text="parentId ? (taskId ? 'Edit subtask' : 'New subtask') : (taskId ? 'Edit task' : 'New task')"></h2>
       <button
         type="button"
         @click="open = false"
@@ -65,7 +65,7 @@
           type="date"
           name="due_date"
           id="task-due"
-          x-model="due"
+          x-model="dueDate"
           class="w-full h-11 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-[15px] text-slate-900 dark:text-white outline-none focus:border-clay-500/50 focus:ring-1 focus:ring-clay-500/30 transition-all"
         />
       </div>
@@ -109,7 +109,7 @@
       groupId: null,
       name: '',
       weight: 0,
-      due: '',
+      dueDate: '',
       hover: 0,
       reset() {
         this.taskId = null
@@ -117,37 +117,42 @@
         this.groupId = null
         this.name = ''
         this.weight = 0
-        this.due = ''
+        this.dueDate = ''
         this.hover = 0
       },
-      openNew(groupId) {
+      openTask(detail = {}) {
         this.reset()
-        this.groupId = groupId
+        this.taskId = detail.id ?? null
+        this.name = detail.name ?? ''
+        this.weight = detail.weight ?? 0
+        this.groupId = detail.groupId ?? null
+        this.dueDate = detail.dueDate ?? ''
         this.open = true
       },
-      openSubtask(parentId) {
+      openSubtask(detail) {
         this.reset()
-        this.parentId = parentId
-        this.open = true
-      },
-      openEdit(detail) {
-        this.reset()
-        this.taskId = detail.id
-        this.name = detail.name
-        this.weight = detail.weight
-        this.groupId = detail.group
-        this.due = detail.due
+        this.taskId = detail.id ?? null
+        this.parentId = detail.parentId
+        this.name = detail.name ?? ''
         this.open = true
       },
     }))
   })
 
-  function editTask(id, name, weight, group, due) {
-    window.dispatchEvent(new CustomEvent('edit-task', { detail: { id, name, weight, group, due } }))
+  function openNewTaskForm(groupId) {
+    window.dispatchEvent(new CustomEvent('open-task', { detail: { groupId } }))
   }
 
-  function addSubtask(parentId) {
-    window.dispatchEvent(new CustomEvent('add-subtask', { detail: { parentId } }))
+  function openEditTaskForm(id, name, weight, groupId, dueDate) {
+    window.dispatchEvent(new CustomEvent('open-task', { detail: { id, name, weight, groupId, dueDate } }))
+  }
+
+  function openNewSubtaskForm(parentId) {
+    window.dispatchEvent(new CustomEvent('open-subtask', { detail: { parentId } }))
+  }
+
+  function openEditSubtaskForm(id, name, parentId) {
+    window.dispatchEvent(new CustomEvent('open-subtask', { detail: { id, name, parentId } }))
   }
 
   function taskFormComplete(event) {

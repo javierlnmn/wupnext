@@ -2,7 +2,7 @@
 <div
   x-data="{ manageOpen: false }"
   @open-manage-groups.window="manageOpen = true"
-  @edit-group.window="manageOpen = false"
+  @open-group.window="manageOpen = false"
   @keydown.escape.window="manageOpen = false"
 >
   {% drawer openStateKey="manageOpen" %}

@@ -21,7 +21,7 @@
     </span>
     <button
       type="button"
-      onclick="window.dispatchEvent(new CustomEvent('edit-group', { detail: { id: {{ group.id }}, name: '{{ group.name|escapejs }}', color: '{{ group.color }}' } }))"
+      onclick="openEditGroupForm({{ group.id }}, '{{ group.name|escapejs }}', '{{ group.color }}')"
       class="p-1 rounded-md text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
       aria-label="Edit group"
     >
@@ -42,7 +42,7 @@
 
 <button
   type="button"
-  onclick="window.dispatchEvent(new CustomEvent('new-group'))"
+  onclick="openNewGroupForm()"
   class="shrink-0 lg:w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-clay-600 dark:hover:text-clay-400 hover:border-clay-400 dark:hover:border-clay-600 transition-colors"
 >
   {% include 'common/icons/plus.html' with class='w-4 h-4 shrink-0' stroke='1.8' %}
