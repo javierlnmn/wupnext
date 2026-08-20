@@ -13,4 +13,9 @@ urlpatterns = [
         views.UnsubscribeView.as_view(),
         name='unsubscribe',
     ),
+    path(
+        'unsubscribe/<str:token>/one-click/',
+        views.OneClickUnsubscribeView.as_view(),
+        name='unsubscribe-one-click',
+    ),
 ]

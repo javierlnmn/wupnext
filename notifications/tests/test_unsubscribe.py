@@ -1,5 +1,5 @@
 from django.core import mail, signing
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from accounts.notifications.notifications.password_reset import (
@@ -22,6 +22,13 @@ PLAIN_STATIC = {
 }
 
 
+def token_for(user, event, channel=Channel.EMAIL):
+    return signing.dumps(
+        {'user': user.pk, 'event': event, 'channel': channel},
+        salt=UNSUBSCRIBE_SALT,
+    )
+
+
 @override_settings(SITE_URL=SITE_URL, STORAGES=PLAIN_STATIC)
 class UnsubscribeViewTests(TestCase):
     def setUp(self):
@@ -29,12 +36,10 @@ class UnsubscribeViewTests(TestCase):
         self.url = self.url_for(self.user, EVENT)
 
     def url_for(self, user, event, channel=Channel.EMAIL):
-        token = signing.dumps(
-            {'user': user.pk, 'event': event, 'channel': channel},
-            salt=UNSUBSCRIBE_SALT,
+        return reverse(
+            'notifications:unsubscribe',
+            kwargs={'token': token_for(user, event, channel)},
         )
-
-        return reverse('notifications:unsubscribe', kwargs={'token': token})
 
     def preference(self):
         return NotificationUserPreference.objects.filter(
@@ -194,3 +199,123 @@ class UnsubscribeLinkTests(TestCase):
         message = self.send_reminder()
 
         self.assertNotIn('/notifications/unsubscribe/', message.body)
+
+
+@override_settings(SITE_URL=SITE_URL, STORAGES=PLAIN_STATIC)
+class OneClickUnsubscribeViewTests(TestCase):
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True)
+        self.user = UserFactory()
+        self.url = self.url_for(self.user, EVENT)
+
+    def url_for(self, user, event, channel=Channel.EMAIL):
+        return reverse(
+            'notifications:unsubscribe-one-click',
+            kwargs={'token': token_for(user, event, channel)},
+        )
+
+    def preference(self):
+        return NotificationUserPreference.objects.filter(
+            user=self.user, event=EVENT, channel=Channel.EMAIL
+        ).first()
+
+    def post_one_click(self, url):
+        return self.client.post(url, data={'List-Unsubscribe': 'One-Click'})
+
+    def test_post_without_a_csrf_token_disables_the_preference(self):
+        response = self.post_one_click(self.url)
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(self.preference().enabled)
+
+    def test_the_confirmation_page_still_demands_a_csrf_token(self):
+        url = reverse(
+            'notifications:unsubscribe',
+            kwargs={'token': token_for(self.user, EVENT)},
+        )
+
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertIsNone(self.preference())
+
+    def test_it_answers_a_bare_post_too(self):
+        self.assertEqual(self.client.post(self.url).status_code, 204)
+        self.assertFalse(self.preference().enabled)
+
+    def test_get_only_offers_the_choice(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, 'Stop receiving')
+        self.assertIsNone(self.preference())
+
+    def test_unsubscribing_twice_is_harmless(self):
+        self.post_one_click(self.url)
+        self.post_one_click(self.url)
+
+        self.assertFalse(self.preference().enabled)
+        self.assertEqual(NotificationUserPreference.objects.count(), 1)
+
+    def test_a_tampered_token_is_refused(self):
+        url = reverse(
+            'notifications:unsubscribe-one-click', kwargs={'token': 'not-a-token'}
+        )
+
+        self.assertEqual(self.post_one_click(url).status_code, 404)
+        self.assertIsNone(self.preference())
+
+    def test_a_notification_that_is_not_optional_stores_no_opt_out(self):
+        url = self.url_for(self.user, PasswordResetNotification.event)
+
+        self.assertEqual(self.post_one_click(url).status_code, 204)
+        self.assertFalse(NotificationUserPreference.objects.exists())
+
+    def test_a_deleted_user_is_refused(self):
+        self.user.delete()
+
+        self.assertEqual(self.post_one_click(self.url).status_code, 404)
+
+
+@override_settings(SITE_URL=SITE_URL, STORAGES=PLAIN_STATIC)
+class UnsubscribeHeaderTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        enable_notification()
+
+    def send_reminder(self):
+        NotificationService(DueReminderNotification()).notify(
+            self.user,
+            channels=[Channel.EMAIL],
+            context=DueReminderNotification().context(self.user),
+        )
+        return mail.outbox[0]
+
+    def test_the_reminder_carries_the_one_click_pair(self):
+        headers = self.send_reminder().extra_headers
+
+        self.assertTrue(
+            headers['List-Unsubscribe'].startswith(
+                f'<{SITE_URL}/notifications/unsubscribe/'
+            )
+        )
+        self.assertTrue(headers['List-Unsubscribe'].endswith('/one-click/>'))
+        self.assertEqual(headers['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click')
+
+    def test_the_header_url_actually_unsubscribes(self):
+        url = self.send_reminder().extra_headers['List-Unsubscribe'].strip('<>')
+
+        response = Client(enforce_csrf_checks=True).post(
+            url[len(SITE_URL) :], data={'List-Unsubscribe': 'One-Click'}
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(
+            NotificationUserPreference.objects.get(user=self.user, event=EVENT).enabled
+        )
+
+    def test_the_password_reset_email_carries_no_header(self):
+        NotificationService(PasswordResetNotification()).send(self.user)
+
+        self.assertNotIn('List-Unsubscribe', mail.outbox[0].extra_headers)
+
+    @override_settings(SITE_URL='')
+    def test_no_header_without_a_site_url_to_hang_it_on(self):
+        self.assertNotIn('List-Unsubscribe', self.send_reminder().extra_headers)

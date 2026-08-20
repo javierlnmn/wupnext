@@ -28,7 +28,7 @@ class EmailChannel(BaseNotificationChannel):
 
         return has_resend_api_key()
 
-    def _get_unsubscribe_url(self, event, user):
+    def _get_unsubscribe_token(self, event, user):
         notification = NOTIFICATIONS.get(event)
 
         if notification is None or not notification.optional:
@@ -37,13 +37,36 @@ class EmailChannel(BaseNotificationChannel):
         if user is None or user.pk is None or not settings.SITE_URL:
             return None
 
-        token = signing.dumps(
+        return signing.dumps(
             {'user': user.pk, 'event': event, 'channel': self.key},
             salt=UNSUBSCRIBE_SALT,
         )
-        path = reverse('notifications:unsubscribe', kwargs={'token': token})
+
+    def _build_unsubscribe_url(self, url_name, token):
+        path = reverse(url_name, kwargs={'token': token})
 
         return f'{settings.SITE_URL}{path}'
+
+    def _get_unsubscribe_url(self, event, user):
+        token = self._get_unsubscribe_token(event, user)
+
+        if token is None:
+            return None
+
+        return self._build_unsubscribe_url('notifications:unsubscribe', token)
+
+    def _get_unsubscribe_headers(self, event, user):
+        token = self._get_unsubscribe_token(event, user)
+
+        if token is None:
+            return None
+
+        url = self._build_unsubscribe_url('notifications:unsubscribe-one-click', token)
+
+        return {
+            'List-Unsubscribe': f'<{url}>',
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        }
 
     def render(self, event, context):
         ctx = {
@@ -63,8 +86,10 @@ class EmailChannel(BaseNotificationChannel):
 
         return subject, body, html
 
-    def build_message(self, subject, body, html, to):
-        message = EmailMultiAlternatives(subject=subject, body=body, to=to)
+    def build_message(self, subject, body, html, to, headers=None):
+        message = EmailMultiAlternatives(
+            subject=subject, body=body, to=to, headers=headers
+        )
         if html:
             message.attach_alternative(html, 'text/html')
         return message
@@ -75,4 +100,10 @@ class EmailChannel(BaseNotificationChannel):
             raise MissingRecipient(f'No email address for {user}')
 
         subject, body, html = self.render(event, {**context, 'user': user})
-        self.build_message(subject, body, html, [recipient]).send()
+        self.build_message(
+            subject,
+            body,
+            html,
+            [recipient],
+            headers=self._get_unsubscribe_headers(event, user),
+        ).send()
