@@ -25,12 +25,20 @@
       <p class="text-[15px] font-semibold text-slate-900 dark:text-white">
         You're unsubscribed
       </p>
+      {% if everything %}
+      <p class="mt-2 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+        No more optional email. You still get the messages your account needs,
+        like a password reset, and you can turn any of this back on any time
+        from your preferences.
+      </p>
+      {% else %}
       <p class="mt-2 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
         No more
         <span class="text-slate-700 dark:text-slate-300">{{ notification.label|lower }}</span>
         by email. Everything else is untouched, and you can turn this back on
         any time from your preferences.
       </p>
+      {% endif %}
 
       {% else %}
 
@@ -57,6 +65,14 @@
           class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl transition-all"
         >
           Unsubscribe
+        </button>
+        <button
+          type="submit"
+          name="scope"
+          value="all"
+          class="mt-3 w-full text-[13px] text-slate-500 dark:text-slate-400 hover:text-clay-600 dark:hover:text-clay-400 transition-colors"
+        >
+          Stop all optional email instead
         </button>
       </form>
 

@@ -43,21 +43,29 @@ class UnsubscribeView(View):
 
         return notification
 
-    def _opt_out(self, payload):
+    def _get_optional_events(self):
+        return [
+            event
+            for event, notification in NOTIFICATIONS.items()
+            if notification.optional
+        ]
+
+    def _opt_out(self, payload, events):
         user = get_object_or_404(get_user_model(), pk=payload['user'])
 
-        NotificationUserPreference.objects.update_or_create(
-            user=user,
-            event=payload['event'],
-            channel=payload['channel'],
-            defaults={'enabled': False},
-        )
-        logger.info(
-            'Unsubscribed user %s from %s on %s',
-            user.pk,
-            payload['event'],
-            payload['channel'],
-        )
+        for event in events:
+            NotificationUserPreference.objects.update_or_create(
+                user=user,
+                event=event,
+                channel=payload['channel'],
+                defaults={'enabled': False},
+            )
+            logger.info(
+                'Unsubscribed user %s from %s on %s',
+                user.pk,
+                event,
+                payload['channel'],
+            )
 
     def get(self, request, token):
         payload = self._get_payload(token)
@@ -75,12 +83,14 @@ class UnsubscribeView(View):
         if notification is None:
             return redirect('tasks:board')
 
-        self._opt_out(payload)
+        everything = request.POST.get('scope') == 'all'
+        events = self._get_optional_events() if everything else [payload['event']]
+        self._opt_out(payload, events)
 
         return render(
             request,
             self.template_name,
-            {'notification': notification, 'done': True},
+            {'notification': notification, 'done': True, 'everything': everything},
         )
 
 
@@ -92,6 +102,6 @@ class OneClickUnsubscribeView(UnsubscribeView):
         payload = self._get_payload(token)
 
         if self._get_notification(payload['event']) is not None:
-            self._opt_out(payload)
+            self._opt_out(payload, [payload['event']])
 
         return HttpResponse(status=204)

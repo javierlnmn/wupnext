@@ -144,6 +144,37 @@ class UnsubscribeViewTests(TestCase):
 
         self.assertEqual(self.client.post(url).status_code, 404)
 
+    def test_scope_all_disables_every_optional_event(self):
+        self.client.post(self.url, data={'scope': 'all'})
+
+        self.assertEqual(
+            set(
+                NotificationUserPreference.objects.filter(
+                    user=self.user, enabled=False
+                ).values_list('event', flat=True)
+            ),
+            {EVENT, 'task_monthly_summary'},
+        )
+
+    def test_scope_all_leaves_the_mandatory_events_alone(self):
+        self.client.post(self.url, data={'scope': 'all'})
+
+        self.assertFalse(
+            NotificationUserPreference.objects.filter(
+                event=PasswordResetNotification.event
+            ).exists()
+        )
+
+    def test_scope_all_says_so_on_the_page(self):
+        response = self.client.post(self.url, data={'scope': 'all'})
+
+        self.assertContains(response, 'No more optional email')
+
+    def test_any_other_scope_touches_one_event_only(self):
+        self.client.post(self.url, data={'scope': 'everything'})
+
+        self.assertEqual(NotificationUserPreference.objects.count(), 1)
+
     def test_names_the_notification_being_declined(self):
         response = self.client.get(self.url)
 
@@ -253,6 +284,12 @@ class OneClickUnsubscribeViewTests(TestCase):
 
         self.assertFalse(self.preference().enabled)
         self.assertEqual(NotificationUserPreference.objects.count(), 1)
+
+    def test_a_broad_scope_in_the_post_body_is_ignored(self):
+        self.client.post(self.url, data={'scope': 'all'})
+
+        self.assertEqual(NotificationUserPreference.objects.count(), 1)
+        self.assertFalse(self.preference().enabled)
 
     def test_a_tampered_token_is_refused(self):
         url = reverse(
