@@ -1,7 +1,8 @@
 {% load ui %}
 <div
   x-data="{ prefsOpen: false, tab: 'pomodoro' }"
-  @open-preferences.window="prefsOpen = true"
+  x-init="$nextTick(openPreferencesFromUrl)"
+  @open-preferences.window="prefsOpen = true; tab = $event.detail?.tab ?? tab"
   @close-preferences="prefsOpen = false"
   @keydown.escape.window="prefsOpen = false"
 >
@@ -74,6 +75,16 @@
 </div>
 
 <script>
+  const PREFERENCES_TABS = ['pomodoro', 'notifications']
+
+  function openPreferencesFromUrl() {
+    const tab = new URLSearchParams(location.search).get('preferences')
+    if (!PREFERENCES_TABS.includes(tab)) return
+
+    window.dispatchEvent(new CustomEvent('open-preferences', { detail: { tab } }))
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
   function preferencesSaved(event) {
     if (!event.detail.successful) return
 

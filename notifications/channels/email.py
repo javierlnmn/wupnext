@@ -68,9 +68,18 @@ class EmailChannel(BaseNotificationChannel):
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         }
 
+    def _get_preferences_url(self):
+        if not settings.SITE_URL:
+            return None
+
+        path = reverse('tasks:board')
+
+        return f'{settings.SITE_URL}{path}?preferences=notifications'
+
     def render(self, event, context):
         ctx = {
             'site_url': settings.SITE_URL,
+            'preferences_url': self._get_preferences_url(),
             'unsubscribe_url': self._get_unsubscribe_url(event, context.get('user')),
             **context,
         }

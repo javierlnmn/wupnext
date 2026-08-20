@@ -15,6 +15,7 @@ from notifications.exceptions import MissingRecipient, UnknownChannel
 from notifications.models import Channel
 
 EVENT = 'task_due_reminder'
+SITE_URL = 'https://wupnext.test'
 LIVE_WITHOUT_KEY = override_settings(
     EMAIL_BACKEND=settings.LIVE_EMAIL_BACKEND, ANYMAIL={'RESEND_API_KEY': ''}
 )
@@ -104,3 +105,20 @@ class EmailChannelTests(TestCase):
 
         with self.assertRaises(MissingRecipient):
             self.channel.deliver(user=user, event=EVENT, context={})
+
+
+@override_settings(SITE_URL=SITE_URL)
+class PreferencesLinkTests(TestCase):
+    def render_reminder(self):
+        _, _, html = EmailChannel().render(EVENT, {'user': UserFactory()})
+
+        return html
+
+    def test_the_footer_opens_the_notifications_tab(self):
+        self.assertIn(
+            f'href="{SITE_URL}/?preferences=notifications"', self.render_reminder()
+        )
+
+    @override_settings(SITE_URL='')
+    def test_no_link_without_a_site_url_to_hang_it_on(self):
+        self.assertNotIn('Manage your preferences', self.render_reminder())
