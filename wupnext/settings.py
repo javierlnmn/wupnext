@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 import sys
+import warnings
 from pathlib import Path
 from shutil import which
 
@@ -35,6 +36,11 @@ ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h.strip
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
 ]
+
+# Required for OAuth as the proxy ends HTTPS connection
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+TESTING = 'test' in sys.argv
 
 
 # Application definition
@@ -220,11 +226,18 @@ Q_CLUSTER = {
     'retry': int(os.getenv('Q_RETRY', '120')),
     'catch_up': False,
     'orm': 'default',
+    # django-q logs its cluster and worker startup at INFO on its own handler.
+    'log_level': 'WARNING',
 }
 
 
 # Logging
-TESTING = 'test' in sys.argv
+
+# The MCP SDK declares a pydantic-settings field with an unresolved forward
+# reference. There is nothing to fix on our side, and it prints on every start.
+warnings.filterwarnings(
+    'ignore', message=r"Field 'lifespan' has an incomplete definition"
+)
 
 LOGGING = {
     'version': 1,
