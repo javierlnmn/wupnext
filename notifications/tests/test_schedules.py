@@ -115,7 +115,9 @@ class ScheduleFiringTests(TestCase):
         with (
             self.assertLogs('django-q', level='INFO'),
             mock.patch('django_q.conf.Conf.SYNC', True),
-            mock.patch('notifications.jobs.enqueue_bulk_notification') as job,
+            mock.patch(
+                'notifications.jobs.enqueue_bulk_notification', return_value=None
+            ) as job,
         ):
             scheduler()
 
@@ -130,7 +132,9 @@ class ScheduleFiringTests(TestCase):
         with (
             self.assertLogs('django-q', level='INFO'),
             mock.patch('django_q.conf.Conf.SYNC', True),
-            mock.patch('notifications.jobs.enqueue_bulk_notification'),
+            mock.patch(
+                'notifications.jobs.enqueue_bulk_notification', return_value=None
+            ),
         ):
             scheduler()
 

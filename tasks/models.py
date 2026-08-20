@@ -58,6 +58,8 @@ class TaskQuerySet(models.QuerySet):
 
 
 class Task(models.Model):
+    objects = TaskQuerySet.as_manager()
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -88,8 +90,6 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    objects = TaskQuerySet.as_manager()
 
     class Meta:
         ordering = ['position', 'created_at']

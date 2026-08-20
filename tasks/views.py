@@ -152,6 +152,9 @@ class ArchiveView(BoardMixin, ArchiveMixin, View):
         Task.objects.filter(
             id=task_id, user=request.user, completed_at__isnull=False
         ).update(archived_at=timezone.now())
+        Task.objects.filter(parent_id=task_id, user=request.user).update(
+            archived_at=timezone.now()
+        )
         return self.board_response()
 
     def delete(self, request, task_id):
@@ -177,6 +180,9 @@ class ArchivePeriodView(ArchiveMixin, View):
 class UnarchiveTaskView(BoardMixin, ArchiveMixin, View):
     def post(self, request, task_id):
         Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
+        Task.objects.filter(parent_id=task_id, user=request.user).update(
+            archived_at=None
+        )
         return render(
             request,
             'tasks/partials/archive/unarchive_response.html',

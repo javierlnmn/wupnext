@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 from shutil import which
 
@@ -55,7 +56,7 @@ INSTALLED_APPS = [
     'django_browser_reload',
     # Task queue / scheduler
     'django_q',
-    # Other apps
+    # Project apps
     'common',
     'accounts',
     'tasks',
@@ -219,8 +220,8 @@ Q_CLUSTER = {
 
 
 # Logging
-# Merged over Django's own DEFAULT_LOGGING; disable_existing_loggers would
-# silence django_q and anymail along with it.
+TESTING = 'test' in sys.argv
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -239,12 +240,17 @@ LOGGING = {
     'loggers': {
         'notifications': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'WARNING' if TESTING else 'INFO',
             'propagate': False,
         },
         'accounts': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'WARNING' if TESTING else 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': False,
         },
     },
