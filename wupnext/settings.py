@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # MCP Server
+    'mcp_server',
     # Tailwind
     'tailwind',
     'theme',
@@ -62,6 +64,8 @@ INSTALLED_APPS = [
     'tasks',
     'pomodoro',
     'notifications',
+    # Django OAuth Toolkit. Listed last to allow template overriding
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -262,3 +266,20 @@ LOGIN_REDIRECT_URL = 'tasks:board'
 LOGIN_URL = 'accounts:login'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 LOGOUT_URL = 'accounts:logout'
+
+
+# MCP Server
+MCP_BASE_URL = os.getenv('MCP_BASE_URL', 'http://localhost:8000')
+
+DJANGO_MCP_AUTHENTICATION_CLASSES = [
+    'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+]
+
+OAUTH2_PROVIDER = {
+    'DCR_ENABLED': True,  # default False
+    'DCR_REGISTRATION_PERMISSION_CLASSES': (
+        'oauth2_provider.dcr.AllowAllDCRPermission',
+    ),
+    'OAUTH2_PROTECTED_RESOURCE_IDENTIFIER': f'{MCP_BASE_URL}/mcp',
+    'OAUTH2_PROTECTED_RESOURCE_AUTHORIZATION_SERVERS': [MCP_BASE_URL],
+}

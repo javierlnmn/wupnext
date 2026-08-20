@@ -30,8 +30,13 @@ urlpatterns = [
     # Django Browser Reload
     path('__reload__/', include('django_browser_reload.urls')),
     path('admin/', admin.site.urls),
+    # Project
     path('', include('tasks.urls')),
     path('accounts/', include('accounts.urls')),
     path('pomodoro/', include('pomodoro.urls')),
     path('notifications/', include('notifications.urls')),
+    # MCP server
+    path('', include('mcp_server.urls')),
+    # OAuth2 for MCP clients
+    path('', include('oauth2_provider.urls')),
 ]

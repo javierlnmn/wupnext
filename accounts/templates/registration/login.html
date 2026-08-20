@@ -22,6 +22,7 @@
 
       <form method="POST" action="{% url 'accounts:login' %}" class="space-y-5">
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
         <div>
           <label
             for="username"

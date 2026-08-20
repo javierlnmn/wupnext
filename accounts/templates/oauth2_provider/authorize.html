@@ -1,0 +1,77 @@
+{% extends 'accounts/_auth_page.html' %}
+
+{% block subheading %}Authorize access{% endblock %}
+
+{% block panel_headline %}Your tasks,<br />on your <span class="text-clay-100 dark:text-clay-300">terms.</span>{% endblock %}
+{% block panel_subline %}Grant access to one client. Take it back whenever you want.{% endblock %}
+
+{% block auth_content %}
+{% if error %}
+<div
+  class="mb-6 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-sm text-center"
+>
+  {{ error.error }}
+</div>
+<p class="text-[13px] leading-relaxed text-slate-500 dark:text-slate-400 text-center">
+  {{ error.description }}
+</p>
+{% else %}
+<div
+  class="mb-6 px-4 py-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+>
+  <p class="text-[15px] font-semibold text-slate-900 dark:text-white">
+    {{ application.name }}
+  </p>
+  <p class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
+    wants to reach your tasks as
+    <span class="text-slate-900 dark:text-white">{{ request.user.username }}</span>.
+  </p>
+</div>
+
+<form method="POST" class="space-y-5">
+  {% csrf_token %}
+  {% for field in form %}{% if field.is_hidden %}{{ field }}{% endif %}{% endfor %}
+
+  {% if scopes_descriptions %}
+  <div>
+    <p class="text-[13px] text-slate-500 dark:text-slate-400 mb-1.5">It asks for</p>
+    <ul class="space-y-2">
+      {% for scope in scopes_descriptions %}
+      <li class="flex items-start gap-2 text-[13px] text-slate-600 dark:text-slate-300">
+        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-clay-500 shrink-0"></span>
+        {{ scope }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if form.errors %}
+  <div
+    class="px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-sm text-center"
+  >
+    This request is not valid. Start again from your client.
+  </div>
+  {% endif %}
+
+  <button
+    type="submit"
+    name="allow"
+    value="Authorize"
+    class="w-full h-11 bg-clay-500 hover:bg-clay-600 text-white font-semibold rounded-xl transition-all"
+  >
+    Authorize
+  </button>
+  <button
+    type="submit"
+    class="w-full h-11 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold rounded-xl hover:border-clay-500/50 transition-all"
+  >
+    Cancel
+  </button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block auth_footer %}
+Signed in as {{ request.user }}
+{% endblock %}
