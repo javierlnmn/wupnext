@@ -1,0 +1,114 @@
+{% load ui %}
+<div
+  x-data="{
+    revokeOpen: false,
+    revokeName: '',
+    revokeUrl: '',
+    promptRevoke(name, url) {
+      this.revokeName = name
+      this.revokeUrl = url
+      this.revokeOpen = true
+    },
+    confirmRevoke() {
+      htmx.ajax('POST', this.revokeUrl, { target: '#mcp-clients', swap: 'innerHTML' })
+      this.revokeOpen = false
+    },
+  }"
+  @keydown.escape.window="revokeOpen = false"
+>
+  <p class="text-[12px] text-slate-500 dark:text-slate-400 mb-4">
+    Reach your tasks from an MCP client.
+  </p>
+
+  <div class="space-y-6">
+    <div x-data="{ copied: false }">
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-1.5">Endpoint</p>
+      <div class="flex items-center gap-2">
+        <input
+          type="text"
+          readonly
+          value="{{ endpoint }}"
+          @focus="$el.select()"
+          class="flex-1 min-w-0 h-8 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-[13px] font-mono text-slate-600 dark:text-slate-300 outline-none focus:border-clay-500/50"
+        >
+        <button
+          type="button"
+          @click="navigator.clipboard.writeText($el.previousElementSibling.value); copied = true; setTimeout(() => copied = false, 1500)"
+          class="shrink-0 flex items-center justify-center w-8 h-8 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:border-clay-500/50 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          :aria-label="copied ? 'Copied' : 'Copy endpoint'"
+        >
+          <span x-show="!copied">{% include 'common/icons/copy.html' with class='w-4 h-4' %}</span>
+          <span x-show="copied" x-cloak class="text-clay-500">{% include 'common/icons/check.html' with class='w-4 h-4' %}</span>
+        </button>
+      </div>
+      <p class="mt-1.5 text-[12px] text-slate-400">
+        Add this URL as a remote MCP server. Your client asks you to sign in the first time.
+      </p>
+    </div>
+
+    <div id="mcp-clients">
+      {% include 'accounts/partials/mcp_clients.html' %}
+    </div>
+
+    <div x-data="{ toolsOpen: false }">
+      <button
+        type="button"
+        @click="toolsOpen = !toolsOpen"
+        :aria-expanded="toolsOpen"
+        class="flex items-center justify-between w-full text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
+      >
+        <span>Tools <span class="text-slate-400">({{ tools|length }})</span></span>
+        <span
+          :class="toolsOpen && 'rotate-180'"
+          class="text-slate-400 transition-transform"
+        >
+          {% include 'common/icons/chevron_down.html' with class='w-4 h-4' %}
+        </span>
+      </button>
+      <ul x-show="toolsOpen" x-cloak class="mt-1.5 divide-y divide-slate-100 dark:divide-slate-800">
+        {% for tool in tools %}
+          <li class="py-2">
+            <span class="block text-[13px] font-mono text-slate-600 dark:text-slate-300">{{ tool.name }}</span>
+            {% if tool.description %}
+              <span class="block text-[12px] text-slate-400">{{ tool.description }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  {% modal openStateKey="revokeOpen" z=70 %}
+    <div class="p-6">
+      <div class="flex items-start gap-4">
+        <div class="shrink-0 w-11 h-11 rounded-full bg-rose-500/10 flex items-center justify-center">
+          {% include 'common/icons/alert.html' with class='w-5 h-5 text-rose-500 dark:text-rose-400' %}
+        </div>
+        <div class="min-w-0">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Revoke access</h2>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <span class="font-semibold text-slate-700 dark:text-slate-200">“<span x-text="revokeName"></span>”</span>
+            loses every token it holds. It has to sign in again to reach your tasks.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-3">
+        <button
+          type="button"
+          @click="revokeOpen = false"
+          class="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          @click="confirmRevoke()"
+          class="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-colors"
+        >
+          Revoke
+        </button>
+      </div>
+    </div>
+  {% endmodal %}
+</div>

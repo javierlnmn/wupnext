@@ -15,6 +15,16 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('preferences/', views.PreferencesView.as_view(), name='preferences'),
     path(
+        'preferences/mcp/',
+        views.MCPPreferencesView.as_view(),
+        name='mcp_preferences',
+    ),
+    path(
+        'preferences/mcp/<int:pk>/revoke/',
+        views.MCPClientRevokeView.as_view(),
+        name='mcp_client_revoke',
+    ),
+    path(
         'password-reset/',
         auth_views.PasswordResetView.as_view(
             form_class=PasswordResetForm,

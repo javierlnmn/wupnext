@@ -98,12 +98,13 @@ class PreferencesModalTests(TestCase):
     def board(self):
         return self.client.get(reverse('tasks:board')).content.decode()
 
-    def test_both_tabs_fetch_their_own_partial_on_open(self):
+    def test_every_tab_fetches_its_own_partial_on_open(self):
         html = self.board()
 
         self.assertIn(f'hx-get="{reverse("pomodoro:preferences")}"', html)
         self.assertIn(f'hx-get="{reverse("notifications:preferences")}"', html)
-        self.assertEqual(html.count('hx-trigger="open-preferences from:window"'), 2)
+        self.assertIn(f'hx-get="{reverse("accounts:mcp_preferences")}"', html)
+        self.assertEqual(html.count('hx-trigger="open-preferences from:window"'), 3)
 
     def test_one_form_posts_everything_to_the_central_view(self):
         html = self.board()

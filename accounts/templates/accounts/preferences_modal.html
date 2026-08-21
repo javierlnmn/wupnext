@@ -45,6 +45,15 @@
           {% include 'common/icons/bell.html' with class='w-4 h-4' %}
           Notifications
         </button>
+        <button
+          type="button"
+          @click="tab = 'mcp'"
+          :class="tab === 'mcp' ? 'border-clay-500 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+          class="flex items-center gap-2 -mb-px py-3 border-b-2 text-sm font-semibold transition-colors"
+        >
+          {% include 'common/icons/plug.html' with class='w-4 h-4' %}
+          MCP server
+        </button>
       </nav>
 
       <div class="flex-1 min-h-0 overflow-y-auto px-6 py-6">
@@ -57,6 +66,12 @@
         <div
           x-show="tab === 'notifications'"
           hx-get="{% url 'notifications:preferences' %}"
+          hx-trigger="open-preferences from:window"
+          hx-swap="innerHTML"
+        ></div>
+        <div
+          x-show="tab === 'mcp'"
+          hx-get="{% url 'accounts:mcp_preferences' %}"
           hx-trigger="open-preferences from:window"
           hx-swap="innerHTML"
         ></div>
@@ -75,7 +90,7 @@
 </div>
 
 <script>
-  const PREFERENCES_TABS = ['pomodoro', 'notifications']
+  const PREFERENCES_TABS = ['pomodoro', 'notifications', 'mcp']
 
   function openPreferencesFromUrl() {
     const tab = new URLSearchParams(location.search).get('preferences')
@@ -86,6 +101,8 @@
   }
 
   function preferencesSaved(event) {
+    // htmx events bubble, so tab loads and the revoke button reach this handler too
+    if (event.target !== event.currentTarget) return
     if (!event.detail.successful) return
 
     const d = new FormData(event.target)

@@ -6,7 +6,7 @@ from tasks.serializers import ParentTaskSerializer
 
 class UserTasksToolset(MCPToolset):
     def get_user_unarchived_tasks(self):
-        """Tool that lists all unarchived user tasks"""
+        """Lists all unarchived user tasks"""
         parent_tasks = (
             Task.objects.filter_unarchived()
             .filter(user=self.request.user, parent__isnull=True)
@@ -16,7 +16,7 @@ class UserTasksToolset(MCPToolset):
         return serializer.data
 
     def get_user_archived_tasks(self):
-        """Tool that lists all archived user tasks"""
+        """Lists all archived user tasks"""
         parent_tasks = (
             Task.objects.filter_archived()
             .filter(user=self.request.user, parent__isnull=True)
