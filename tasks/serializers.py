@@ -6,7 +6,7 @@ from tasks.models import Group, Task
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('name', 'color', 'position', 'created_at')
+        fields = ('id', 'name', 'color', 'position', 'created_at')
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -17,6 +17,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = (
+            'id',
             'name',
             'weight',
             'group',
@@ -40,6 +41,7 @@ class ParentTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = (
+            'id',
             'name',
             'weight',
             'group',
