@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -69,10 +68,7 @@ class ToggleCompleteTaskView(BoardMixin, View):
         if not task:
             return HttpResponse(status=404)
 
-        now = None if task.completed_at else timezone.now()
-        task.completed_at = now
-        task.save(update_fields=['completed_at'])
-        task.subtasks.update(completed_at=now)
+        task.set_complete_with_subtasks(not task.completed_at)
 
         return self.board_response()
 
@@ -149,12 +145,12 @@ class ArchiveView(BoardMixin, ArchiveMixin, View):
         return self.archive_response()
 
     def post(self, request, task_id):
-        Task.objects.filter(
+        task = Task.objects.filter(
             id=task_id, user=request.user, completed_at__isnull=False
-        ).update(archived_at=timezone.now())
-        Task.objects.filter(parent_id=task_id, user=request.user).update(
-            archived_at=timezone.now()
-        )
+        ).first()
+        if task:
+            task.set_archived_with_subtasks(True)
+
         return self.board_response()
 
     def delete(self, request, task_id):
@@ -179,10 +175,10 @@ class ArchivePeriodView(ArchiveMixin, View):
 
 class UnarchiveTaskView(BoardMixin, ArchiveMixin, View):
     def post(self, request, task_id):
-        Task.objects.filter(id=task_id, user=request.user).update(archived_at=None)
-        Task.objects.filter(parent_id=task_id, user=request.user).update(
-            archived_at=None
-        )
+        task = Task.objects.filter(id=task_id, user=request.user).first()
+        if task:
+            task.set_archived_with_subtasks(False)
+
         return render(
             request,
             'tasks/partials/archive/unarchive_response.html',

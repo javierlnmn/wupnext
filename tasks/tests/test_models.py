@@ -117,3 +117,73 @@ class NextPositionTests(TestCase):
     def test_group_next_position_ignores_other_users(self):
         GroupFactory(user=UserFactory(), position=9)
         self.assertEqual(Group.next_position(self.user), 0)
+
+
+class SetCompleteWithSubtasksTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.parent = TaskFactory(user=self.user)
+        self.subtask = TaskFactory(user=self.user, parent=self.parent)
+
+    def test_completing_cascades_to_subtasks(self):
+        self.parent.set_complete_with_subtasks(True)
+        self.subtask.refresh_from_db()
+        self.assertIsNotNone(self.parent.completed_at)
+        self.assertIsNotNone(self.subtask.completed_at)
+
+    def test_reopening_cascades_to_subtasks(self):
+        self.parent.set_complete_with_subtasks(True)
+        self.parent.set_complete_with_subtasks(False)
+        self.subtask.refresh_from_db()
+        self.assertIsNone(self.parent.completed_at)
+        self.assertIsNone(self.subtask.completed_at)
+
+    def test_the_parent_change_is_saved(self):
+        self.parent.set_complete_with_subtasks(True)
+        self.parent.refresh_from_db()
+        self.assertIsNotNone(self.parent.completed_at)
+
+    def test_does_not_touch_another_task_subtasks(self):
+        other_parent = TaskFactory(user=self.user)
+        other_subtask = TaskFactory(user=self.user, parent=other_parent)
+        self.parent.set_complete_with_subtasks(True)
+        other_subtask.refresh_from_db()
+        self.assertIsNone(other_subtask.completed_at)
+
+
+class SetArchivedWithSubtasksTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.parent = TaskFactory(user=self.user, completed=True)
+        self.subtask = TaskFactory(user=self.user, parent=self.parent, completed=True)
+
+    def test_archiving_cascades_to_subtasks(self):
+        self.parent.set_archived_with_subtasks(True)
+        self.subtask.refresh_from_db()
+        self.assertIsNotNone(self.parent.archived_at)
+        self.assertIsNotNone(self.subtask.archived_at)
+
+    def test_unarchiving_cascades_to_subtasks(self):
+        self.parent.set_archived_with_subtasks(True)
+        self.parent.set_archived_with_subtasks(False)
+        self.subtask.refresh_from_db()
+        self.assertIsNone(self.parent.archived_at)
+        self.assertIsNone(self.subtask.archived_at)
+
+    def test_the_parent_change_is_saved(self):
+        self.parent.set_archived_with_subtasks(True)
+        self.parent.refresh_from_db()
+        self.assertIsNotNone(self.parent.archived_at)
+
+    def test_a_subtask_shares_the_parent_timestamp(self):
+        self.parent.set_archived_with_subtasks(True)
+        self.parent.refresh_from_db()
+        self.subtask.refresh_from_db()
+        self.assertEqual(self.subtask.archived_at, self.parent.archived_at)
+
+    def test_does_not_touch_another_task_subtasks(self):
+        other_parent = TaskFactory(user=self.user, completed=True)
+        other_subtask = TaskFactory(user=self.user, parent=other_parent, completed=True)
+        self.parent.set_archived_with_subtasks(True)
+        other_subtask.refresh_from_db()
+        self.assertIsNone(other_subtask.archived_at)

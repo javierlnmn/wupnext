@@ -160,7 +160,6 @@ class ToggleCompleteTests(BoardClientTestCase):
     def setUp(self):
         super().setUp()
         self.task = TaskFactory(user=self.user)
-        self.subtask = TaskFactory(user=self.user, parent=self.task)
 
     def test_requires_login(self):
         self.client.logout()
@@ -169,20 +168,16 @@ class ToggleCompleteTests(BoardClientTestCase):
         )
         self.assertEqual(response.status_code, 302)
 
-    def test_completes_task_and_cascades_to_subtasks(self):
+    def test_completes_the_task(self):
         self.client.post(reverse('tasks:task-toggle-complete', args=[self.task.id]))
         self.task.refresh_from_db()
-        self.subtask.refresh_from_db()
         self.assertIsNotNone(self.task.completed_at)
-        self.assertIsNotNone(self.subtask.completed_at)
 
-    def test_reopens_task_and_cascades(self):
+    def test_reopens_the_task(self):
         self.client.post(reverse('tasks:task-toggle-complete', args=[self.task.id]))
         self.client.post(reverse('tasks:task-toggle-complete', args=[self.task.id]))
         self.task.refresh_from_db()
-        self.subtask.refresh_from_db()
         self.assertIsNone(self.task.completed_at)
-        self.assertIsNone(self.subtask.completed_at)
 
     def test_missing_task_returns_404(self):
         response = self.client.post(
@@ -329,13 +324,6 @@ class ArchiveViewTests(BoardClientTestCase):
         task.refresh_from_db()
         self.assertIsNotNone(task.archived_at)
 
-    def test_archives_children(self):
-        task = TaskFactory(user=self.user, completed=True)
-        child = TaskFactory(user=self.user, parent=task, completed=True)
-        self.client.post(reverse('tasks:task-archive', args=[task.id]))
-        child.refresh_from_db()
-        self.assertIsNotNone(child.archived_at)
-
     def test_does_not_archive_incomplete_task(self):
         task = TaskFactory(user=self.user)
         self.client.post(reverse('tasks:task-archive', args=[task.id]))
@@ -365,13 +353,6 @@ class UnarchiveViewTests(BoardClientTestCase):
         self.assertContains(response, 'innerHTML:#queue-content')
         task.refresh_from_db()
         self.assertIsNone(task.archived_at)
-
-    def test_unarchives_children(self):
-        task = TaskFactory(user=self.user, completed=True, archived=True)
-        child = TaskFactory(user=self.user, parent=task, completed=True, archived=True)
-        self.client.post(reverse('tasks:task-unarchive', args=[task.id]))
-        child.refresh_from_db()
-        self.assertIsNone(child.archived_at)
 
     def test_cannot_unarchive_other_users_task(self):
         task = TaskFactory(user=UserFactory(), completed=True, archived=True)

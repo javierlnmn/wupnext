@@ -111,6 +111,16 @@ class Task(models.Model):
         ).aggregate(max_position=models.Max('group_position'))['max_position']
         return last + 1 if last is not None else 0
 
+    def set_complete_with_subtasks(self, complete):
+        self.completed_at = timezone.now() if complete else None
+        self.save(update_fields=['completed_at'])
+        self.subtasks.update(completed_at=self.completed_at)
+
+    def set_archived_with_subtasks(self, archived):
+        self.archived_at = timezone.now() if archived else None
+        self.save(update_fields=['archived_at'])
+        self.subtasks.update(archived_at=self.archived_at)
+
     @property
     def subtask_count(self):
         return len(self.subtasks.all())
