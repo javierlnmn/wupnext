@@ -288,6 +288,18 @@ DJANGO_MCP_AUTHENTICATION_CLASSES = [
     'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
 ]
 
+DJANGO_MCP_GLOBAL_SERVER_CONFIG = {
+    'name': 'WupNext',
+    'instructions': (
+        'Every tool reads and writes the tasks of the signed in user only. '
+        'Read a task id from get_tasks_due, search_tasks or a list tool before '
+        'you change a task. A task must be complete before you archive it. '
+        'Archive a task instead of deleting it: there is no delete tool. '
+        'A task id is an argument for a tool, not content for the user. '
+        'Never print an id: name a task by its name.'
+    ),
+}
+
 OAUTH2_PROVIDER = {
     'DCR_ENABLED': True,  # default False
     'DCR_REGISTRATION_PERMISSION_CLASSES': (

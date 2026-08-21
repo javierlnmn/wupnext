@@ -136,6 +136,17 @@ class TaskEditTests(BoardClientTestCase):
         task.refresh_from_db()
         self.assertEqual(task.group_position, 4)
 
+    def test_removing_the_group_resets_group_position(self):
+        group = GroupFactory(user=self.user)
+        task = TaskFactory(user=self.user, group=group, group_position=4)
+        self.client.post(
+            reverse('tasks:task'),
+            {'task_id': task.id, 'name': 'Loose'},
+        )
+        task.refresh_from_db()
+        self.assertIsNone(task.group)
+        self.assertEqual(task.group_position, 0)
+
 
 class TaskDeleteTests(BoardClientTestCase):
     def test_requires_login(self):
