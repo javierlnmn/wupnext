@@ -34,23 +34,25 @@ class TaskForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
 
-        parent = None
         if cleaned.get('parent_id'):
             parent = Task.objects.filter(
                 id=cleaned['parent_id'], user=self.user, parent__isnull=True
             ).first()
-        cleaned['parent'] = parent
+
+            if parent:
+                cleaned['parent'] = parent
+                cleaned['group'] = None
+                cleaned['due_date'] = None
+
+                return cleaned
+
+        cleaned['parent'] = None
 
         group = None
-        if not parent and cleaned.get('group_id'):
-            group = Group.objects.filter(
-                id=cleaned['group_id'],
-                user=self.user,
-            ).first()
-        cleaned['group'] = group
+        if cleaned.get('group_id'):
+            group = Group.objects.filter(id=cleaned['group_id'], user=self.user).first()
 
-        if parent:
-            cleaned['due_date'] = None
+        cleaned['group'] = group
 
         return cleaned
 
